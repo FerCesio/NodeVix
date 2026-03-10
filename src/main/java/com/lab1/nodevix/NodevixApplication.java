@@ -8,6 +8,8 @@ public class NodevixApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(NodevixApplication.class, args);
+		System.out.println();
+		System.out.println("Running...");
 	}
 
 }
