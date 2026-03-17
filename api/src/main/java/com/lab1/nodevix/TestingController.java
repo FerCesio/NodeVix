@@ -10,4 +10,12 @@ public class TestingController {
     public String test_1() {
         return "Welcome to home";
     }
+
+    /*
+    @GetMapping("/REGISTER")
+    public Response test_2(Request) {
+        return "Welcome to home";
+    }
+    */
+
 }
