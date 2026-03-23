@@ -6,8 +6,6 @@ import com.lab1.nodevix.user.dtos.UserLogin;
 import com.lab1.nodevix.user.dtos.UserRegister;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class UserService {
     private final UserRepository userRepo;
@@ -16,7 +14,7 @@ public class UserService {
         this.userRepo = userRepo;
     }
 
-    public RegisterResponse register(UserRegister ur){
+    public RegisterResponse register(UserRegister ur) {
 
         // validar si existe
         userRepo.findByEmail(ur.getEmail()).ifPresent(u -> {
@@ -28,8 +26,7 @@ public class UserService {
                 ur.getUserName(),
                 ur.getEmail(),
                 ur.getPassword(),
-                ur.getBirthDate()
-        );
+                ur.getBirthDate());
 
         User saved = userRepo.save(user);
 
@@ -37,12 +34,11 @@ public class UserService {
                 saved.getId(),
                 saved.getName(),
                 saved.getEmail(),
-                saved.getBirthDate()
-        );
+                saved.getBirthDate());
 
     }
 
-    public LoginResponse login(UserLogin ul){
+    public LoginResponse login(UserLogin ul) {
 
         User user = userRepo.findByEmail(ul.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -54,6 +50,5 @@ public class UserService {
 
         return new LoginResponse(user.getId(), user.getEmail());
     }
-
 
 }

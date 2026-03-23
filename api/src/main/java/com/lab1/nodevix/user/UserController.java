@@ -4,10 +4,7 @@ import com.lab1.nodevix.user.dtos.LoginResponse;
 import com.lab1.nodevix.user.dtos.RegisterResponse;
 import com.lab1.nodevix.user.dtos.UserLogin;
 import com.lab1.nodevix.user.dtos.UserRegister;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
