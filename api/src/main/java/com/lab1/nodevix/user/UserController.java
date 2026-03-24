@@ -6,6 +6,7 @@ import com.lab1.nodevix.user.dtos.UserLogin;
 import com.lab1.nodevix.user.dtos.UserRegister;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/auth")
 public class UserController {

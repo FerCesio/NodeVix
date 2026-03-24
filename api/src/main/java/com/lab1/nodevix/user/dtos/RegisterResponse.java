@@ -12,6 +12,7 @@ public class RegisterResponse {
         this.id = id;
         this.username = username;
         this.email = email;
+        this.birthDate = birthDate;
     }
 
     public Long getId() { return id; }
