@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { api } from "../services/api";
-import type { RegisterRequest, RegisterResponse } from "../types/user";
+import type { LoginRequest, LoginResponse } from "../types/user";
 
-export default function RegisterForm() {
-  const [form, setForm] = useState<RegisterRequest>({
+export default function LoginForm() {
+  const [form, setForm] = useState<LoginRequest>({
     name: "",
     email: "",
     password: "",
@@ -20,13 +20,13 @@ export default function RegisterForm() {
     e.preventDefault();
 
     try {
-      const res = await api.post<RegisterResponse>(
-        "/auth/register",
+      const res = await api.post<LoginResponse>(
+        "/auth/login",
         form
       );
 
       console.log(res.data);
-      alert("Usuario registrado");
+      alert("Usuario inicio sesion");
     } catch (err) {
       console.error(err);
       alert("Error");
@@ -36,19 +36,12 @@ export default function RegisterForm() {
   return (
     <form onSubmit={handleSubmit}>
       <input
-        name="name"
-        placeholder="Name..."
+        name="user_name_email"
+        placeholder="Name/Email..."
         value={form.name}
         onChange={handleChange}
       />
-
-      <input
-        name="email"
-        placeholder="Email..."
-        value={form.email}
-        onChange={handleChange}
-      />
-
+      
       <input
         name="password"
         type="password"
@@ -57,7 +50,7 @@ export default function RegisterForm() {
         onChange={handleChange}
       />
 
-      <button type="submit">Register</button>
+      <button type="submit">Login</button>
     </form>
   );
 }
