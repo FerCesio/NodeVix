@@ -1,22 +1,23 @@
 package com.lab1.nodevix.user.dtos;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 public class RegisterResponse {
     private Long id;
-    private String username;
+    private String userName;
     private String email;
-    private Date birthDate;
+    private String birthDate;
 
-    public RegisterResponse(Long id, String username, String email, Date birthDate) {
+    public RegisterResponse(Long id, String username, String email, String birthDate) {
         this.id = id;
-        this.username = username;
+        this.userName = username;
         this.email = email;
         this.birthDate = birthDate;
     }
 
     public Long getId() { return id; }
-    public String getUsername() { return username; }
+    public String getUsername() { return userName; }
     public String getEmail() { return email; }
-    public Date getBirthDate() { return birthDate; }
+    public String getBirthDate() { return birthDate; }
 }

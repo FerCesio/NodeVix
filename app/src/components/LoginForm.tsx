@@ -4,8 +4,7 @@ import type { LoginRequest, LoginResponse } from "../types/user";
 
 export default function LoginForm() {
   const [form, setForm] = useState<LoginRequest>({
-    name: "",
-    email: "",
+    identifier: "",
     password: "",
   });
 
@@ -27,18 +26,25 @@ export default function LoginForm() {
 
       console.log(res.data);
       alert("Usuario inicio sesion");
-    } catch (err) {
+    } catch (err:any) {
+
+      if (err.response && err.response.data){
+        alert(err.response.data.message)
+      } else {
+        alert("Error de conexión con el servidor")
+      }
+
       console.error(err);
-      alert("Error");
+      
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <input
-        name="user_name_email"
-        placeholder="Name/Email..."
-        value={form.name}
+        name="identifier"
+        placeholder="Username/Email..."
+        value={form.identifier}
         onChange={handleChange}
       />
       

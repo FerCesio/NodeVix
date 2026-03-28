@@ -3,25 +3,24 @@
  */
 
 export type RegisterRequest = {
-  name: string;
+  userName: string;
   email: string;
   password: string;
+  birthDate: string;
 };
 
 export type RegisterResponse = {
   id: number;
-  name: string;
+  userName: string;
   email: string;
 };
 
 export type LoginRequest = {
-  name: string;
-  email: string;
+  identifier: string;
   password: string;
 };
 
 export type LoginResponse = {
   id: number;
-  name: string;
   email: string;
 };

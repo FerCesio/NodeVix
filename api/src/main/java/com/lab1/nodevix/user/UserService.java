@@ -6,6 +6,8 @@ import com.lab1.nodevix.user.dtos.UserLogin;
 import com.lab1.nodevix.user.dtos.UserRegister;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 public class UserService {
     private final UserRepository userRepo;
@@ -20,13 +22,18 @@ public class UserService {
         userRepo.findByEmail(ur.getEmail()).ifPresent(u -> {
             throw new RuntimeException("Email ya registrado");
         });
+        userRepo.findByName(ur.getUserName()).ifPresent(u -> {
+            throw new RuntimeException("Usuario ya registrado");
+        });
+
+        LocalDate parsed = LocalDate.parse(ur.getBirthDate());
 
         // crear usuario
         User user = new User(
                 ur.getUserName(),
                 ur.getEmail(),
                 ur.getPassword(),
-                ur.getBirthDate());
+                parsed);
 
         User saved = userRepo.save(user);
 
@@ -34,13 +41,14 @@ public class UserService {
                 saved.getId(),
                 saved.getName(),
                 saved.getEmail(),
-                saved.getBirthDate());
+                saved.getBirthDate().toString());
 
     }
 
     public LoginResponse login(UserLogin ul) {
 
-        User user = userRepo.findByEmail(ul.getEmail())
+        String identifier = ul.getIdentifier();
+        User user = userRepo.findByNameOrEmail(identifier, identifier)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         // validar password (simple)

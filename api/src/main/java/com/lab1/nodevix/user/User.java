@@ -2,6 +2,7 @@ package com.lab1.nodevix.user;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Table(name = "users")
@@ -19,12 +20,12 @@ public class User {
     private String email;
 
     private String password;
-    private Date birthDate;
+    private LocalDate birthDate;
     private String avatar_url;
 
     public User(){}
 
-    public User(String username, String email, String password, Date birthDate) {
+    public User(String username, String email, String password, LocalDate birthDate) {
         this.email = email;
         this.password = password;
         this.birthDate = birthDate;
@@ -43,7 +44,7 @@ public class User {
         this.password = password;
     }
 
-    public void setBirthDate(Date birthDate) {
+    public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
     }
 
@@ -63,7 +64,7 @@ public class User {
         return email;
     }
 
-    public Date getBirthDate() {
+    public LocalDate getBirthDate() {
         return birthDate;
     }
 
