@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&display=swap');
+
+/* =========================================
+   1. Contenedor Principal (Fondo Negro)
+   ========================================= */
+.register-container {
+  display: flex;
+  justify-content: flex-end; 
+  align-items: center;     /* Centrado vertical */
+  min-height: 100vh;       /* Toda la altura de la pantalla */
+  background-color: #121212; /* Negro mate, más suave que #000 */
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 50px;           /* Espacio de seguridad en móviles */
+  box-sizing: border-box;
+}
+
+.register-text-section {
+  flex: 1; /* Ocupa el espacio disponible */
+  max-width: 500px; /* Evita que el texto se estire demasiado */
+  color: #ffffff; /* Texto blanco */
+  padding-right: 200px; /* Espacio con la tarjeta de login */
+}
+
+.main-title {
+  font-family: 'Fraunces', serif;
+  font-size: 80px; /* Título grande */
+  font-weight: 100;
+  line-height: 1.2;
+  margin: 0 0 20px 0;
+  letter-spacing: -1px;
+}
+
+.main-description {
+  
+  font-size: 18px;
+  line-height: 1.6;
+  color: #b3b3b3; /* Gris claro para la descripción */
+  margin: 0;
+}
+
+/* =========================================
+   2. El Recuadro (Card Blanco)
+   ========================================= */
+.register-card {
+  background-color: #ffffff; /* Blanco puro */
+  padding: 40px 30px;        /* Mucho aire por dentro */
+  border-radius: 12px;       /* Bordes suavizados modernos */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra intensa para resaltar sobre negro */
+  width: 100%;
+  max-width: 400px;          /* Ancho máximo profesional */
+  text-align: center;
+  transition: transform 0.3s ease; /* Pequeño efecto al cargar */
+}
+
+
+/* =========================================
+   3. Títulos y Textos
+   ========================================= */
+.register-card h1 {
+  font-family: 'Fraunces', serif;
+  margin: 0 0 20px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a; /* Casi negro para el texto */
+}
+
+/* =========================================
+   4. Estilos de los Inputs (Formulario)
+   ========================================= */
+.register-card form {
+  display: flex;
+  flex-direction: column; /* Inputs uno debajo del otro */
+  gap: 15px;              /* Espacio uniforme entre elementos */
+}
+
+.register-card input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 1px solid #e0e0e0; /* Borde gris muy suave */
+  border-radius: 8px;        /* Bordes redondeados en inputs */
+  background-color: #f9f9f9; /* Fondo grisáceo sutil para el input */
+  color: #1a1a1a;
+  box-sizing: border-box;    /* Crucial para el padding */
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Efecto al hacer foco (clic) en el input */
+.register-card input:focus {
+  outline: none;
+  border-color: #007bff;     /* Azul de marca */
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); /* Resplandor azul suave */
+  background-color: #ffffff;  /* Se vuelve blanco puro al escribir */
+}
+
+/* BOTON DE REGISTRO */ 
+
+.btn-register {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 15px 32px;
+  background: #ffffff;
+  color: #0d0d0d;
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: color 0.35s ease;
+  outline: none;
+}
+
+.btn-register::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #0d0d0d;
+  transform: translateX(-101%);
+  transition: transform 0.38s cubic-bezier(0.76, 0, 0.24, 1);
+  z-index: 0;
+}
+
+.btn-register:not(:disabled):hover::before {
+  transform: translateX(0);
+}
+
+.btn-register:not(:disabled):hover {
+  color: #ffffff;
+  box-shadow: 0 0 0 1.5px #ffffff;
+}
+
+.btn-register:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.btn-register:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
+.btn-register span {
+  position: relative;
+  z-index: 1;
+}

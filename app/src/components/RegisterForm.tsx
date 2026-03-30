@@ -76,7 +76,9 @@ export default function RegisterForm() {
       />
 
 
-      <button type="submit">Register</button>
+      <button type="submit" className="btn-register">
+        <span>Register</span>
+      </button>
     </form>
   );
 }

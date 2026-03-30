@@ -54,6 +54,7 @@
    3. Títulos y Textos
    ========================================= */
 .login-card h1 {
+  font-family: 'Fraunces', serif;
   margin: 0 0 10px 0;
   font-size: 28px;
   font-weight: 700;
@@ -93,32 +94,6 @@
   border-color: #007bff;     /* Azul de marca */
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); /* Resplandor azul suave */
   background-color: #ffffff;  /* Se vuelve blanco puro al escribir */
-}
-
-/* =========================================
-   5. Botón Principal (Azul Profundo)
-   ========================================= */
-.btn-primary {
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  background-color: #0062cc; /* Un azul más saturado */
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  box-shadow: 0 4px 6px rgba(0, 98, 204, 0.2); /* Sombra azul */
-}
-
-.btn-primary:hover {
-  background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
-}
-
-.btn-primary:active {
-  transform: scale(0.98);    /* Efecto de "pulsado" */
 }
 
 /* =========================================

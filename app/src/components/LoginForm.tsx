@@ -56,7 +56,11 @@ export default function LoginForm() {
         onChange={handleChange}
       />
 
-      <button type="submit">Login</button>
+      <button type="submit" className="btn-register">
+        <span>Login</span>
+      </button>
+
+
     </form>
   );
 }
