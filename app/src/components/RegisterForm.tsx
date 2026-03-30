@@ -3,8 +3,18 @@ import { api } from "../services/api";
 import type { RegisterRequest, RegisterResponse } from "../types/user";
 
 export default function RegisterForm() {
+  
+  const today = new Date().toISOString().split("T")[0].split("-");
+  const year: number = parseInt(today[0]); // Convertimos a número
+  const month: string = today[1];
+  const day: string = today[2];
 
-  const today = new Date().toISOString().split("T")[0];
+  const minAge: number = 13;
+  const maxAge: number = 100;
+
+  // Ahora la resta funciona y el resultado se inyecta en el string
+  const maxDate: string = `${year - minAge}-${month}-${day}`;
+  const minDate: string = `${year - maxAge}-${month}-${day}`;
 
   const [form, setForm] = useState<RegisterRequest>({
     userName: "",
@@ -65,12 +75,19 @@ export default function RegisterForm() {
         onChange={handleChange}
       />
 
+      {
+      /*
+       *  QUE CARAJO ESTA SINTAXIS DE COMENTARIOS
+       */
+      }
+      
       
       <input
         id="birthDate"
         name="birthDate"
         type="date"
-        max={today}
+        max={maxDate}
+        min={minDate}
         value={form.birthDate}
         onChange={handleChange}
       />
