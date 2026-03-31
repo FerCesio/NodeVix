@@ -8,10 +8,6 @@ export default function ProjectsBrowse() {
     const projects:ProjectResponse[] = [
         { id: 10, name: "Alpha", desc: "Old project", modDate: "01-02-2005", creationDate: "01-02-2005" },
         { id: 25, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
-        { id: 0x3, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
-        { id: 0x4f, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
-        { id: 25, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
-        { id: 25, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
         { id: 15, name: "Beta", desc: "Mid project", modDate: "01-02-2005", creationDate: "01-02-2005" }
     ]
     
