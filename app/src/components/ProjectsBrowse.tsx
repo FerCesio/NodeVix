@@ -8,6 +8,10 @@ export default function ProjectsBrowse() {
     const projects:ProjectResponse[] = [
         { id: 10, name: "Alpha", desc: "Old project", modDate: "01-02-2005", creationDate: "01-02-2005" },
         { id: 25, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
+        { id: 0x3, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
+        { id: 0x4f, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
+        { id: 25, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
+        { id: 25, name: "Gamma", desc: "New project", modDate: "01-02-2005", creationDate: "01-02-2005" },
         { id: 15, name: "Beta", desc: "Mid project", modDate: "01-02-2005", creationDate: "01-02-2005" }
     ]
     
@@ -40,15 +44,16 @@ export default function ProjectsBrowse() {
 
 function ProjectCard({project}:{project:ProjectResponse}) {
     return (
-        <div className="project-card">
-            <h2>{project.name}</h2>
-            <h4>ID: {project.id}</h4>
+    <div className="project-card">
+        <div className="project-info">
+            <h3>{project.name}</h3>
             <p>{project.desc}</p>
             
-            <button className="btn btn-small">
-                <span>Enter</span>
-            </button>
-
+            {/* Este span se irá al fondo gracias al margin-top: auto */}
+            <span className="project-id">id:{project.id}</span>
         </div>
+
+        <button className="btn btn-small"><span>Enter</span></button>
+    </div>
     );
 }

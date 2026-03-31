@@ -1,11 +1,42 @@
 .projects-list {
-    border: 1px;
-    background-color: greenyellow;
+    display: flex;
+    flex-direction: column; /* Las tarjetas una debajo de otra */
+    gap: 1rem; /* Espacio entre tarjetas */
+    padding: 20px;
+    margin: 20px;
+    background-color: #ccc;
+    border-radius: 10px;
 }
 
 .project-card { 
-    border: '1px solid #ccc'; 
-    padding: '1rem'; 
-    margin: '1rem'; 
-    background-color: red;
+    display: flex;
+    justify-content: space-between; /* Empuja el contenido a los extremos */
+    align-items: center; /* Centra verticalmente el texto y el botón */
+    
+    border: 1px solid #ccc; 
+    padding: 1rem; /* Padding interno para que respire */
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    color: white; /* Para que el texto sea legible sobre el rojo */
+}
+
+/* Contenedor opcional para el texto si quieres separar título de descripción */
+.project-info {
+    display: flex;
+    flex-direction: column;
+    padding: 10px; /* Un poco más de respiro */
+    height: 100%;  /* Importante para que el "empuje" funcione */
+    align-items: flex-start; /* Alinea el texto a la izquierda */
+}
+
+.project-info h3{
+    color: #121212;
+    margin: 0 0 8px 0; /* Espaciado simple entre título y desc */
+}
+
+.project-id {
+    margin-top: auto; /* ¡MAGIA! Empuja este elemento al fondo del contenedor flex */
+    color: #121212;
+    font-size: 0.7rem; /* Bien chico como pediste */
+    opacity: 0.7;      /* Un poco de transparencia para que no distraiga */
 }
