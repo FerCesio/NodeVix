@@ -1,5 +1,6 @@
 import LoginForm from "../components/LoginForm"; // Importás el corazón
 import "../styles/login.css";
+import "../styles/general.css";
 import TitleAndDesc from "./TitleAndDesc";
 
 export default function LoginPage() {
@@ -14,7 +15,7 @@ export default function LoginPage() {
         {/* Aquí "enchufás" el formulario que ya hicimos */}
         <LoginForm /> 
 
-        <button className="btn-register" onClick={() => window.location.href = "/projects"}>
+        <button className="btn" onClick={() => window.location.href = "/project"}>
             <span>Create Project</span>
         </button>
 

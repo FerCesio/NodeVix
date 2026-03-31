@@ -1,0 +1,11 @@
+.projects-list {
+    border: 1px;
+    background-color: greenyellow;
+}
+
+.project-card { 
+    border: '1px solid #ccc'; 
+    padding: '1rem'; 
+    margin: '1rem'; 
+    background-color: red;
+}

@@ -37,8 +37,8 @@ export default function RegisterForm() {
       const res = await api.post<RegisterResponse>("/auth/register", form);
 
       console.log(res.data);
-      alert("Usuario registrado");
       window.location.href = "/login";
+      alert("Usuario registrado");
         
     } catch (err:any) {
       if (err.response && err.response.data) {
@@ -95,7 +95,7 @@ export default function RegisterForm() {
       />
 
 
-      <button type="submit" className="btn-register">
+      <button type="submit" className="btn">
         <span>Register</span>
       </button>
     </form>

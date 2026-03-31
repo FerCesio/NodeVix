@@ -1,5 +1,4 @@
 export default function TitleAndDesc() {
-
   return (
     <div className="login-text-section">
         <h1 className="main-title">NodeVix</h1>
