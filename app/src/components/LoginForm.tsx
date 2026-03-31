@@ -26,6 +26,7 @@ export default function LoginForm() {
 
       console.log(res.data);
       alert("Usuario inicio sesion");
+      
     } catch (err:any) {
 
       if (err.response && err.response.data){

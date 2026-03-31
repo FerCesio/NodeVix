@@ -9,13 +9,35 @@ public class UserRegister {
     private String userName;
     private String birthDate;
 
-   public void setEmail(String email) { this.email = email; }
-    public void setPassword(String password) { this.password = password; }
-    public void setUserName(String userName) { this.userName = userName; }
-    public void setBirthDate(String birthDate) { this.birthDate = birthDate; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public String getEmail() { return email; }
-    public String getPassword() { return password; }
-    public String getUserName() { return userName; }
-    public String getBirthDate() { return birthDate; }
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
 }

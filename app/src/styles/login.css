@@ -17,7 +17,9 @@
   flex: 1; /* Ocupa el espacio disponible */
   max-width: 500px; /* Evita que el texto se estire demasiado */
   color: #ffffff; /* Texto blanco */
-  padding-right: 200px; /* Espacio con la tarjeta de login */
+  position: absolute;
+  top: 40%;
+  left: 5%
 }
 
 .main-title {
