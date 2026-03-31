@@ -38,6 +38,8 @@ export default function RegisterForm() {
 
       console.log(res.data);
       alert("Usuario registrado");
+      window.location.href = "/login";
+        
     } catch (err:any) {
       if (err.response && err.response.data) {
 
