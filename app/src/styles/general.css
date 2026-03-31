@@ -1,14 +1,108 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&display=swap');
 
+/* MAIN STUFF */
+.main-container {
+  display: flex;
+  justify-content: flex-end; 
+  align-items: center;     /* Centrado vertical */
+  min-height: 100vh;       /* Toda la altura de la pantalla */
+  background-color: #121212; /* Negro mate, más suave que #000 */
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 50px;           /* Espacio de seguridad en móviles */
+  box-sizing: border-box;
+}
+.main-text-section {
+  flex: 1; /* Ocupa el espacio disponible */
+  max-width: 500px; /* Evita que el texto se estire demasiado */
+  color: #ffffff; /* Texto blanco */
+  position: absolute;
+  top: 40%;
+  left: 5%
+}
+.main-title {
+  font-size: 48px; /* Título grande */
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 20px 0;
+  letter-spacing: -1px;
+}
+.main-description {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #b3b3b3; /* Gris claro para la descripción */
+  margin: 0;
+}
+  
+/* THE BASIC WHITE CARD*/
+.basic-card {
+  background-color: #ffffff; /* Blanco puro */
+  padding: 40px 30px;        /* Mucho aire por dentro */
+  border-radius: 12px;       /* Bordes suavizados modernos */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra intensa para resaltar sobre negro */
+  width: 100%;
+  max-width: 400px;          /* Ancho máximo profesional */
+  text-align: center;
+  transition: transform 0.3s ease; /* Pequeño efecto al cargar */
+}
+.basic-card h1 {
+  font-family: 'Fraunces', serif;
+  margin: 0 0 10px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a; /* Casi negro para el texto */
+}
+.basic-card p {
+  margin: 0 0 30px 0;
+  font-size: 16px;
+  color: #666666; /* Gris para el subtítulo */
+}
+.basic-card form {
+  display: flex;
+  flex-direction: column; /* Inputs uno debajo del otro */
+  gap: 15px;              /* Espacio uniforme entre elementos */
+}
+.basic-card input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 1px solid #e0e0e0; /* Borde gris muy suave */
+  border-radius: 8px;        /* Bordes redondeados en inputs */
+  background-color: #f9f9f9; /* Fondo grisáceo sutil para el input */
+  color: #1a1a1a;
+  box-sizing: border-box;    /* Crucial para el padding */
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.basic-card input:focus {
+  outline: none;
+  border-color: #007bff;     /* Azul de marca */
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); /* Resplandor azul suave */
+  background-color: #ffffff;  /* Se vuelve blanco puro al escribir */
+}
+.basic-card .footer-links {
+  margin-top: 25px;
+  border-top: 1px solid #eee; /* Línea divisoria suave */
+  padding-top: 15px;
+}
+.basic-card a {
+  font-size: 14px;
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.basic-card a:hover {
+  color: #0056b3;
+  text-decoration: underline; /* Subrayado solo al hover */
+}
 
+/* BUTTONS */
 .btn {
   /*
   *   Por defecto la clase boton tiene los siguiente atributos
   */
   --position: relative;
   --display: inline-flex;
-  --size: 100px;
   --align-items: center;
   --justify-content: center;
   --width: 100%;
@@ -20,7 +114,6 @@
   /* Ahora*/
   
   position: var(--position);
-  size: var(--size);
   display: var(--display);
   align-items: var(--align-items);
   justify-content: var(--justify-content);
@@ -45,16 +138,16 @@
 .btn-small {
   --position: relative;
   --display: inline-flex;
-  --size: 20px;
   --align-items: center;
   --justify-content: center;
-  --width: 20%;
+  --width: 24%;
   --padding: 10px 28px;
   --border: none;
   --border-radius: 4px;
   --font-size: 12px;
 }
 
+/* BUTTON ANIMATIONS :)*/
 .btn::before {
   content: '';
   position: absolute;
@@ -64,24 +157,19 @@
   transition: transform 0.38s cubic-bezier(0.76, 0, 0.24, 1);
   z-index: 0;
 }
-
 .btn:not(:disabled):hover::before {
   transform: translateX(0);
 }
-
 .btn:not(:disabled):hover {
   color: #ffffff;
   box-shadow: 0 0 0 1.5px #ffffff;
 }
-
 .btn:not(:disabled):active {
   transform: scale(0.97);
 }
-
 .btn:focus-visible {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
 }
-
 .btn span {
   position: relative;
   z-index: 1;

@@ -1,14 +1,13 @@
 import RegisterForm from "../components/RegisterForm";
-import "../styles/register.css";
 import "../styles/general.css";
 
 import TitleAndDesc from "./TitleAndDesc";
 
 export default function RegisterPage(){
     return (
-        <div className="register-container">
+        <div className="main-container">
             <TitleAndDesc/>
-            <div className="register-card">
+            <div className="basic-card">
                 <h1>New here?</h1>
             
                 {/* Aquí "enchufás" el formulario que ya hicimos */}

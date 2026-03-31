@@ -1,14 +1,13 @@
 import LoginForm from "../components/LoginForm"; // Importás el corazón
-import "../styles/login.css";
 import "../styles/general.css";
 import TitleAndDesc from "./TitleAndDesc";
 
 export default function LoginPage() {
 
   return (
-    <div className="login-container">
+    <div className="main-container">
       <TitleAndDesc/>
-      <div className="login-card">
+      <div className="basic-card">
         <h1>Welcome</h1>
         <p>Start now</p>
         

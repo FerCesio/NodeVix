@@ -1,14 +1,12 @@
 import ProjectsBrowse from "../components/ProjectsBrowse";
 import "../styles/general.css";
-import "../styles/login.css";
 import TitleAndDesc from "./TitleAndDesc";
 
 export default function HomePage() {
-
   return (
-    <div className="login-container">
+    <div className="main-container">
       <TitleAndDesc/>
-      <div className="login-card">
+      <div className="basic-card">
         <h1>Your projects</h1>
         
         <form>
