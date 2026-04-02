@@ -1,6 +1,6 @@
 import LoginForm from "../components/LoginForm"; // Importás el corazón
 import "../styles/general.css";
-import TitleAndDesc from "./TitleAndDesc";
+import TitleAndDesc from "../components/TitleAndDesc";
 
 export default function LoginPage() {
 

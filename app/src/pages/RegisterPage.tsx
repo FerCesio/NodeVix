@@ -1,7 +1,7 @@
 import RegisterForm from "../components/RegisterForm";
 import "../styles/general.css";
 
-import TitleAndDesc from "./TitleAndDesc";
+import TitleAndDesc from "../components/TitleAndDesc";
 
 export default function RegisterPage(){
     return (

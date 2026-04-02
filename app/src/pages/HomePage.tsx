@@ -1,25 +1,37 @@
-import ProjectsBrowse from "../components/ProjectsBrowse";
 import "../styles/general.css";
-import TitleAndDesc from "./TitleAndDesc";
+import { useState } from "react";
+
+import UserConfig from "../components/UserConfig";
+import TitleAndDesc from "../components/TitleAndDesc";
+import ProjectsBrowse from "../components/ProjectsBrowse";
 
 export default function HomePage() {
+  // 'projects' es el valor inicial
+  const [view, setView] = useState('projects');
+
   return (
     <div className="main-container">
-      <TitleAndDesc/>
-      <div className="basic-card">
-        <h1>Your projects</h1>
-        
-        <form>
-          <input name="searched" placeholder="Search..."></input>
-        </form>
-        
-        <ProjectsBrowse/>
-        
-        <button className="btn" onClick={() => window.location.href = "/project"}>
-            <span>Create Project</span>
-        </button>
-        
-      </div>
+        <TitleAndDesc/>
+        <div className="browse-container">
+
+          <div className="browsing_buttons">
+              <ol>
+                <li>
+                  <button onClick={() => setView('projects')} title="Projects" className="btn btn-small">
+                    <span>📁</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setView('user')} title="User" className="btn btn-small">
+                    <span>👤</span>
+                  </button>
+                </li>
+              </ol>
+          </div>
+          <div className="basic-card">
+            {view === 'projects' ? (<><ProjectsBrowse /></>) : (<><UserConfig /> </>)}
+          </div>
+        </div>
     </div>
   );
 }

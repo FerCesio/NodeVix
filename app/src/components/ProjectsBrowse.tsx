@@ -27,13 +27,24 @@ export default function ProjectsBrowse() {
     });
 
     return (
-        <div className="projects-list">
-            {sortedProjects.map((item) => (
-                <ProjectCard 
-                    key={item.id} 
-                    project={item} 
-                />
-            ))}
+        <div>
+            <h1>Your projects</h1>
+            <form>
+                <input name="searched" placeholder="Search..." />
+            </form>
+            
+            <div className="projects-list">
+                {sortedProjects.map((item) => (
+                    <ProjectCard 
+                        key={item.id} 
+                        project={item} 
+                    />
+                ))}
+            </div>
+            
+            <button className="btn">
+                <span>Create Project</span>
+            </button>
         </div>
     );
 }

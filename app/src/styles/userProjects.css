@@ -51,3 +51,66 @@
     font-size: 0.7rem; /* Bien chico como pediste */
     opacity: 0.7;      /* Un poco de transparencia para que no distraiga */
 }
+
+/* Sidebar de botones */
+.browsing_buttons {
+  width: 70px;
+  background-color: #ffffff; /* Coincide con el fondo principal */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 5x;
+  align-self: flex-start; 
+  border-radius: 12px;
+  border: 1px solid #333; /* Borde sutil para resaltar sobre el fondo negro */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra igual a la .basic-card */
+  margin-top: 20px;
+}
+
+.browsing_buttons ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Estilo de los botones */
+.browsing_buttons button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ffffff; /* Gris de .main-description */
+  font-size: 24px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.browsing_buttons button:hover {
+  color: #ffffff;
+  background-color: #333; /* Efecto de hover oscuro */
+  transform: scale(1.05);
+}
+
+/* Estado activo/foco (opcional) */
+.browsing_buttons button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+/* Clase que aplicarías al botón seleccionado */
+.browsing_buttons button.active {
+  background-color: #ffffff; 
+  color: #121212; /* Invertimos colores */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+.browse-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
