@@ -28,7 +28,7 @@ export default function ProjectsBrowse() {
 
     return (
         <div>
-            <h1>Your projects</h1>
+            <h1>My projects</h1>
             <form>
                 <input name="searched" placeholder="Search..." />
             </form>
@@ -41,7 +41,7 @@ export default function ProjectsBrowse() {
                     />
                 ))}
             </div>
-            
+
             <button className="btn">
                 <span>Create Project</span>
             </button>
