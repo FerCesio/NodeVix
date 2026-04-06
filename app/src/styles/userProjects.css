@@ -1,0 +1,116 @@
+.projects-list {
+    /* 1. Definimos el tamaño fijo */
+    height: 300px; /* O usa 70vh para que ocupe el 70% de la pantalla */
+    
+    /* 2. Activamos el scroll vertical */
+    overflow-y: auto; 
+    
+    /* 3. Evitamos el scroll horizontal si las tarjetas se estiran */
+    overflow-x: hidden;
+
+    /* Estilos estéticos que ya tenías */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 15px;
+    margin: 20px;
+    background-color: #f9f9f9; /* Cambié el verde para que no canse la vista */
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.project-card { 
+    display: flex;
+    justify-content: space-between; /* Empuja el contenido a los extremos */
+    align-items: center; /* Centra verticalmente el texto y el botón */
+    
+    border: 1px solid #ccc; 
+    padding: 1rem; /* Padding interno para que respire */
+    background-color: #ffffff;
+    border-radius: 8px;
+    color: white; /* Para que el texto sea legible sobre el rojo */
+}
+
+/* Contenedor opcional para el texto si quieres separar título de descripción */
+.project-info {
+    display: flex;
+    flex-direction: column;
+    padding: 10px; /* Un poco más de respiro */
+    height: 100%;  /* Importante para que el "empuje" funcione */
+    align-items: flex-start; /* Alinea el texto a la izquierda */
+}
+
+.project-info h3{
+    color: #121212;
+    margin: 0 0 8px 0; /* Espaciado simple entre título y desc */
+}
+
+.project-id {
+    margin-top: auto; /* ¡MAGIA! Empuja este elemento al fondo del contenedor flex */
+    color: #121212;
+    font-size: 0.7rem; /* Bien chico como pediste */
+    opacity: 0.7;      /* Un poco de transparencia para que no distraiga */
+}
+
+/* Sidebar de botones */
+.browsing_buttons {
+  width: 70px;
+  background-color: #ffffff; /* Coincide con el fondo principal */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 5x;
+  align-self: flex-start; 
+  border-radius: 12px;
+  border: 1px solid #333; /* Borde sutil para resaltar sobre el fondo negro */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra igual a la .basic-card */
+  margin-top: 20px;
+}
+
+.browsing_buttons ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Estilo de los botones */
+.browsing_buttons button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ffffff; /* Gris de .main-description */
+  font-size: 24px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.browsing_buttons button:hover {
+  color: #ffffff;
+  background-color: #333; /* Efecto de hover oscuro */
+  transform: scale(1.05);
+}
+
+/* Estado activo/foco (opcional) */
+.browsing_buttons button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+/* Clase que aplicarías al botón seleccionado */
+.browsing_buttons button.active {
+  background-color: #ffffff; 
+  color: #121212; /* Invertimos colores */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+.browse-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}

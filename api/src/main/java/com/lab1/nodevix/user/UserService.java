@@ -46,6 +46,11 @@ public class UserService {
     }
 
     public LoginResponse login(UserLogin ul) {
+        /**
+         * 1. Hash the la password
+         * 2. Generamos un JWT (token de auth) con la info de usuario
+         * 3. Devolvemos el token al front para que almacene en su local storage
+         */
 
         String identifier = ul.getIdentifier();
         User user = userRepo.findByNameOrEmail(identifier, identifier)

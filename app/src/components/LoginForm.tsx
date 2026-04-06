@@ -25,6 +25,7 @@ export default function LoginForm() {
       );
 
       console.log(res.data);
+      window.location.href ="/home";
       alert("Usuario inicio sesion");
       
     } catch (err:any) {
@@ -57,7 +58,7 @@ export default function LoginForm() {
         onChange={handleChange}
       />
 
-      <button type="submit" className="btn-register">
+      <button type="submit" className="btn">
         <span>Login</span>
       </button>
 
