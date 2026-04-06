@@ -1,43 +1,86 @@
 import { useState } from "react";
 import { api } from "../services/api";
-import type { ProjectRequest, ProjectResponse } from "../types/project";
-
+import type { UpdateRequest, UpdateResponse } from "../types/user";
 import "../styles/userProjects.css";
 import "../styles/general.css";
 
-// WIP --> NO ES UNA VERSION FINAL PERO VA POR ACA LA COSA
-
-/*
-    Aqui tenemos la modificacion media y baja del usuario
-    1. Cambios en nombre y contraseña -> media
-    2. Poder eliminar el usuario y borrar todos los proyectos
-*/
 export default function UserConfig() {
+  const [form, setForm] = useState<UpdateRequest>({
+    userName: "",
+    password: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const id = localStorage.getItem("userId"); // PROVISIORIO (CAMBIAR AL IMPLEMENTAR JWT)
+    console.log("ID del usuario: ", id)
+
+    
+
+    if (!id) {
+      alert("No se encontró el usuario. Iniciá sesión nuevamente.");
+      return;
+    }
+
+    const payload: Partial<UpdateRequest> = {};
+    if (form.userName.trim()) payload.userName = form.userName;
+    if (form.password.trim()) payload.password = form.password;
+
+    if (Object.keys(payload).length === 0) {
+      alert("Completá al menos un campo para actualizar.");
+      return;
+    }
+
+    console.log("Payload mandado: ", payload)
+
+    try {
+      const res = await api.put<UpdateResponse>(`/auth/${id}`, payload);
+      console.log(res.data);
+      alert("Usuario actualizado correctamente.");
+    } catch (err: any) {
+      if (err.response?.data?.message) {
+        alert(err.response.data.message);
+      } else {
+        alert("Error de conexión con el servidor.");
+      }
+      console.error(err);
+    }
+  };
+
   return (
     <div className="user-config-view">
       <h1>User Config</h1>
       <p>Actualiza tu información de acceso</p>
-      
-      <form style={{ textAlign: 'left' }}>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#666' }}>
+
+      <form onSubmit={handleSubmit} style={{ textAlign: "left" }}>
+        <div style={{ marginBottom: "15px" }}>
+          <label style={{ fontSize: "14px", fontWeight: "bold", color: "#666" }}>
             Username
           </label>
-          <input 
-            type="text" 
-            name="username" 
-            placeholder="New user name..." 
+          <input
+            type="text"
+            name="userName"
+            placeholder="New user name..."
+            value={form.userName}
+            onChange={handleChange}
           />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#666' }}>
+        <div style={{ marginBottom: "20px" }}>
+          <label style={{ fontSize: "14px", fontWeight: "bold", color: "#666" }}>
             Password
           </label>
-          <input 
-            type="password" 
-            name="password" 
-            placeholder="New password..." 
+          <input
+            type="password"
+            name="password"
+            placeholder="New password..."
+            value={form.password}
+            onChange={handleChange}
           />
         </div>
 

@@ -24,3 +24,14 @@ export type LoginResponse = {
   id: number;
   email: string;
 };
+
+export type UpdateRequest = {
+  userName: string
+  password: string
+};
+
+export type UpdateResponse = {
+  id: number
+  userName: string
+  password: string
+};

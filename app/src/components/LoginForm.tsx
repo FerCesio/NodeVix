@@ -23,10 +23,12 @@ export default function LoginForm() {
         "/auth/login",
         form
       );
+      localStorage.setItem("userId", String(res.data.id));
+
 
       console.log(res.data);
-      window.location.href ="/home";
       alert("Usuario inicio sesion");
+      window.location.href ="/home";
       
     } catch (err:any) {
 

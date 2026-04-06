@@ -41,8 +41,9 @@
   padding: 40px 30px;        /* Mucho aire por dentro */
   border-radius: 12px;       /* Bordes suavizados modernos */
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra intensa para resaltar sobre negro */
-  width: 400px;
-  height: 800px;
+  width: 90%;
+  max-width: 400px;
+  height: auto; 
   text-align: center;
   transition: transform 0.3s ease; /* Pequeño efecto al cargar */
 }
