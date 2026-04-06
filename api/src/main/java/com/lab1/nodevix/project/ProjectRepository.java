@@ -8,9 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-    Optional<Project> findByDate(String email);
-
-    Optional<Project> findByName(String name);
-
-    Optional<List<Project>> findByUser(String user_name);
+    
 }

@@ -1,9 +1,8 @@
 package com.lab1.nodevix.project;
 
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.lab1.nodevix.project.dtos.*;
+import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -13,5 +12,20 @@ public class ProjectController {
 
     public ProjectController(ProjectService projectService) {
         this.projectService = projectService;
+    }
+
+    @PostMapping("/home")
+    public CreateResponse createProject(@RequestBody CreateProject cp){
+        return projectService.create(cp);
+    }
+
+    @PutMapping("/{id}")
+    public UpdateResponse updateProject(@RequestBody UpdateProject up, @PathVariable Long id){
+        return projectService.update(id, up);
+    }
+
+    @DeleteMapping("/{id}")
+    public DeleteResponse delete(@PathVariable Long id) {
+        return projectService.delete(id);
     }
 }

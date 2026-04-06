@@ -1,14 +1,11 @@
 package com.lab1.nodevix.project;
 
-import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
+import com.lab1.nodevix.project.dtos.*;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-
-import com.lab1.nodevix.project.dtos.CreateProject;
-import com.lab1.nodevix.project.dtos.ProjectResponse;
-import com.lab1.nodevix.user.User;
-import com.lab1.nodevix.user.dtos.RegisterResponse;
-import com.lab1.nodevix.user.dtos.UserRegister;
 
 @Service
 public class ProjectService {
@@ -18,24 +15,46 @@ public class ProjectService {
         this.projectRepo = projectRepo;
     }
 
-    /**
-     * Metodo para guardar un projecto de un user en la db
-     * 
-     * @param ur
-     * @param cp
-     * @return
-     */
-    public ProjectResponse save(User ur, CreateProject cp) {
+    public CreateResponse create(CreateProject cp) {
 
-        return null;
+        Project project = new  Project(cp.getProjectName(),cp.getDescription());
+        Project saved = projectRepo.save(project);
+
+        CreateResponse pr = new CreateResponse(saved.getId(),saved.getName(),saved.getDescription());
+
+        if (saved.getCreatedOn() != null) {
+            String parsedCreate = saved.getCreatedOn().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            pr.setCreatedOn(parsedCreate);
+        }
+        if (saved.getModifiedOn() != null) {
+            String parsedModified = saved.getModifiedOn().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            pr.setUpdatedOn(parsedModified);
+        }
+
+        return pr;
     }
 
-    /**
-     * 
-     * @return
-     */
-    public ProjectResponse create() {
-        return null;
+    @Transactional
+    public UpdateResponse update(Long id, UpdateProject up){
+        Project project = projectRepo.findById(id).orElseThrow(() -> new RuntimeException("No existe el proyecto"));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+        project.setName(up.getName());
+        project.setDescription(up.getDescription());
+        if (up.getContent() != null) project.setContent(up.getContent());
+
+        Project saved = projectRepo.saveAndFlush(project);
+
+        return new UpdateResponse(saved.getId(),saved.getName(),saved.getDescription(),saved.getContent(),saved.getModifiedOn().format(formatter));
+    }
+
+    public DeleteResponse delete(Long id){
+        if (!projectRepo.existsById(id)) {
+            throw new EntityNotFoundException("No existe el proyecto con id: " + id);
+        }
+        projectRepo.deleteById(id);
+        return new DeleteResponse("Proyecto con id: " + id + " eliminado");
     }
 
 }

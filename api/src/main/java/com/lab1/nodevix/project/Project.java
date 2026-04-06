@@ -2,11 +2,11 @@ package com.lab1.nodevix.project;
 
 
 import jakarta.persistence.*;
-import org.springframework.boot.jackson.autoconfigure.JacksonProperties;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import java.security.Timestamp;
 import java.time.LocalDateTime;
 
 @Table(name = "project")
@@ -27,7 +27,10 @@ public class Project {
     @LastModifiedDate
     private LocalDateTime modifiedOn;
 
-    private String content; // cambiar por JSON despues
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private ProjectContent content;
+
     private String description;
 
 
@@ -46,6 +49,10 @@ public class Project {
         this.description = description;
     }
 
+    public void setContent(ProjectContent content) {
+        this.content = content;
+    }
+
     public String getName() {
         return name;
     }
@@ -59,4 +66,6 @@ public class Project {
     public LocalDateTime getCreatedOn() { return createdOn; }
 
     public LocalDateTime getModifiedOn() { return modifiedOn; }
+
+    public ProjectContent getContent() { return content; }
 }

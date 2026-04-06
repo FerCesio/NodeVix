@@ -1,13 +1,13 @@
 package com.lab1.nodevix.project.dtos;
 
-public class ProjectResponse {
+public class CreateResponse {
     private Long id;
     private String projectName;
     private String description;
     private String createdOn;
     private String updatedOn;
 
-    public ProjectResponse(Long id, String projectName, String description) {
+    public CreateResponse(Long id, String projectName, String description) {
         this.id = id;
         this.projectName = projectName;
         this.description = description;
