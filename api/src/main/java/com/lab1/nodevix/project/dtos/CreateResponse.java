@@ -4,6 +4,8 @@ public class ProjectResponse {
     private Long id;
     private String projectName;
     private String description;
+    private String createdOn;
+    private String updatedOn;
 
     public ProjectResponse(Long id, String projectName, String description) {
         this.id = id;
@@ -21,5 +23,21 @@ public class ProjectResponse {
 
     public String getDescription(){
         return description;
+    }
+
+    public String getCreatedOn(){
+        return createdOn;
+    }
+
+    public String getUpdatedOn(){
+        return updatedOn;
+    }
+
+    public void setCreatedOn(String createdOn){
+        this.createdOn = createdOn;
+    }
+
+    public void setUpdatedOn(String updatedOn){
+        this.updatedOn = updatedOn;
     }
 }
