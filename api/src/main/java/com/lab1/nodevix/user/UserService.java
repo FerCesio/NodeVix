@@ -1,9 +1,8 @@
 package com.lab1.nodevix.user;
 
-import com.lab1.nodevix.user.dtos.LoginResponse;
-import com.lab1.nodevix.user.dtos.RegisterResponse;
-import com.lab1.nodevix.user.dtos.UserLogin;
-import com.lab1.nodevix.user.dtos.UserRegister;
+import com.lab1.nodevix.user.dtos.*;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -62,6 +61,28 @@ public class UserService {
         }
 
         return new LoginResponse(user.getId(), user.getEmail());
+    }
+
+    @Transactional
+    public UpdateResponse update(Long id, UpdateRequest request) {
+        System.out.println("ID recibido: " + id);
+        System.out.println("userName recibido: " + request.getUserName());
+        System.out.println("password recibida: " + request.getPassword());
+
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No existe el usuario con id: " + id));
+
+        if (request.getUserName() != null && !request.getUserName().isBlank()) {
+            user.setName(request.getUserName());
+        }
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(request.getPassword());
+        }
+
+        User saved = userRepo.saveAndFlush(user);
+
+        return new UpdateResponse(saved.getId(), saved.getName());
     }
 
 }

@@ -1,9 +1,6 @@
 package com.lab1.nodevix.user;
 
-import com.lab1.nodevix.user.dtos.LoginResponse;
-import com.lab1.nodevix.user.dtos.RegisterResponse;
-import com.lab1.nodevix.user.dtos.UserLogin;
-import com.lab1.nodevix.user.dtos.UserRegister;
+import com.lab1.nodevix.user.dtos.*;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -24,6 +21,11 @@ public class UserController {
     @PostMapping("/login")
     public LoginResponse loginUser(@RequestBody UserLogin ul) {
         return userService.login(ul);
+    }
+
+    @PutMapping("/{id}")
+    public UpdateResponse update(@PathVariable Long id, @RequestBody UpdateRequest upd) {
+        return userService.update(id, upd);
     }
 
 }

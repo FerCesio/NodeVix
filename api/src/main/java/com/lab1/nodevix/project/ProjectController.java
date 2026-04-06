@@ -4,6 +4,8 @@ package com.lab1.nodevix.project;
 import com.lab1.nodevix.project.dtos.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/manage")
@@ -27,5 +29,10 @@ public class ProjectController {
     @DeleteMapping("/{id}")
     public DeleteResponse delete(@PathVariable Long id) {
         return projectService.delete(id);
+    }
+
+    @GetMapping()
+    public List<ReadListResponse> readProjects(){
+        return projectService.readList();
     }
 }

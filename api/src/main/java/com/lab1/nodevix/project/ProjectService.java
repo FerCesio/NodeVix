@@ -1,6 +1,8 @@
 package com.lab1.nodevix.project;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.lab1.nodevix.project.dtos.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -55,6 +57,20 @@ public class ProjectService {
         }
         projectRepo.deleteById(id);
         return new DeleteResponse("Proyecto con id: " + id + " eliminado");
+    }
+
+    public List<ReadListResponse> readList(){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+        return projectRepo.findAll().stream()
+                .map(p -> new ReadListResponse(
+                        p.getId(),
+                        p.getName(),
+                        p.getDescription(),
+                        p.getModifiedOn() != null ? p.getModifiedOn().format(formatter) : "S/F",
+                        p.getCreatedOn() != null ? p.getCreatedOn().format(formatter) : "S/F"
+                ))
+                .collect(Collectors.toList());
     }
 
 }
