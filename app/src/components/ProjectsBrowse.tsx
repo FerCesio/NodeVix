@@ -49,7 +49,7 @@ export default function ProjectsBrowse() {
                 ))}
             </div>
 
-            <button className="btn">
+            <button className="btn" onClick={() => window.location.href = "/project"}>
                 <span>Create Project</span>
             </button>
         </div>
