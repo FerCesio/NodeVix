@@ -22,6 +22,7 @@
   left: 5%
 }
 .main-title {
+  font-family: 'Fraunces', serif;
   font-size: 48px; /* Título grande */
   font-weight: 800;
   line-height: 1.2;

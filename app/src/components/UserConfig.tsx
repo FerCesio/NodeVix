@@ -16,17 +16,7 @@ export default function UserConfig() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const id = localStorage.getItem("userId"); // PROVISIORIO (CAMBIAR AL IMPLEMENTAR JWT)
-    console.log("ID del usuario: ", id)
-
     
-
-    if (!id) {
-      alert("No se encontró el usuario. Iniciá sesión nuevamente.");
-      return;
-    }
-
     const payload: Partial<UpdateRequest> = {};
     if (form.userName.trim()) payload.userName = form.userName;
     if (form.password.trim()) payload.password = form.password;
@@ -39,7 +29,7 @@ export default function UserConfig() {
     console.log("Payload mandado: ", payload)
 
     try {
-      const res = await api.put<UpdateResponse>(`/auth/${id}`, payload);
+      const res = await api.put<UpdateResponse>("/users", payload);
       console.log(res.data);
       alert("Usuario actualizado correctamente.");
     } catch (err: any) {

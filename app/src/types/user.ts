@@ -23,6 +23,7 @@ export type LoginRequest = {
 export type LoginResponse = {
   id: number;
   email: string;
+  token: string;
 };
 
 export type UpdateRequest = {

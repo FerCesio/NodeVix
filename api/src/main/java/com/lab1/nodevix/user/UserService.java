@@ -1,5 +1,6 @@
 package com.lab1.nodevix.user;
 
+import com.lab1.nodevix.security.JWTService;
 import com.lab1.nodevix.user.dtos.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -10,9 +11,11 @@ import java.time.LocalDate;
 @Service
 public class UserService {
     private final UserRepository userRepo;
+    private final JWTService jwtService;
 
-    public UserService(UserRepository userRepo) {
+    public UserService(UserRepository userRepo, JWTService jwtService) {
         this.userRepo = userRepo;
+        this.jwtService = jwtService;
     }
 
     public RegisterResponse register(UserRegister ur) {
@@ -60,7 +63,8 @@ public class UserService {
             throw new RuntimeException("Contraseña incorrecta");
         }
 
-        return new LoginResponse(user.getId(), user.getEmail());
+        String token = jwtService.generateToken(user.getId(), user.getEmail());
+        return new LoginResponse(user.getId(), user.getEmail(), token);
     }
 
     @Transactional
