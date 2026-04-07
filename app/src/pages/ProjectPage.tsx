@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../services/api";
 import ProjectCreationForm from "../components/ProjectCreationForm";
+import type { UpdateProject, ProjectContent } from "../types/project";
 
 export default function ProjectPage() { 
         
@@ -8,6 +9,7 @@ export default function ProjectPage() {
     const [view, setView] = useState('none');
     
     function checkAuth() {
+        
         // Aca revisamos si el usuario esta registrado. 
         // si NO esta registrado -> enviamos el formulario para completar y cortamos la funcion
         // es re feo.. pero funk
@@ -20,10 +22,16 @@ export default function ProjectPage() {
         // A. crear el proyecto en la DB        (si no existe)
         // B. actualizar el proyecto en la DB   (si existe)
         
-                
+        // const content = ProjectContent()
+        // const [project, setProject] =  useState<UpdateProject>({
+        //     name: "",
+        //     description: "",
+        //     content: 
+        // });
         
         
-
+        
+        
     }
     
     
