@@ -1,17 +1,25 @@
 package com.lab1.nodevix.user;
 
 import com.lab1.nodevix.user.dtos.*;
+
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
     }
+
+    // @PostMapping("/register")
+    // public ResponseEntity<RegisterResponse> registerUser(@RequestBody
+    // UserRegister ur) throws UserNameAlreadyExist {
+    // RegisterResponse response = userService.register(ur);
+    // return ResponseEntity.ok(response);
+    // }
 
     @PostMapping("/register")
     public RegisterResponse registerUser(@RequestBody UserRegister ur) {
