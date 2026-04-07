@@ -41,7 +41,7 @@ export default function LoginForm() {
       }
 
       console.error(err);
-      
+
     }
   };
 
@@ -65,7 +65,6 @@ export default function LoginForm() {
       <button type="submit" className="btn">
         <span>Login</span>
       </button>
-
 
     </form>
   );
