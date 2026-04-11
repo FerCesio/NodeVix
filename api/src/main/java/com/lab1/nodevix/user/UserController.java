@@ -2,6 +2,8 @@ package com.lab1.nodevix.user;
 
 import com.lab1.nodevix.security.JWTService;
 import com.lab1.nodevix.user.dtos.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -22,6 +24,21 @@ public class UserController {
         String token = authHeader.substring(7);
         Long id = jwtService.extractUserId(token);
         return userService.update(id, upd);
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyAccount(@RequestHeader("Authorization") String authHeader) {
+        // 1. Validamos que venga el header
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String token = authHeader.substring(7);
+        Long id = jwtService.extractUserId(token);
+
+        userService.delete(id);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

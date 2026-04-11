@@ -31,6 +31,7 @@ export default function HomePage() {
           <div className="basic-card">
             {view === 'projects' ? (<><ProjectsBrowse /></>) : (<><UserConfig /> </>)}
           </div>
+          
         </div>
     </div>
   );

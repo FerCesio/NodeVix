@@ -11,7 +11,7 @@ export default function LoginPage() {
         <h1>Welcome</h1>
         <p>Start now</p>
         
-        {/* Aquí "enchufás" el formulario que ya hicimos */}
+      
         <LoginForm /> 
 
         <button className="btn" onClick={() => window.location.href = "/project"}>

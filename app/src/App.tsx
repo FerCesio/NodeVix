@@ -16,13 +16,13 @@ function App() {
       <Routes>
           
         {/* 0. Ruta para el Home (usuario registrado) */}
-        <Route path="/home" element={<HomePage />} />
-
-        {/* 1. Ruta para el Login */}
         <Route element={<ProtectedRoute/>}>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/home" element={<HomePage />} />
         </Route>
 
+        {/* 1. Ruta para el Login */}
+        <Route path="/login" element={<LoginPage />} />
+        
         {/* 2. Ruta para el Registro */}
         <Route path="/register" element={<RegisterPage />} />
 

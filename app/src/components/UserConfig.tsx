@@ -42,10 +42,34 @@ export default function UserConfig() {
     }
   };
 
+  // --- BORRAR ---
+  const handleDelete = async () => {
+    const confirmacion = window.confirm(
+      "ARE YOU SURE? This action is irreversible and will delete all your projects and data."
+    );
+
+    if (!confirmacion) return;
+
+    try {
+      
+      await api.delete("/users/me"); 
+      
+      alert("Account deleted.");
+      
+      // Limpiamos todo y afuera
+      localStorage.removeItem("token");
+      
+      window.location.href = "/login";
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "No se pudo eliminar la cuenta.";
+      alert(msg);
+    }
+  };
+
   return (
     <div className="user-config-view">
       <h1>User Config</h1>
-      <p>Actualiza tu información de acceso</p>
+      <p>Update your access information</p>
 
       <form onSubmit={handleSubmit} style={{ textAlign: "left" }}>
         <div style={{ marginBottom: "15px" }}>
@@ -78,6 +102,11 @@ export default function UserConfig() {
           <span>Save Changes</span>
         </button>
       </form>
+      <button className="btn-danger" onClick={handleDelete}>
+        <span>
+          Delete Account
+        </span>
+      </button>
     </div>
   );
 }

@@ -52,6 +52,9 @@ export default function ProjectsBrowse() {
             <button className="btn" onClick={() => window.location.href = "/project"}>
                 <span>Create Project</span>
             </button>
+            <button className="btn" onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("userId"); window.location.href = "/login";}}>
+                <span>Log out</span>
+            </button>
         </div>
     );
 }

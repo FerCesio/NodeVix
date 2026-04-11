@@ -69,9 +69,6 @@ public class UserService {
 
     @Transactional
     public UpdateResponse update(Long id, UpdateRequest request) {
-        System.out.println("ID recibido: " + id);
-        System.out.println("userName recibido: " + request.getUserName());
-        System.out.println("password recibida: " + request.getPassword());
 
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("No existe el usuario con id: " + id));
@@ -87,6 +84,14 @@ public class UserService {
         User saved = userRepo.saveAndFlush(user);
 
         return new UpdateResponse(saved.getId(), saved.getName());
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        if (!userRepo.existsById(id)) {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+        userRepo.deleteById(id);
     }
 
 }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&display=swap');
 
 /* MAIN STUFF */
@@ -175,4 +175,38 @@
 .btn span {
   position: relative;
   z-index: 1;
+}
+
+.btn-danger {
+  --width: 100%;
+  --padding: 15px 32px;
+  --border-radius: 6px;
+  --font-size: 14px;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--width);
+  padding: var(--padding);
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: var(--font-size);
+
+  font-family: 'Fraunces', serif;
+  background: #c0392b;
+  color: #ffffff;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  outline: none;
+}
+
+.btn-danger:hover {
+  background: #a93226;
+}
+
+.btn-danger:active {
+  transform: scale(0.97);
 }
