@@ -1,15 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import "../styles/userProjects.css";
 import type { ReadListResponse } from "../types/project";
 
 export default function ProjectsBrowse() {
-    // Estos datos ahora simulan lo que te devolvería el backend real
-    const projects: ReadListResponse[] = [
-        { id: 10, name: "Alpha", description: "Old project", modifiedOn: "01/02/2026 15:30:00", createdOn: "01/01/2026 10:00:00" },
-        { id: 25, name: "Gamma", description: "New project", modifiedOn: "15/03/2026 18:20:10", createdOn: "10/03/2026 09:00:00" },
-        { id: 15, name: "Beta", description: "Mid project", modifiedOn: "10/02/2026 12:00:00", createdOn: "05/02/2026 11:45:00" }
-    ];
+ 
+    const [projects, setProjects] = useState<ReadListResponse[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    
+    const fetchProjects = async () => {
+        try {
+            setLoading(true);
+            // El interceptor ya manda el token, el back sabe quién es el usuario
+            
+            const response = await api.get<ReadListResponse[]>("/manage"); 
+            console.log("Respuesta:", response.data);
+            setProjects(response.data);
+
+               
+        } catch (error) {
+            console.error("Error cargando proyectos:", error);
+            alert("No se pudieron cargar los proyectos");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 4. Se ejecuta una sola vez al montar el componente
+    useEffect(() => {
+        fetchProjects();
+    }, []);
     
     // Ordenamos por fecha de modificación (más recientes primero)
     const sortedProjects = [...projects].sort((a, b) => {
@@ -33,6 +54,8 @@ export default function ProjectsBrowse() {
         return dateB - dateA;
     });
 
+    if (loading) return <div className="loader">Cargando proyectos...</div>;
+
     return (
         <div className="projects-container">
             <h1>My projects</h1>
@@ -41,12 +64,13 @@ export default function ProjectsBrowse() {
             </form>
             
             <div className="projects-list">
-                {sortedProjects.map((item) => (
-                    <ProjectCard 
-                        key={item.id} 
-                        project={item} 
-                    />
-                ))}
+                {sortedProjects.length > 0 ? (
+                    sortedProjects.map((item) => (
+                        <ProjectCard key={item.id} project={item} />
+                    ))
+                ) : (
+                    <p>You don't have any projects yet</p>
+                )}
             </div>
 
             <button className="btn" onClick={() => window.location.href = "/project"}>
@@ -56,13 +80,16 @@ export default function ProjectsBrowse() {
                 <span>Log out</span>
             </button>
         </div>
+
     );
+
+
+    
 }
 
 function ProjectCard({ project }: { project: ReadListResponse }) {
-    // Mostramos solo Fecha y Hora sin los segundos para que quede más prolijo
-    // "dd/MM/yyyy HH:mm"
-    const displayDate = project.modifiedOn.substring(0, 16);
+    
+    const displayDate = project.modifiedOn ? project.modifiedOn.substring(0, 16) : "Sin fecha";
 
     return (
         <div className="project-card">
@@ -80,3 +107,5 @@ function ProjectCard({ project }: { project: ReadListResponse }) {
         </div>
     );
 }
+
+

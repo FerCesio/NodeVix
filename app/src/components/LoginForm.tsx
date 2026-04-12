@@ -25,7 +25,7 @@ export default function LoginForm() {
       );
       
 
-      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("token", res.data.token); // TOKEN      
 
 
       console.log(res.data) ;
@@ -41,7 +41,7 @@ export default function LoginForm() {
       }
 
       console.error(err);
-
+      
     }
   };
 
@@ -65,6 +65,7 @@ export default function LoginForm() {
       <button type="submit" className="btn">
         <span>Login</span>
       </button>
+
 
     </form>
   );

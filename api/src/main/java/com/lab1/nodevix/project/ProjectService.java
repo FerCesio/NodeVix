@@ -4,7 +4,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.lab1.nodevix.has.Has;
+import com.lab1.nodevix.has.HasRepository;
 import com.lab1.nodevix.project.dtos.*;
+import com.lab1.nodevix.user.User;
+import com.lab1.nodevix.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -12,15 +16,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProjectService {
     private final ProjectRepository projectRepo;
+    private final HasRepository hasRepo;
+    private final UserRepository userRepo;
 
-    public ProjectService(ProjectRepository projectRepo) {
+    public ProjectService(ProjectRepository projectRepo, HasRepository hasRepo, UserRepository userRepo) {
         this.projectRepo = projectRepo;
+        this.hasRepo = hasRepo;
+        this.userRepo = userRepo;
     }
 
-    public CreateResponse create(CreateProject cp) {
+    @Transactional
+    public CreateResponse create(CreateProject cp, Long userID) {
+        User user = userRepo.findById(userID).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
-        Project project = new  Project(cp.getProjectName(),cp.getDescription());
+        Project project = new  Project(cp.getProjectName());
         Project saved = projectRepo.save(project);
+        hasRepo.save(new Has(user, saved));
 
         CreateResponse pr = new CreateResponse(saved.getId(),saved.getName(),saved.getDescription());
 
@@ -37,8 +48,10 @@ public class ProjectService {
     }
 
     @Transactional
-    public UpdateResponse update(Long id, UpdateProject up){
-        Project project = projectRepo.findById(id).orElseThrow(() -> new RuntimeException("No existe el proyecto"));
+    public UpdateResponse update(Long projectID, Long userID, UpdateProject up){
+        Project project = projectRepo.findById(projectID).orElseThrow(() -> new RuntimeException("No existe el proyecto"));
+
+        if (!hasRepo.existsByProjectIdAndUserId(projectID, userID)) {throw new RuntimeException("No existe el proyecto");}
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
@@ -51,18 +64,25 @@ public class ProjectService {
         return new UpdateResponse(saved.getId(),saved.getName(),saved.getDescription(),saved.getContent(),saved.getModifiedOn().format(formatter));
     }
 
-    public DeleteResponse delete(Long id){
-        if (!projectRepo.existsById(id)) {
-            throw new EntityNotFoundException("No existe el proyecto con id: " + id);
+    public DeleteResponse delete(Long projectID, Long userID){
+        if (!projectRepo.existsById(projectID)) {
+            throw new EntityNotFoundException("No existe el proyecto con id: " + projectID);
         }
-        projectRepo.deleteById(id);
-        return new DeleteResponse("Proyecto con id: " + id + " eliminado");
+
+        if (!hasRepo.existsByProjectIdAndUserId(projectID, userID)) { throw new RuntimeException("No tienes permiso");}
+        hasRepo.deleteByProjectId(projectID);
+        projectRepo.deleteById(projectID);
+        return new DeleteResponse("Proyecto con id: " + projectID + " eliminado");
     }
 
-    public List<ReadListResponse> readList(){
+    public List<ReadListResponse> readList(Long userID){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        List<Has> relations = hasRepo.findProjectsByUserId(userID);
+        System.out.println("Relaciones: " + relations.size());
+        System.out.println("Primer proyecto: " + relations.get(0).getProject().getName());
 
-        return projectRepo.findAll().stream()
+        return hasRepo.findProjectsByUserId(userID).stream()
+                .map(has -> has.getProject())
                 .map(p -> new ReadListResponse(
                         p.getId(),
                         p.getName(),
@@ -71,6 +91,7 @@ public class ProjectService {
                         p.getCreatedOn() != null ? p.getCreatedOn().format(formatter) : "S/F"
                 ))
                 .collect(Collectors.toList());
+
     }
 
 }

@@ -16,4 +16,26 @@ public class ReadListResponse {
         this.modifiedOn = modifiedOn;
         this.createdOn = createdOn;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public String getCreatedOn() {
+        return createdOn;
+    }
+
+
 }

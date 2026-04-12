@@ -1,16 +1,19 @@
 package com.lab1.nodevix.project;
 
 
+import com.lab1.nodevix.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Table(name = "project")
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class Project {
 
     @Id
@@ -33,12 +36,10 @@ public class Project {
 
     private String description;
 
-
     public Project() {}
 
-    public Project(String name, String description){
+    public Project(String name){
         this.name = name;
-        this.description = description;
     }
 
     public void setName(String name) {

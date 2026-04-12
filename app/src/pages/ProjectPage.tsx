@@ -1,64 +1,30 @@
-import { useState } from "react";
-import { api } from "../services/api";
 import ProjectCreationForm from "../components/ProjectCreationForm";
-import type { UpdateProject, ProjectContent } from "../types/project";
 
-export default function ProjectPage() { 
-        
-    // 'none' es el valor inicial
-    const [view, setView] = useState('none');
-    
-    function checkAuth() {
-        
-        // Aca revisamos si el usuario esta registrado. 
-        // si NO esta registrado -> enviamos el formulario para completar y cortamos la funcion
-        // es re feo.. pero funk
-        if(!localStorage.getItem("userId")) { setView('form'); return; } 
-        
-        // Si esta registrado guardamos el proyecto usando su user_id
-        
-        // resquest a back -> "guardame este proyecto"
-        // el back despues se ocupa de...
-        // A. crear el proyecto en la DB        (si no existe)
-        // B. actualizar el proyecto en la DB   (si existe)
-        
-        // const content = ProjectContent()
-        // const [project, setProject] =  useState<UpdateProject>({
-        //     name: "",
-        //     description: "",
-        //     content: 
-        // });
-        
-        
-        
-        
-    }
-    
-    
-    // MUESTRA EL FORMULARIO DE LOGIN/REGISTER o UNO VACIO "(<></>)} "
-    return (
-        <div>
-            <div>
-                <input placeholder="MyProject...">
-                    
-                </input>
-                <button onClick={() => checkAuth()}>
-                    <span>Save</span>
-                </button>
-            </div>
-            
-            <div >
-                {view === 'form' ? 
-                (<>
-                    <ProjectCreationForm/>
-                    <button onClick={() => setView('none')}> 
-                        <span> Close </span>
-                    </button>
-                </>) 
-                : 
-                (<></>)} 
-            </div>
-        </div>
-    )
-    
+export default function ProjectPage() {
+  return (
+    <div 
+      style={{ 
+        backgroundColor: "black", 
+        color: "white", 
+        minHeight: "100vh", 
+        margin: 0, 
+        padding: 0 
+      }}
+    >
+      {/* Contenedor para ubicar el formulario arriba a la izquierda 
+        sin estilos CSS externos 
+      */}
+      <div 
+        style={{ 
+          display: "flex", 
+          justifyContent: "flex-start", 
+          alignItems: "flex-start", 
+          padding: "20px" 
+        }}
+      >
+        {/* Insertamos el componente crudo */}
+        <ProjectCreationForm /> 
+      </div>
+    </div>
+  );
 }

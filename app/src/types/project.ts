@@ -1,6 +1,5 @@
 export type CreateProject = {
     projectName: string;
-    description: string;
 };
 
 export type CreateResponse = {

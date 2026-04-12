@@ -20,12 +20,12 @@ function App() {
           <Route path="/home" element={<HomePage />} />
         </Route>
 
-        {/* 1. Ruta para el Login */}
-        <Route path="/login" element={<LoginPage />} />
-        
-        {/* 2. Ruta para el Registro */}
-        <Route path="/register" element={<RegisterPage />} />
 
+        <Route element={<ProtectedRoute redirectIfLogged />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Route>
+        
         {/* 3. Ruta por defecto: si entran a "/", los manda al login */}
         <Route path="/" element={<Navigate to="/login" />} />
 
