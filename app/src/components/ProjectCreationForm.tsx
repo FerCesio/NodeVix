@@ -7,7 +7,6 @@ import type { CreateProject } from "../types/project";
 
 export default function ProjectCreationForm() {
     const [projectName, setName] = useState("");
-    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,8 +25,7 @@ export default function ProjectCreationForm() {
             await api.post("/manage/create", newProject);
             
             alert("¡Proyecto creado con éxito!");
-            setName(""); // Limpiamos el input
-            navigate("/home"); // Redirigimos a la lista de proyectos
+
         } catch (err: any) {
             console.error(err);
             alert(err.response?.data?.message || "Error al crear el proyecto");
@@ -38,6 +36,7 @@ export default function ProjectCreationForm() {
         <header className="navbar-creation">
 
             <form onSubmit={handleSubmit} className="creation-form-nav">
+
                 <input 
                     type="text" 
                     placeholder="Project Name..." 
@@ -45,10 +44,13 @@ export default function ProjectCreationForm() {
                     onChange={(e) => setName(e.target.value)}
                     className="nav-input"
                 />
+                
                 <button type="submit" className="btn-nav">
                     <span>Create</span>
                 </button>
+
             </form>
+
         </header>
     );
 }

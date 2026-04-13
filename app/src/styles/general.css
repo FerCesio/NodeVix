@@ -210,3 +210,47 @@
 .btn-danger:active {
   transform: scale(0.97);
 }
+
+/* Contenedor principal en la esquina */
+.top-left-nav {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 100; /* Para que esté por encima de otros elementos */
+}
+
+/* Alineación de input y botón uno al lado del otro */
+.nav-save-group {
+  display: flex;
+  align-items: center;
+  gap: 0; /* Pegados, o 5px si prefieres aire */
+}
+
+/* Ajuste específico para el input en el nav */
+.nav-input {
+  background-color: #1e1e1e; /* Gris muy oscuro */
+  border: 1px solid #333;
+  border-radius: 6px 0 0 6px; /* Redondeado solo a la izquierda */
+  color: white;
+  padding: 10px 15px;
+  outline: none;
+  font-size: 14px;
+}
+
+/* Ajuste para el botón de save pegado al input */
+.btn-nav-save {
+  background-color: #ffffff;
+  color: #000;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 0 6px 6px 0; /* Redondeado solo a la derecha */
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-family: 'Fraunces', serif; /* Manteniendo tu estilo */
+  text-transform: uppercase;
+}
+
+.btn-nav-save:hover {
+  background-color: #e0e0e0;
+}
