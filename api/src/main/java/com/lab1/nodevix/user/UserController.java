@@ -19,16 +19,14 @@ public class UserController {
     }
 
     @PutMapping
-    public UpdateResponse update(@RequestHeader("Authorization") String authHeader, @RequestBody UpdateRequest upd) {
-
+    public ResponseEntity<UpdateResponse> update(@RequestHeader("Authorization") String authHeader, @RequestBody UpdateRequest upd) {
         String token = authHeader.substring(7);
         Long id = jwtService.extractUserId(token);
-        return userService.update(id, upd);
+        return ResponseEntity.ok(userService.update(id, upd));
     }
 
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteMyAccount(@RequestHeader("Authorization") String authHeader) {
-        // 1. Validamos que venga el header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(401).build();
         }

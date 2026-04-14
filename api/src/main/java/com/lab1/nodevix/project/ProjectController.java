@@ -3,8 +3,10 @@ package com.lab1.nodevix.project;
 
 import com.lab1.nodevix.project.dtos.*;
 import com.lab1.nodevix.security.JWTService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -20,30 +22,30 @@ public class ProjectController {
     }
 
     @PostMapping("/create")
-    public CreateResponse createProject(@RequestBody CreateProject cp, @RequestHeader("Authorization") String authHeader){
+    public ResponseEntity<CreateResponse> createProject(@RequestBody CreateProject cp, @RequestHeader("Authorization") String authHeader){
         String token = authHeader.substring(7);
         Long id = jwtService.extractUserId(token);
-        return projectService.create(cp, id);
+        return ResponseEntity.status(201).body(projectService.create(cp, id));
     }
 
     @PutMapping("/{projectID}")
-    public UpdateResponse updateProject(@PathVariable Long projectID, @RequestBody UpdateProject up, @RequestHeader("Authorization") String authHeader){
+    public ResponseEntity<UpdateResponse> updateProject(@PathVariable Long projectID, @RequestBody UpdateProject up, @RequestHeader("Authorization") String authHeader){
         String token = authHeader.substring(7);
         Long userID = jwtService.extractUserId(token);
-        return projectService.update(projectID, userID, up);
+        return ResponseEntity.ok(projectService.update(projectID, userID, up));
     }
 
     @DeleteMapping("/{projectID}")
-    public DeleteResponse delete(@PathVariable Long projectID, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<DeleteResponse> delete(@PathVariable Long projectID, @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
         Long userID = jwtService.extractUserId(token);
-        return projectService.delete(projectID, userID);
+        return ResponseEntity.ok(projectService.delete(projectID, userID));
     }
 
     @GetMapping()
-    public List<ReadListResponse> readProjects(@RequestHeader("Authorization") String authHeader){
+    public ResponseEntity<List<ReadListResponse>> readProjects(@RequestHeader("Authorization") String authHeader){
         String token = authHeader.substring(7);
         Long id = jwtService.extractUserId(token);
-        return projectService.readList(id);
+        return ResponseEntity.ok(projectService.readList(id));
     }
 }
