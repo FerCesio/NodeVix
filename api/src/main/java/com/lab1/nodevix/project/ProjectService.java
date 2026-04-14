@@ -78,8 +78,6 @@ public class ProjectService {
     public List<ReadListResponse> readList(Long userID){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         List<Has> relations = hasRepo.findProjectsByUserId(userID);
-        System.out.println("Relaciones: " + relations.size());
-        System.out.println("Primer proyecto: " + relations.get(0).getProject().getName());
 
         return hasRepo.findProjectsByUserId(userID).stream()
                 .map(has -> has.getProject())

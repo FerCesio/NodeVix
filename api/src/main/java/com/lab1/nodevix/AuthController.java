@@ -6,7 +6,10 @@ import com.lab1.nodevix.user.dtos.LoginResponse;
 import com.lab1.nodevix.user.dtos.RegisterResponse;
 import com.lab1.nodevix.user.dtos.UserLogin;
 import com.lab1.nodevix.user.dtos.UserRegister;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -19,12 +22,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public RegisterResponse registerUser(@RequestBody UserRegister ur) {
-        return userService.register(ur);
+    public ResponseEntity<RegisterResponse> registerUser(@RequestBody UserRegister ur) {
+        return ResponseEntity.status(201).body(userService.register(ur));
     }
 
     @PostMapping("/login")
-    public LoginResponse loginUser(@RequestBody UserLogin ul) {
-        return userService.login(ul);
+    public ResponseEntity<LoginResponse> loginUser(@RequestBody UserLogin ul) {
+        return ResponseEntity.status(201).body(userService.login(ul));
     }
 }
