@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import "../styles/userProjects.css";
+
 import type { ReadListResponse } from "../types/project";
 
 export default function ProjectsBrowse() {
@@ -86,15 +87,15 @@ export default function ProjectsBrowse() {
     
 }
 
-function ProjectCard({ project }: { project: ReadListResponse }) {
-    
-    const displayDate = project.modifiedOn ? project.modifiedOn.substring(0, 16) : "Sin fecha";
+
+function ProjectCard({ project }: { project: any }) {
+    const displayDate = project.modifiedOn ? project.modifiedOn.substring(0, 10) : "Sin fecha";
 
     return (
-        <div className="project-card">
+        <div className="project-card wide">
             <div className="project-info">
                 <h3>{project.name}</h3>
-                <p>{project.description}</p>
+                <p className="project-desc">{project.description || "No description available."}</p>
                 
                 <div className="project-card-footer">
                     <span className="project-id">ID: {project.id}</span>
@@ -102,7 +103,22 @@ function ProjectCard({ project }: { project: ReadListResponse }) {
                 </div>
             </div>
 
-            <button className="btn btn-small"><span>Enter</span></button>
+            <div className="project-actions">
+                {/* ICONO ELIMINAR (Trash) */}
+                <button className="action-btn delete" title="Eliminar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                </button>
+
+                {/* ICONO EDITAR (Pencil) */}
+                <button className="action-btn edit" title="Editar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                </button>
+
+                {/* ICONO ENTRAR (External Link) */}
+                <button className="action-btn enter" title="Entrar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </button>
+            </div>
         </div>
     );
 }

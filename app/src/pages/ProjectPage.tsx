@@ -4,6 +4,7 @@ import LoginForm from "../components/LoginForm"; // Tu formulario existente
 import RegisterForm from "../components/RegisterForm"; // Tu formulario existente
 import "../styles/general.css";
 import type { CreateProject } from "../types/project";
+import { Toaster } from "react-hot-toast";
 
 export default function ProjectPage() {
     const [projectName, setProjectName] = useState("");
@@ -37,7 +38,7 @@ export default function ProjectPage() {
 
     return (
         <div className="main-container" style={{ flexDirection: 'column', gap: '20px' }}>
-            
+            <Toaster/>
             {/* Sección de Input de Proyecto */}
             <div className="top-left-nav">
              

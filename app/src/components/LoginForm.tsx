@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../services/api";
 import type { LoginRequest, LoginResponse } from "../types/user";
+import toast from "react-hot-toast";
 
 interface Props {
   onSuccess?: () => void;
@@ -36,7 +37,7 @@ export default function LoginForm({ onSuccess }: Props) {
       if(onSuccess) onSuccess();
       
       console.log(res.data) ;
-      alert("Usuario inicio sesion");
+      toast("Usuario inicio sesion");
   
       // Chequeo para evitar el cambio de ruta
       if (window.location.pathname != "/project") {
@@ -46,9 +47,9 @@ export default function LoginForm({ onSuccess }: Props) {
     } catch (err:any) {
 
       if (err.response && err.response.data){
-        alert(err.response.data.message)
+        toast(err.response.data.message)
       } else {
-        alert("Error de conexión con el servidor")
+        toast("Error de conexión con el servidor")
       }
 
       console.error(err);

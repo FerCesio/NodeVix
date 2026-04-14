@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../services/api";
 import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from "../types/user";
+import toast from "react-hot-toast";
 
 
 interface Props {
@@ -61,20 +62,20 @@ export default function RegisterForm({onSuccess}: Props) {
         if (window.location.pathname !== "/project") {
           window.location.href = "/home";
         } else {
-          alert("¡Cuenta creada y sesión iniciada!");
+          toast.success("¡Cuenta creada y sesión iniciada!");
         }
 
       } catch (loginErr: any) {
         console.error("Error en login automático:", loginErr);
-        alert("Cuenta creada, pero hubo un error al iniciar sesión automáticamente. Por favor, logueate manualmente.");
+        toast.success("Cuenta creada, pero hubo un error al iniciar sesión automáticamente. Por favor, logueate manualmente.");
       }
 
     } catch (err: any) {
       // Manejo de errores del Registro
       if (err.response && err.response.data) {
-        alert(err.response.data.message);
+        toast.error(err.response.data.message);
       } else {
-        alert("Error de conexión al intentar registrarse");
+        toast.error("Error de conexión al intentar registrarse");
       }
       console.error(err);
     }

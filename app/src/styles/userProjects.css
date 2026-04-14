@@ -112,9 +112,89 @@
 .browse-container {
   display: flex;
   justify-content: flex-end;
-  flex-direction: row;
   gap: 10px;
   width: 80%;
   height: 80%;
+}
+
+
+
+/* Tarjeta principal más ancha */
+.project-card.wide {
+    width: 100%;
+    max-width: 500px; /* Ajusta este valor según tu layout */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+}
+
+.project-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.project-desc {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 4px 0;
+}
+
+.project-card-footer {
+    display: flex;
+    gap: 15px;
+    font-size: 0.75rem;
+    color: #999;
+}
+
+/* Contenedor de botones a la derecha */
+.project-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 20px;
+}
+
+/* Estilo de los botones circulares con iconos */
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #444;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+/* Colores de énfasis opcionales al pasar el mouse */
+.action-btn.delete:hover {
+    color: #ff4d4f;
+    border-color: #ffa39e;
+    background: #fff1f0;
+}
+
+.action-btn.edit:hover {
+    color: #1890ff;
+    border-color: #91d5ff;
+    background: #e6f7ff;
+}
+
+.action-btn.enter:hover {
+    color: #000;
+    background: #f5f5f5;
+    border-color: #333;
 }
 
