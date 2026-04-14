@@ -30,7 +30,11 @@
     border-radius: 8px;
     color: white; /* Para que el texto sea legible sobre el rojo */
 }
-
+.project-card.wide {
+    width: 100%;
+    box-sizing: border-box; /* Crucial para que el padding no las ensanche de más */
+    /* ... resto de tus estilos ... */
+}
 /* Contenedor opcional para el texto si quieres separar título de descripción */
 .project-info {
     display: flex;
@@ -150,6 +154,38 @@
     gap: 15px;
     font-size: 0.75rem;
     color: #999;
+}
+
+.projects-list-container {
+    max-height: 500px; /* O el alto que tengas */
+    overflow-y: auto;
+    overflow-x: hidden; /* Evita que aparezca el slider horizontal por error */
+    
+    /* LA CLAVE: Añade espacio para el slider */
+    padding-right: 15px; 
+    
+    /* Opcional: añade espacio a la izquierda para que quede centrado */
+    padding-left: 5px; 
+}
+/* Tamaño del scrollbar */
+.projects-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+/* El carril por donde corre */
+.projects-list-container::-webkit-scrollbar-track {
+    background: transparent; 
+    margin: 10px 0; /* Separa un poco el slider de los bordes superior/inferior */
+}
+
+/* La barrita que se mueve */
+.projects-list-container::-webkit-scrollbar-thumb {
+    background: #d1d1d1; 
+    border-radius: 10px;
+}
+
+.projects-list-container::-webkit-scrollbar-thumb:hover {
+    background: #b1b1b1; 
 }
 
 /* Contenedor de botones a la derecha */
