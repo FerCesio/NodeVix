@@ -30,7 +30,11 @@ export default function LoginForm() {
 
       console.log(res.data) ;
       alert("Usuario inicio sesion");
-      window.location.href ="/home";
+  
+      // Chequeo para evitar el cambio de ruta
+      if (window.location.pathname != "/project") {
+        window.location.href ="/home";
+      }
       
     } catch (err:any) {
 
