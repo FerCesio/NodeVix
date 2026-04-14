@@ -21,7 +21,6 @@ export default function ProjectsBrowse() {
                
         } catch (error) {
             console.error("Error cargando proyectos:", error);
-            alert("No se pudieron cargar los proyectos");
         } finally {
             setLoading(false);
         }

@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { api } from "../services/api";
 import LoginForm from "../components/LoginForm"; // Tu formulario existente
 import RegisterForm from "../components/RegisterForm"; // Tu formulario existente
 import "../styles/general.css";
+import type { CreateProject } from "../types/project";
 
 export default function ProjectPage() {
     const [projectName, setProjectName] = useState("");
     const [view, setView] = useState<'none' | 'auth'>('none');
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+    const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
     const handleSaveTrigger = () => {
         // A) Verificamos si existe el token en localStorage
@@ -15,17 +17,22 @@ export default function ProjectPage() {
         if (token) {
             // CASO A: El usuario está logueado
             console.log("Procediendo a guardar proyecto:", projectName);
-            confirmarGuardado(token);
+            const newProject: CreateProject = {
+                projectName: projectName 
+            };
+                    
+            confirmarGuardado(token, newProject);
         } else {
             // CASO B: No hay sesión, abrimos el formulario
             setView('auth');
         }
+        
     };
 
-    const confirmarGuardado = async (token: string) => {
+    const confirmarGuardado = async (token: string, newProject: CreateProject) => {
         // Aquí irá la lógica de tu request con api.post
         // Por ahora lo dejamos como aproximación
-        alert(`Guardando "${projectName}" con sesión activa...`);
+        await api.post("/manage/create", newProject);
     };
 
     return (
@@ -33,13 +40,18 @@ export default function ProjectPage() {
             
             {/* Sección de Input de Proyecto */}
             <div className="top-left-nav">
+             
               <div className="nav-save-group">
+                  <button className="btn btn-small" onClick={() => window.location.assign("/home")}>
+                    <span>Go Home</span>
+                  </button>
+
                   <input 
-                      className="nav-input" 
-                      type="text" 
-                      placeholder="Project Name..." 
-                      value={projectName}
-                      onChange={(e) => setProjectName(e.target.value)}
+                    className="nav-input" 
+                    type="text" 
+                    placeholder="Project Name..." 
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
                   />
                   <button className="btn-nav-save" onClick={handleSaveTrigger}>
                       <span>Save</span>

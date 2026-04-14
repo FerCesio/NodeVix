@@ -111,7 +111,10 @@
 }
 .browse-container {
   display: flex;
+  justify-content: flex-end;
   flex-direction: row;
   gap: 10px;
+  width: 80%;
+  height: 80%;
 }
 

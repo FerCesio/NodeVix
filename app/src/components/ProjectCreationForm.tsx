@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { api } from "../services/api";
-import { useNavigate } from "react-router-dom"; // Para volver a la lista tras crear
 import "../styles/general.css";
 import "../styles/userProjects.css";
 import type { CreateProject } from "../types/project";
@@ -31,7 +30,7 @@ export default function ProjectCreationForm() {
             alert(err.response?.data?.message || "Error al crear el proyecto");
         }
     };
-
+    
     return (
         <header className="navbar-creation">
 
