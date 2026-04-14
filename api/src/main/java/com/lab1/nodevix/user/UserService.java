@@ -4,6 +4,8 @@ import com.lab1.nodevix.security.JWTService;
 import com.lab1.nodevix.user.dtos.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,10 +14,12 @@ import java.time.LocalDate;
 public class UserService {
     private final UserRepository userRepo;
     private final JWTService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepo, JWTService jwtService) {
+    public UserService(UserRepository userRepo, JWTService jwtService, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public RegisterResponse register(UserRegister ur) {
@@ -30,11 +34,13 @@ public class UserService {
 
         LocalDate parsed = LocalDate.parse(ur.getBirthDate());
 
+        String encodedPassword = passwordEncoder.encode(ur.getPassword());
+
         // crear usuario
         User user = new User(
                 ur.getUserName(),
                 ur.getEmail(),
-                ur.getPassword(),
+                encodedPassword,
                 parsed);
 
         User saved = userRepo.save(user);
@@ -48,18 +54,13 @@ public class UserService {
     }
 
     public LoginResponse login(UserLogin ul) {
-        /**
-         * 1. Hash the la password
-         * 2. Generamos un JWT (token de auth) con la info de usuario
-         * 3. Devolvemos el token al front para que almacene en su local storage
-         */
-
         String identifier = ul.getIdentifier();
         User user = userRepo.findByNameOrEmail(identifier, identifier)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // validar password (simple)
-        if (!user.getPassword().equals(ul.getPassword())) {
+        boolean matches = passwordEncoder.matches(ul.getPassword(), user.getPassword());
+
+        if (!matches) {
             throw new RuntimeException("Contraseña incorrecta");
         }
 
