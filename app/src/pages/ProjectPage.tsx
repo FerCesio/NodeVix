@@ -29,6 +29,11 @@ export default function ProjectPage() {
         }
         
     };
+    
+    const handleAuthSuccess = () => {
+        setView('none');
+        handleSaveTrigger();
+    };
 
     return (
         <div className="main-container" style={{ flexDirection: 'column', gap: '20px' }}>
@@ -66,7 +71,7 @@ export default function ProjectPage() {
                     <>
                       <h1>Welcome Back</h1>
                       <p>Login to save your project</p>
-                      <LoginForm />
+                      <LoginForm onSuccess={() => handleAuthSuccess()} />
                       <div className="footer-links" style={{ marginTop: '15px' }}>
                         <span style={{ fontSize: '14px', color: '#666' }}>
                           Don't have an account?{" "}
@@ -83,7 +88,7 @@ export default function ProjectPage() {
                     <>
                       <h1>Create Account</h1>
                       <p>Join us to manage your projects</p>
-                      <RegisterForm />
+                      <RegisterForm onSuccess={() => handleAuthSuccess()}/>
                       <div className="footer-links" style={{ marginTop: '15px' }}>
                         <span style={{ fontSize: '14px', color: '#666' }}>
                           Already have an account?{" "}

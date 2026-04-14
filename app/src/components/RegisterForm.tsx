@@ -21,12 +21,6 @@ export default function RegisterForm({onSuccess}: Props) {
   const maxDate: string = `${year - minAge}-${month}-${day}`;
   const minDate: string = `${year - maxAge}-${month}-${day}`;
 
-  
-  const [loginForm, setLoginForm] = useState<LoginRequest>({
-      identifier: "",
-      password: "",
-    });
-    
     
   const [form, setForm] = useState<RegisterRequest>({
     userName: "",
