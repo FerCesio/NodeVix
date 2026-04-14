@@ -20,19 +20,14 @@ export default function ProjectPage() {
             const newProject: CreateProject = {
                 projectName: projectName 
             };
-                    
-            confirmarGuardado(token, newProject);
-        } else {
+            
+            api.post("/manage/create", newProject);
+            
+          } else {
             // CASO B: No hay sesión, abrimos el formulario
             setView('auth');
         }
         
-    };
-
-    const confirmarGuardado = async (token: string, newProject: CreateProject) => {
-        // Aquí irá la lógica de tu request con api.post
-        // Por ahora lo dejamos como aproximación
-        await api.post("/manage/create", newProject);
     };
 
     return (

@@ -12,7 +12,7 @@ export default function LoginPage() {
         <p>Start now</p>
         
       
-        <LoginForm /> 
+        <LoginForm/> 
 
         <button className="btn" onClick={() => window.location.href = "/project"}>
             <span>Create Project</span>
