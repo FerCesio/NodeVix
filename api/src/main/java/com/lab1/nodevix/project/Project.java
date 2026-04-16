@@ -1,6 +1,5 @@
 package com.lab1.nodevix.project;
 
-
 import com.lab1.nodevix.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -10,6 +9,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Table(name = "project")
 @Entity
@@ -20,8 +21,9 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
+    private String description;
 
     @CreatedDate
     @Column(updatable = false)
@@ -34,11 +36,10 @@ public class Project {
     @Column(columnDefinition = "jsonb")
     private ProjectContent content;
 
-    private String description;
+    public Project() {
+    }
 
-    public Project() {}
-
-    public Project(String name){
+    public Project(String name) {
         this.name = name;
     }
 
@@ -62,11 +63,20 @@ public class Project {
         return description;
     }
 
-    public long getId() { return id; }
+    public long getId() {
+        return id;
+    }
 
-    public LocalDateTime getCreatedOn() { return createdOn; }
+    public LocalDateTime getCreatedOn() {
+        return createdOn;
+    }
 
-    public LocalDateTime getModifiedOn() { return modifiedOn; }
+    public LocalDateTime getModifiedOn() {
+        return modifiedOn;
+    }
 
-    public ProjectContent getContent() { return content; }
+    public ProjectContent getContent() {
+        return content;
+    }
+
 }

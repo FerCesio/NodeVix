@@ -3,7 +3,11 @@ package com.lab1.nodevix.user;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import com.lab1.nodevix.project.Project;
 
 @Table(name = "users")
 @Entity
@@ -23,7 +27,14 @@ public class User {
     private LocalDate birthDate;
     private String avatar_url;
 
-    public User(){}
+    // JPA creará y gestionará la tabla "has" por ti
+    // "has": tabla de relacion --> User has Project
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(name = "has", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "project_id"))
+    private List<Project> projects = new ArrayList<>();
+
+    public User() {
+    }
 
     public User(String username, String email, String password, LocalDate birthDate) {
         this.email = email;
@@ -70,6 +81,10 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public List<Project> getProjects() {
+        return projects;
     }
 
 }

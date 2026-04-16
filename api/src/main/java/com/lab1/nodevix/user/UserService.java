@@ -1,5 +1,7 @@
 package com.lab1.nodevix.user;
 
+import com.lab1.nodevix.project.Project;
+import com.lab1.nodevix.project.ProjectRepository;
 import com.lab1.nodevix.security.JWTService;
 import com.lab1.nodevix.user.dtos.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -9,15 +11,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class UserService {
     private final UserRepository userRepo;
+    private final ProjectRepository projectRepo;
+
     private final JWTService jwtService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepo, JWTService jwtService, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepo, ProjectRepository projectRepo,
+            JWTService jwtService,
+            PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
+        this.projectRepo = projectRepo;
+
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -89,10 +99,21 @@ public class UserService {
 
     @Transactional
     public void delete(Long id) {
-        if (!userRepo.existsById(id)) {
-            throw new RuntimeException("Usuario no encontrado");
-        }
-        userRepo.deleteById(id);
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 1. Obtener los proyectos antes de borrar al usuario
+        List<Project> projects = new ArrayList<>(user.getProjects());
+
+        // 2. Limpiar la relación (borra las filas en la tabla intermedia user_projects)
+        user.getProjects().clear();
+        userRepo.save(user); // Esto sincroniza el borrado de la tabla de unión
+
+        // 3. Borrar los proyectos reales (si así lo deseas)
+        projectRepo.deleteAll(projects);
+
+        // 4. Borrar el usuario
+        userRepo.delete(user);
     }
 
 }

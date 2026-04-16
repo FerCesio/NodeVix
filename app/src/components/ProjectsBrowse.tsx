@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import "../styles/userProjects.css";
 
-import type { ReadListResponse } from "../types/project";
+import type { ReadListResponse, UpdateProject, UpdateResponse } from "../types/project";
 import toast from "react-hot-toast";
 
 export default function ProjectsBrowse() {
@@ -15,7 +15,6 @@ export default function ProjectsBrowse() {
         try {
             setLoading(true);
             // El interceptor ya manda el token, el back sabe quién es el usuario
-            
             const response = await api.get<ReadListResponse[]>("/manage"); 
             console.log("Respuesta:", response.data);
             setProjects(response.data);
@@ -99,13 +98,42 @@ function ProjectCard({ project }: { project: any }) {
     });
     
     const handleSave = async () => {
+        const loadingToast = toast.loading("Actualizando proyecto...");
+
         try {
-            // Aquí iría tu llamada al backend: api.put(`/projects/${project.id}`, editForm)
-            toast.success("Proyecto actualizado");
+            // Definimos el payload respetando el tipo UpdateProject
+            // Si no estás editando el 'content' ahora mismo, mandamos un objeto vacío
+            const payload: UpdateProject = {
+                name: editForm.name,
+                description: editForm.description,
+                content: project.content || {} // Mantenemos el contenido existente
+            };
+
+            const res = await api.put<UpdateResponse>(`/manage/${project.id}`, payload);
+
+            // Éxito
+            toast.success("¡Cambios guardados!", { id: loadingToast });
             setIsEditing(false);
-        } catch (error) {
-            toast.error("Error al actualizar");
+
+            /* IMPORTANTE: 
+            Para que la UI se actualice (el nombre en la card y la fecha),
+            lo ideal es que el componente padre refresque la lista o 
+            que tú actualices un estado local si 'project' viene de un useState.
+            */
+            
+        } catch (err: any) {
+            console.error(err);
+            const msg = err.response?.data?.message || "Error al conectar con el servidor";
+            toast.error(msg, { id: loadingToast });
         }
+    };
+    
+    const handleCancel = () => {
+        setEditForm({
+            name: project.name,
+            description: project.description || ""
+        });
+        setIsEditing(false);
     };
     
     return (
@@ -145,7 +173,7 @@ function ProjectCard({ project }: { project: any }) {
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                         </button>
                         {/* Botón de Cancelar */}
-                        <button className="action-btn cancel" onClick={() => setIsEditing(false)} title="Cancelar">
+                        <button className="action-btn cancel" onClick={() => handleCancel()} title="Cancelar">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                     </>
