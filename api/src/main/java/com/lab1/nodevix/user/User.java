@@ -29,7 +29,7 @@ public class User {
 
     // JPA creará y gestionará la tabla "has" por ti
     // "has": tabla de relacion --> User has Project
-    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @ManyToMany(cascade = CascadeType.ALL) // Incluye PERSIST, MERGE y REMOVE
     @JoinTable(name = "has", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "project_id"))
     private List<Project> projects = new ArrayList<>();
 

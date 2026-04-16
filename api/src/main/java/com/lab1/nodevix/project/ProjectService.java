@@ -66,7 +66,7 @@ public class ProjectService {
         // 2. Verificación de propiedad (Sustituye al hasRepo)
         // Buscamos si el usuario está en la lista de propietarios del proyecto
         // Nota: Esto requiere que en Project.java tengas la lista 'users' o 'owners'
-        if (!projectRepo.isUserOwner(projectID, userID)) {
+        if (!userRepo.hasProject(userID, projectID)) {
             throw new RuntimeException("Acceso denegado");
         }
 
