@@ -4,12 +4,25 @@ import "../styles/userProjects.css";
 
 import type { ReadListResponse, UpdateProject, UpdateResponse } from "../types/project";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 export default function ProjectsBrowse() {
  
     const [projects, setProjects] = useState<ReadListResponse[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Dentro de ProjectsBrowse
+    const deleteProject = async (projectId: number) => {
+        try {
+            await api.delete(`/manage/${projectId}`);
+            // ACTUALIZACIÓN DE ESTADO (Sustituye a removeProjectFromState)
+            setProjects((prev) => prev.filter(p => p.id !== projectId));
+            return true;
+        } catch (error) {
+            console.error("Error al eliminar:", error);
+            return false;
+        }
+    };
     
     const fetchProjects = async () => {
         try {
@@ -66,7 +79,11 @@ export default function ProjectsBrowse() {
             <div className="projects-list">
                 {sortedProjects.length > 0 ? (
                     sortedProjects.map((item) => (
-                        <ProjectCard key={item.id} project={item} />
+                        <ProjectCard 
+                            key={item.id} 
+                            project={item} 
+                            onDelete={deleteProject} // <-- Nueva prop
+                        />
                     ))
                 ) : (
                     <p>You don't have any projects yet</p>
@@ -82,13 +99,15 @@ export default function ProjectsBrowse() {
         </div>
 
     );
-
-
     
 }
 
+interface ProjectCardProps {
+    project: any; // O ReadListResponse si lo tienes importado
+    onDelete: (projectId: number) => Promise<boolean>;
+}
 
-function ProjectCard({ project }: { project: any }) {
+function ProjectCard({ project, onDelete }: ProjectCardProps) {
     const displayDate = project.modifiedOn ? project.modifiedOn.substring(0, 10) : "Sin fecha";
     // Estados para controlar la edición
     const [isEditing, setIsEditing] = useState(false);
@@ -143,6 +162,36 @@ function ProjectCard({ project }: { project: any }) {
         setIsEditing(false);
     };
     
+    const handleDeleteClick = () => {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: `Vas a eliminar el proyecto "${project.name}". Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            background: '#1a1a1a', // Ajusta al color de tu app
+            color: '#fff'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const success = await onDelete(project.id);
+                if (success) {
+                    Swal.fire({
+                        title: '¡Eliminado!',
+                        text: 'El proyecto ha sido borrado.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar el proyecto.', 'error');
+                }
+            }
+        });
+    };
+    
     return (
         <div className="project-card wide">
             <div className="project-info">
@@ -192,8 +241,16 @@ function ProjectCard({ project }: { project: any }) {
                         <button className="action-btn edit" onClick={() => setIsEditing(true)} title="Editar">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                         </button>
-                        <button className="action-btn delete" title="Eliminar">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                        <button 
+                            className="action-btn delete" 
+                            onClick={handleDeleteClick} 
+                            title="Eliminar"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            </svg>
                         </button>
                     </>
                 )}
