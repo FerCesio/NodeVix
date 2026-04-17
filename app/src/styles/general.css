@@ -253,3 +253,44 @@
 .btn-nav-save:hover {
   background-color: #e0e0e0;
 }
+
+.postcard {
+    margin-bottom: 20px;
+    border-left: 4px solid var(--accent-color, #3085d6);
+}
+
+.comments-section {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comments-title {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.comment-item {
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #3085d6;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}

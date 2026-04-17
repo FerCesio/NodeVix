@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
-import LoginPage from "./pages/LoginPage";
+import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import ProjectPage from "./pages/ProjectPage"
-import HomePage from "./pages/HomePage";
-
+import HomePage from "./pages/HomePage"
+import PostsPage from "./pages/PostsPage"
 
 // JWT with spring boot
 // protected paths for front
@@ -15,7 +15,7 @@ function App() {
     <BrowserRouter>
       <Routes>
           
-        {/* 0. Ruta para el Home (usuario registrado) */}
+        {/* Ruta para el Home (usuario registrado) */}
         <Route element={<ProtectedRoute/>}>
           <Route path="/home" element={<HomePage />} />
         </Route>
@@ -26,13 +26,16 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
         </Route>
         
-        {/* 3. Ruta por defecto: si entran a "/", los manda al login */}
+        {/* Ruta por defecto: si entran a "/", los manda al login */}
         <Route path="/" element={<Navigate to="/login" />} />
 
-        {/* 4.Ruta para el proyecto del usuario */}
+        {/* Ruta para el proyecto del usuario */}
         <Route path="/project" element={<ProjectPage />} />
 
-        {/* 5. Ruta para errores (404 Not Found) */}
+        {/* Ruta para el proyecto del usuario */}
+        <Route path="/posts" element={<PostsPage />} />
+
+        {/* Ruta para errores (404 Not Found) */}
         <Route path="*" element={<h1>Página no encontrada - 404</h1>} />
         
       </Routes>

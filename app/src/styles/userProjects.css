@@ -234,3 +234,14 @@
     border-color: #333;
 }
 
+
+.projects-container {
+    width: 90%;
+    max-width: 1200px;
+    /* ESTO ES LO QUE FALTA: */
+    margin-left: auto;
+    margin-right: auto;
+    
+    /* O de forma abreviada (0 arriba/abajo, auto a los lados) */
+    margin: 0 auto; 
+}
