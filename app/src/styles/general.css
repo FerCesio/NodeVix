@@ -222,7 +222,7 @@
 .nav-save-group {
   display: flex;
   align-items: center;
-  gap: 0; /* Pegados, o 5px si prefieres aire */
+  gap: 5px; /* Pegados, o 5px si prefieres aire */
 }
 
 /* Ajuste específico para el input en el nav */

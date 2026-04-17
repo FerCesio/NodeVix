@@ -43,6 +43,7 @@ export default function ProjectPage() {
     const [projectDesc, setProjectDesc] = useState("");
     const [projectContent, setProjectContent] = useState("");
     const [view, setView] = useState<'none' | 'auth'>('none');
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!localStorage.getItem("token"));
     const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
     const navigate = useNavigate();
 
@@ -96,9 +97,14 @@ export default function ProjectPage() {
     
     const handleAuthSuccess = () => {
         setView('none');
+        setIsLoggedIn(true);
         handleSaveTrigger();
     };
-
+    
+    const handlePublish = async () => {
+      
+    };
+    
     return (
         <div className="main-container" style={{ flexDirection: 'column', gap: '20px' }}>
             <Toaster/>
@@ -107,7 +113,7 @@ export default function ProjectPage() {
              
               <div className="nav-save-group">
                   <button className="btn btn-small" onClick={() => window.location.assign("/home")}>
-                    <span>Go Home</span>
+                    <span>Home</span>
                   </button>
 
                   <input 
@@ -117,9 +123,14 @@ export default function ProjectPage() {
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                   />
-                  <button className="btn-nav-save" onClick={handleSaveTrigger}>
+                  <button className="btn btn-nav-save btn-small " onClick={handleSaveTrigger}>
                       <span>Save</span>
                   </button>
+                  {isLoggedIn && (
+                    <button className="btn btn-small" onClick={handlePublish}>
+                      <span>Publish</span>
+                    </button>
+                  )}
               </div>
           </div>
 
