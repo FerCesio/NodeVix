@@ -3,6 +3,7 @@ import "../styles/general.css";
 
 import TitleAndDesc from "../components/TitleAndDesc";
 import { Toaster } from "react-hot-toast";
+import ReturnButton from "../components/ReturnButton";
 
 export default function RegisterPage(){
     return (
@@ -11,7 +12,7 @@ export default function RegisterPage(){
             <Toaster/>
             <div className="basic-card">
                 <h1>New here?</h1>
-            
+                <ReturnButton to="/login" />
                 {/* Aquí "enchufás" el formulario que ya hicimos */}
                 <RegisterForm /> 
     

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "../styles/general.css";
 import { Toaster } from "react-hot-toast";
 import { api } from "../services/api";
+import ReturnButton from "../components/ReturnButton";
 
 // 1. Asegúrate de que el tipo incluya los campos que necesitas
 interface Post {
@@ -49,6 +50,7 @@ export default function PostsPage() {
         <div className="main-container">
             <Toaster />
             <div className="projects-container" style={{ width: '90%', maxWidth: '1200px' }}>
+                <ReturnButton to="/home"/>
                 <h1 className="main-title">Community Posts</h1>
                 
                 <div className="search-section">
