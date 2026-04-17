@@ -2,10 +2,13 @@ package com.lab1.nodevix.project;
 
 import com.lab1.nodevix.project.dtos.*;
 import com.lab1.nodevix.security.JWTService;
+import com.lab1.nodevix.user.UserService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.security.Principal;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -45,8 +48,22 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.delete(projectID, userID));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<GetProjectResponse> getProjectById(@PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        // Obtenemos el ID del usuario actual a través de su username
+        String token = authHeader.substring(7);
+        Long userID = jwtService.extractUserId(token);
+
+        // Llamada al service
+        GetProjectResponse response = projectService.get(id, userID);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping()
-    public ResponseEntity<List<ReadListResponse>> readProjects(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<List<GetProjectResponse>> readProjects(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
         Long id = jwtService.extractUserId(token);
         return ResponseEntity.ok(projectService.readList(id));

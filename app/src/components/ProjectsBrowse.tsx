@@ -90,7 +90,7 @@ export default function ProjectsBrowse() {
                 )}
             </div>
 
-            <button className="btn" onClick={() => window.location.href = "/project"}>
+            <button className="btn" onClick={() => window.location.href = "/project/new"}>
                 <span>Create Project</span>
             </button>
             <button className="btn" onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("userId"); window.location.href = "/login";}}>
@@ -235,7 +235,7 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
                     </>
                 ) : (
                     <>
-                        <button className="action-btn enter" title="Entrar">
+                        <button className="action-btn enter" title="Entrar" onClick={() => {window.location.assign(`/project/${project.id}`)}}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                         </button>
                         <button className="action-btn edit" onClick={() => setIsEditing(true)} title="Editar">

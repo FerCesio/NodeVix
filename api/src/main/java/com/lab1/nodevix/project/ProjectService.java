@@ -118,7 +118,7 @@ public class ProjectService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReadListResponse> readList(Long userID) {
+    public List<GetProjectResponse> readList(Long userID) {
         // 1. Buscamos al usuario
         User user = userRepo.findById(userID)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
@@ -129,7 +129,7 @@ public class ProjectService {
         // 3. Obtenemos los proyectos directamente desde el objeto User
         // user.getProjects() ya tiene la lista gracias al @ManyToMany
         return user.getProjects().stream()
-                .map(p -> new ReadListResponse(
+                .map(p -> new GetProjectResponse(
                         p.getId(),
                         p.getName(),
                         p.getDescription(),
@@ -137,4 +137,26 @@ public class ProjectService {
                         p.getCreatedOn() != null ? p.getCreatedOn().format(formatter) : "S/F"))
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public GetProjectResponse get(Long projectID, Long userID) {
+        // 1. Buscar entidad
+        Project project = projectRepo.findById(projectID)
+                .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado"));
+
+        // 2. Validar propiedad
+        if (!userRepo.hasProject(userID, projectID)) {
+            throw new RuntimeException("Acceso denegado");
+        }
+
+        // 3. Retornar usando el constructor específico
+        return new GetProjectResponse(
+                project.getId(),
+                project.getName(),
+                project.getDescription(),
+                project.getModifiedOn().toString(), // Convertimos fecha a String
+                project.getCreatedOn().toString() // Convertimos fecha a String
+        );
+    }
+
 }

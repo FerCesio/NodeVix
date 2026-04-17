@@ -29,9 +29,10 @@ function App() {
         {/* Ruta por defecto: si entran a "/", los manda al login */}
         <Route path="/" element={<Navigate to="/login" />} />
 
-        {/* Ruta para el proyecto del usuario */}
-        <Route path="/project" element={<ProjectPage />} />
-
+        {/* Ruta para el proyecto recien creado */}
+        <Route path="/project/new" element={<ProjectPage />} />
+        <Route path="/project/:id" element={<ProjectPage />} />
+        
         {/* Ruta para el proyecto del usuario */}
         <Route path="/posts" element={<PostsPage />} />
 

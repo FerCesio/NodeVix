@@ -1,37 +1,97 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../services/api";
 import LoginForm from "../components/LoginForm"; // Tu formulario existente
 import RegisterForm from "../components/RegisterForm"; // Tu formulario existente
 import "../styles/general.css";
-import type { CreateProject } from "../types/project";
-import { Toaster } from "react-hot-toast";
+import type { CreateProject, UpdateProject } from "../types/project";
+import toast, { Toaster } from "react-hot-toast";
 import ReturnButton from "../components/ReturnButton";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function ProjectPage() {
+    // 1. Capturamos el ID de la URL
+    const { id } = useParams<{ id: string }>();
+    
+    useEffect(() => {
+      // Si NO hay id, significa que estamos en /project/new
+      if (!id) {
+          console.log("Modo: Crear nuevo proyecto");
+          setProjectName(""); // Empezamos limpio
+          return;
+      }
+
+      // Si HAY id, significa que estamos en /project/:id
+      const loadProject = async () => {
+          try {
+              const res = await api.get(`/manage/${id}`);
+              
+              // We get the info from the response
+              setProjectName(res.data.name);
+              setProjectDesc(res.data.description);
+              setProjectContent(res.data.content);
+              
+          } catch (err) {
+              toast.error("Proyecto no encontrado");
+              navigate("/home");
+          }
+      };
+      
+      loadProject();
+    }, [id]); // Se dispara si el ID cambia
+    
     const [projectName, setProjectName] = useState("");
+    const [projectDesc, setProjectDesc] = useState("");
+    const [projectContent, setProjectContent] = useState("");
     const [view, setView] = useState<'none' | 'auth'>('none');
     const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
     const navigate = useNavigate();
 
-    const handleSaveTrigger = () => {
-        // A) Verificamos si existe el token en localStorage
+    const handleSaveTrigger = async () => {
         const token = localStorage.getItem("token");
-
-        if (token) {
-            // CASO A: El usuario está logueado
-            console.log("Procediendo a guardar proyecto:", projectName);
-            const newProject: CreateProject = {
-                projectName: projectName 
-            };
-            
-            api.post("/manage/create", newProject);
-            navigate("/home");
-          } else {
-            // CASO B: No hay sesión, abrimos el formulario
+        if (!token) {
             setView('auth');
+            return;
         }
-        
+
+        const loadingToast = toast.loading(id ? "Actualizando..." : "Creando...");
+
+        try {
+            if (!id || id === "new") {
+                // --- CASO: CREACIÓN ---
+                // 1. Hacemos el POST y guardamos la respuesta
+                const response = await api.post("/manage/create", { 
+                    projectName: projectName 
+                });
+
+                // 2. Extraemos el ID que el Backend generó
+                // (Asegúrate de que tu Backend devuelva el objeto creado o su ID)
+                const newId = response.data.id; 
+
+                toast.success("¡Proyecto creado!", { id: loadingToast });
+
+                // 3. CAMBIO DE RUTA SILENCIOSO:
+                // En lugar de ir a /home, navegamos a la ruta de edición de este nuevo ID
+                // El replace: true evita que el usuario pueda volver atrás a "/new"
+                navigate(`/project/${newId}`, { replace: true });
+
+            } else {
+              
+                // --- CASO: ACTUALIZACIÓN ---
+                const updateProj: UpdateProject = {
+                    name: projectName,
+                    description: projectDesc,
+                    content: projectContent // Mantenemos el contenido existente
+                };
+                
+                await api.put(`/manage/${id}`, updateProj);
+                
+                toast.success("Cambios guardados", { id: loadingToast });
+                 
+            }
+        } catch (error: any) {
+            console.error(error);
+            toast.error("Error al guardar", { id: loadingToast });
+        }
     };
     
     const handleAuthSuccess = () => {
@@ -43,8 +103,6 @@ export default function ProjectPage() {
         <div className="main-container" style={{ flexDirection: 'column', gap: '20px' }}>
             <Toaster/>
             {/* Sección de Input de Proyecto */}
-            <ReturnButton to="/home" />
-            
             <div className="top-left-nav">
              
               <div className="nav-save-group">

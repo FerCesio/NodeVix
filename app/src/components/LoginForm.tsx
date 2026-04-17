@@ -40,7 +40,7 @@ export default function LoginForm({ onSuccess }: Props) {
       toast("Usuario inicio sesion");
   
       // Chequeo para evitar el cambio de ruta
-      if (window.location.pathname != "/project") {
+      if (window.location.pathname != "/project/new") {
         window.location.href ="/home";
       }
       

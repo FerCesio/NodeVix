@@ -16,7 +16,7 @@ export default function LoginPage() {
       
         <LoginForm/> 
 
-        <button className="btn" onClick={() => window.location.href = "/project"}>
+        <button className="btn" onClick={() => window.location.href = "/project/new"}>
             <span>Create Project</span>
         </button>
 
