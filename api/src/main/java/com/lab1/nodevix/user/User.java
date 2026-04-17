@@ -11,7 +11,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // id's generados por la base en orden ascendente
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -52,7 +52,7 @@ public class User {
         this.avatar_url = avatar_url;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
