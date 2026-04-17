@@ -1,7 +1,5 @@
 package com.lab1.nodevix.project.dtos;
 
-import com.lab1.nodevix.project.ProjectContent;
-
 public class ReadListResponse {
     private Long id;
     private String name;
@@ -36,6 +34,5 @@ public class ReadListResponse {
     public String getCreatedOn() {
         return createdOn;
     }
-
 
 }

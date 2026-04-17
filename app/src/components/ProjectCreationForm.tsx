@@ -3,6 +3,7 @@ import { api } from "../services/api";
 import "../styles/general.css";
 import "../styles/userProjects.css";
 import type { CreateProject } from "../types/project";
+import toast from "react-hot-toast";
 
 export default function ProjectCreationForm() {
     const [projectName, setName] = useState("");
@@ -15,7 +16,7 @@ export default function ProjectCreationForm() {
         };
 
         if (!projectName.trim()) {
-            alert("El nombre es obligatorio");
+            toast.error("El nombre es obligatorio");
             return;
         }
 
@@ -23,11 +24,11 @@ export default function ProjectCreationForm() {
             // El backend debería recibir un objeto con "name"
             await api.post("/manage/create", newProject);
             
-            alert("¡Proyecto creado con éxito!");
+            toast.success("¡Proyecto creado con éxito!");
 
         } catch (err: any) {
             console.error(err);
-            alert(err.response?.data?.message || "Error al crear el proyecto");
+            toast.error(err.response?.data?.message || "Error al crear el proyecto");
         }
     };
     

@@ -4,92 +4,137 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.lab1.nodevix.has.Has;
-import com.lab1.nodevix.has.HasRepository;
 import com.lab1.nodevix.project.dtos.*;
 import com.lab1.nodevix.user.User;
 import com.lab1.nodevix.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ProjectService {
     private final ProjectRepository projectRepo;
-    private final HasRepository hasRepo;
     private final UserRepository userRepo;
 
-    public ProjectService(ProjectRepository projectRepo, HasRepository hasRepo, UserRepository userRepo) {
+    public ProjectService(ProjectRepository projectRepo, UserRepository userRepo) {
         this.projectRepo = projectRepo;
-        this.hasRepo = hasRepo;
         this.userRepo = userRepo;
     }
 
     @Transactional
     public CreateResponse create(CreateProject cp, Long userID) {
-        User user = userRepo.findById(userID).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        // 1. Buscamos al usuario
+        User user = userRepo.findById(userID)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
-        Project project = new  Project(cp.getProjectName());
+        // 2. Creamos el proyecto
+        Project project = new Project(cp.getProjectName());
+
+        // 3. LA CLAVE: Establecemos la relación directamente en las entidades
+        // Al añadir el proyecto a la lista del usuario, JPA sabe que debe insertar en
+        // la tabla 'has'
+        user.getProjects().add(project);
+
+        // 4. Guardamos el proyecto (esto genera el ID y los timestamps)
         Project saved = projectRepo.save(project);
-        hasRepo.save(new Has(user, saved));
 
-        CreateResponse pr = new CreateResponse(saved.getId(),saved.getName(),saved.getDescription());
+        // Nota: No hace falta guardar el 'user' explícitamente si tienes
+        // CascadeType.PERSIST
+        // pero guardar el proyecto es lo que nos da los datos para la respuesta.
+
+        // 5. Mapeo de la respuesta
+        CreateResponse pr = new CreateResponse(saved.getId(), saved.getName(), saved.getDescription());
+
+        DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
         if (saved.getCreatedOn() != null) {
-            String parsedCreate = saved.getCreatedOn().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            pr.setCreatedOn(parsedCreate);
+            pr.setCreatedOn(saved.getCreatedOn().format(isoFormatter));
         }
         if (saved.getModifiedOn() != null) {
-            String parsedModified = saved.getModifiedOn().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            pr.setUpdatedOn(parsedModified);
+            pr.setUpdatedOn(saved.getModifiedOn().format(isoFormatter));
         }
 
         return pr;
     }
 
     @Transactional
-    public UpdateResponse update(Long projectID, Long userID, UpdateProject up){
-        Project project = projectRepo.findById(projectID).orElseThrow(() -> new RuntimeException("No existe el proyecto"));
+    public UpdateResponse update(Long projectID, Long userID, UpdateProject up) {
+        // 1. Verificación de seguridad y existencia
+        Project project = projectRepo.findById(projectID)
+                .orElseThrow(() -> new RuntimeException("No existe el proyecto"));
 
-        if (!hasRepo.existsByProjectIdAndUserId(projectID, userID)) {throw new RuntimeException("No existe el proyecto");}
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-
-        project.setName(up.getName());
-        project.setDescription(up.getDescription());
-        if (up.getContent() != null) project.setContent(up.getContent());
-
-        Project saved = projectRepo.saveAndFlush(project);
-
-        return new UpdateResponse(saved.getId(),saved.getName(),saved.getDescription(),saved.getContent(),saved.getModifiedOn().format(formatter));
-    }
-
-    public DeleteResponse delete(Long projectID, Long userID){
-        if (!projectRepo.existsById(projectID)) {
-            throw new EntityNotFoundException("No existe el proyecto con id: " + projectID);
+        if (!userRepo.hasProject(userID, projectID)) {
+            throw new RuntimeException("Acceso denegado");
         }
 
-        if (!hasRepo.existsByProjectIdAndUserId(projectID, userID)) { throw new RuntimeException("No tienes permiso");}
-        hasRepo.deleteByProjectId(projectID);
-        projectRepo.deleteById(projectID);
-        return new DeleteResponse("Proyecto con id: " + projectID + " eliminado");
+        // 2. Actualización de metadatos básicos
+        project.setName(up.getName());
+        project.setDescription(up.getDescription());
+
+        // 3. PIPELINE DE CONTENIDO (Opcional)
+        // Si el 'content' en la request es null, el proyecto mantiene su JSON anterior
+        if (up.getContent() != null) {
+            project.setContent(up.getContent());
+        }
+
+        // 4. Persistencia
+        Project saved = projectRepo.saveAndFlush(project);
+
+        // 5. Formateo de respuesta
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+        return new UpdateResponse(
+                saved.getId(),
+                saved.getName(),
+                saved.getDescription(),
+                saved.getContent(), // Siempre devolvemos el estado final del JSON
+                saved.getModifiedOn().format(formatter));
     }
 
-    public List<ReadListResponse> readList(Long userID){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        List<Has> relations = hasRepo.findProjectsByUserId(userID);
+    @Transactional
+    public DeleteResponse delete(Long projectID, Long userID) {
+        // 1. Verificación rápida de propiedad usando el nuevo método del repositorio
+        if (!userRepo.hasProject(userID, projectID)) {
+            throw new RuntimeException("No tienes permiso o el proyecto no existe");
+        }
 
-        return hasRepo.findProjectsByUserId(userID).stream()
-                .map(has -> has.getProject())
+        // 2. Buscamos las entidades para operar sobre ellas
+        User user = userRepo.findById(userID)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+        Project project = projectRepo.findById(projectID)
+                .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado"));
+
+        // 3. Rompemos la relación en la tabla intermedia 'has'
+        // Al removerlo de la lista, JPA genera el DELETE en la tabla de unión al hacer
+        // flush/commit
+        user.getProjects().remove(project);
+        userRepo.save(user);
+
+        // 4. Borramos el proyecto físicamente de su tabla
+        projectRepo.delete(project);
+
+        return new DeleteResponse("Proyecto con id: " + projectID + " eliminado correctamente");
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReadListResponse> readList(Long userID) {
+        // 1. Buscamos al usuario
+        User user = userRepo.findById(userID)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+        // 2. Definimos el formato de fecha
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+        // 3. Obtenemos los proyectos directamente desde el objeto User
+        // user.getProjects() ya tiene la lista gracias al @ManyToMany
+        return user.getProjects().stream()
                 .map(p -> new ReadListResponse(
                         p.getId(),
                         p.getName(),
                         p.getDescription(),
                         p.getModifiedOn() != null ? p.getModifiedOn().format(formatter) : "S/F",
-                        p.getCreatedOn() != null ? p.getCreatedOn().format(formatter) : "S/F"
-                ))
+                        p.getCreatedOn() != null ? p.getCreatedOn().format(formatter) : "S/F"))
                 .collect(Collectors.toList());
-
     }
-
 }

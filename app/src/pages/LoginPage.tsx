@@ -1,18 +1,20 @@
 import LoginForm from "../components/LoginForm"; // Importás el corazón
 import "../styles/general.css";
 import TitleAndDesc from "../components/TitleAndDesc";
+import { Toaster } from "react-hot-toast";
 
 export default function LoginPage() {
 
   return (
     <div className="main-container">
       <TitleAndDesc/>
+      <Toaster/>
       <div className="basic-card">
         <h1>Welcome</h1>
         <p>Start now</p>
         
       
-        <LoginForm /> 
+        <LoginForm/> 
 
         <button className="btn" onClick={() => window.location.href = "/project"}>
             <span>Create Project</span>

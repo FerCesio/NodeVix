@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { api } from "../services/api";
 import type { LoginRequest, LoginResponse } from "../types/user";
+import toast from "react-hot-toast";
 
-export default function LoginForm() {
+interface Props {
+  onSuccess?: () => void;
+}
+
+export default function LoginForm({ onSuccess }: Props) {
   const [form, setForm] = useState<LoginRequest>({
     identifier: "",
     password: "",
@@ -19,6 +24,7 @@ export default function LoginForm() {
     e.preventDefault();
 
     try {
+
       const res = await api.post<LoginResponse>(
         "/auth/login",
         form
@@ -27,9 +33,11 @@ export default function LoginForm() {
 
       localStorage.setItem("token", res.data.token); // TOKEN      
 
-
+      // Avisamos que todo salio bien a quien este usando el form
+      if(onSuccess) onSuccess();
+      
       console.log(res.data) ;
-      alert("Usuario inicio sesion");
+      toast("Usuario inicio sesion");
   
       // Chequeo para evitar el cambio de ruta
       if (window.location.pathname != "/project") {
@@ -39,9 +47,9 @@ export default function LoginForm() {
     } catch (err:any) {
 
       if (err.response && err.response.data){
-        alert(err.response.data.message)
+        toast(err.response.data.message)
       } else {
-        alert("Error de conexión con el servidor")
+        toast("Error de conexión con el servidor")
       }
 
       console.error(err);

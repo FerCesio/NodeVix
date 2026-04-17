@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { api } from "../services/api";
-import type { RegisterRequest, RegisterResponse } from "../types/user";
+import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from "../types/user";
+import toast from "react-hot-toast";
 
-export default function RegisterForm() {
+
+interface Props {
+  onSuccess?: () => void;
+}
+
+export default function RegisterForm({onSuccess}: Props) {
   
   const today = new Date().toISOString().split("T")[0].split("-");
   const year: number = parseInt(today[0]); // Convertimos a número
@@ -16,6 +22,7 @@ export default function RegisterForm() {
   const maxDate: string = `${year - minAge}-${month}-${day}`;
   const minDate: string = `${year - maxAge}-${month}-${day}`;
 
+    
   const [form, setForm] = useState<RegisterRequest>({
     userName: "",
     email: "",
@@ -32,24 +39,48 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
+    // Register segment
     try {
+      // 1. Intentamos el Registro
       const res = await api.post<RegisterResponse>("/auth/register", form);
+      console.log("Registro exitoso:", res.data);
 
-      console.log(res.data);
-      window.location.href = "/login";
-      alert("Usuario registrado");
+      // 2. Si el registro sale bien, intentamos el Login inmediatamente
+      try {
+        const logRes = await api.post<LoginResponse>("/auth/login", {
+          // CAMBIO AQUÍ: El backend espera 'identifier', pero le pasamos el valor de 'form.email'
+          identifier: form.email, 
+          password: form.password 
+        });
+
+        localStorage.setItem("token", logRes.data.token);
         
-    } catch (err:any) {
+        onSuccess?.();
+
+        // 5. Gestión de navegación
+        if (window.location.pathname !== "/project") {
+          window.location.href = "/home";
+        } else {
+          toast.success("¡Cuenta creada y sesión iniciada!");
+        }
+
+      } catch (loginErr: any) {
+        console.error("Error en login automático:", loginErr);
+        toast.success("Cuenta creada, pero hubo un error al iniciar sesión automáticamente. Por favor, logueate manualmente.");
+      }
+
+    } catch (err: any) {
+      // Manejo de errores del Registro
       if (err.response && err.response.data) {
-
-      alert(err.response.data.message); 
-
-    } else {
-      alert("Error de conexión con el servidor");
-    }
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Error de conexión al intentar registrarse");
+      }
       console.error(err);
     }
+    
+
   };
 
   return (

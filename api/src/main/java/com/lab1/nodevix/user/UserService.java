@@ -1,10 +1,10 @@
 package com.lab1.nodevix.user;
 
+import com.lab1.nodevix.project.ProjectRepository;
 import com.lab1.nodevix.security.JWTService;
 import com.lab1.nodevix.user.dtos.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +13,17 @@ import java.time.LocalDate;
 @Service
 public class UserService {
     private final UserRepository userRepo;
+    private final ProjectRepository projectRepo;
+
     private final JWTService jwtService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepo, JWTService jwtService, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepo, ProjectRepository projectRepo,
+            JWTService jwtService,
+            PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
+        this.projectRepo = projectRepo;
+
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -94,5 +100,4 @@ public class UserService {
         }
         userRepo.deleteById(id);
     }
-
 }

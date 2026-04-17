@@ -1,11 +1,9 @@
 package com.lab1.nodevix.project.dtos;
 
-import com.lab1.nodevix.project.ProjectContent;
-
 public class UpdateProject {
     String name;
     String description;
-    ProjectContent content; // Ver si tiene que ser string o json
+    String content; // Ver si tiene que ser string o json
 
     public String getName() {
         return name;
@@ -23,9 +21,8 @@ public class UpdateProject {
         this.description = description;
     }
 
-    public ProjectContent getContent() {
+    public String getContent() {
         return content;
     }
-
 
 }

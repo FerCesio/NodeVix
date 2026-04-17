@@ -4,6 +4,7 @@ import { useState } from "react";
 import UserConfig from "../components/UserConfig";
 import TitleAndDesc from "../components/TitleAndDesc";
 import ProjectsBrowse from "../components/ProjectsBrowse";
+import { Toaster } from "react-hot-toast";
 
 export default function HomePage() {
   // 'projects' es el valor inicial
@@ -12,6 +13,7 @@ export default function HomePage() {
   return (
     <div className="main-container">
         <TitleAndDesc/>
+        <Toaster/>
         <div className="browse-container">
 
           <div className="browsing_buttons">

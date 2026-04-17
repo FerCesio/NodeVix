@@ -4,6 +4,7 @@ import LoginForm from "../components/LoginForm"; // Tu formulario existente
 import RegisterForm from "../components/RegisterForm"; // Tu formulario existente
 import "../styles/general.css";
 import type { CreateProject } from "../types/project";
+import { Toaster } from "react-hot-toast";
 
 export default function ProjectPage() {
     const [projectName, setProjectName] = useState("");
@@ -20,24 +21,24 @@ export default function ProjectPage() {
             const newProject: CreateProject = {
                 projectName: projectName 
             };
-                    
-            confirmarGuardado(token, newProject);
-        } else {
+            
+            api.post("/manage/create", newProject);
+            
+          } else {
             // CASO B: No hay sesión, abrimos el formulario
             setView('auth');
         }
         
     };
-
-    const confirmarGuardado = async (token: string, newProject: CreateProject) => {
-        // Aquí irá la lógica de tu request con api.post
-        // Por ahora lo dejamos como aproximación
-        await api.post("/manage/create", newProject);
+    
+    const handleAuthSuccess = () => {
+        setView('none');
+        handleSaveTrigger();
     };
 
     return (
         <div className="main-container" style={{ flexDirection: 'column', gap: '20px' }}>
-            
+            <Toaster/>
             {/* Sección de Input de Proyecto */}
             <div className="top-left-nav">
              
@@ -71,7 +72,7 @@ export default function ProjectPage() {
                     <>
                       <h1>Welcome Back</h1>
                       <p>Login to save your project</p>
-                      <LoginForm />
+                      <LoginForm onSuccess={() => handleAuthSuccess()} />
                       <div className="footer-links" style={{ marginTop: '15px' }}>
                         <span style={{ fontSize: '14px', color: '#666' }}>
                           Don't have an account?{" "}
@@ -88,7 +89,7 @@ export default function ProjectPage() {
                     <>
                       <h1>Create Account</h1>
                       <p>Join us to manage your projects</p>
-                      <RegisterForm />
+                      <RegisterForm onSuccess={() => handleAuthSuccess()}/>
                       <div className="footer-links" style={{ marginTop: '15px' }}>
                         <span style={{ fontSize: '14px', color: '#666' }}>
                           Already have an account?{" "}

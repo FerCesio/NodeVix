@@ -3,6 +3,7 @@ import { api } from "../services/api";
 import type { UpdateRequest, UpdateResponse } from "../types/user";
 import "../styles/userProjects.css";
 import "../styles/general.css";
+import toast from "react-hot-toast";
 
 export default function UserConfig() {
   const [form, setForm] = useState<UpdateRequest>({
@@ -22,7 +23,7 @@ export default function UserConfig() {
     if (form.password.trim()) payload.password = form.password;
 
     if (Object.keys(payload).length === 0) {
-      alert("Completá al menos un campo para actualizar.");
+      toast("Completá al menos un campo para actualizar.");
       return;
     }
 
@@ -31,12 +32,12 @@ export default function UserConfig() {
     try {
       const res = await api.put<UpdateResponse>("/users", payload);
       console.log(res.data);
-      alert("Usuario actualizado correctamente.");
+      toast("Usuario actualizado correctamente.");
     } catch (err: any) {
       if (err.response?.data?.message) {
-        alert(err.response.data.message);
+        toast(err.response.data.message);
       } else {
-        alert("Error de conexión con el servidor.");
+        toast("Error de conexión con el servidor.");
       }
       console.error(err);
     }
@@ -54,7 +55,7 @@ export default function UserConfig() {
       
       await api.delete("/users/me"); 
       
-      alert("Account deleted.");
+      toast("Account deleted.");
       
       // Limpiamos todo y afuera
       localStorage.removeItem("token");
@@ -62,7 +63,7 @@ export default function UserConfig() {
       window.location.href = "/login";
     } catch (err: any) {
       const msg = err.response?.data?.message || "No se pudo eliminar la cuenta.";
-      alert(msg);
+      toast(msg);
     }
   };
 
