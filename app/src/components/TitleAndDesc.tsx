@@ -10,7 +10,7 @@ export default function TitleAndDesc() {
       </p>
 
       {/* Botón para ir a los proyectos de la comunidad */}
-      <Link to="/posts" style={{ textDecoration: 'none' }}>
+      <Link to="/posts" style={{ textDecoration: 'none', marginTop: '24px', display: 'block' }}>
         <button className="btn">
           <span>Explore Community</span>
         </button>

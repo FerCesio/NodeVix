@@ -1,5 +1,7 @@
 import "../styles/general.css";
 import { useState } from "react";
+import userIcon from "../assets/circulo-de-usuarios.svg";
+import folderIcon from "../assets/carpeta.svg";
 
 import UserConfig from "../components/UserConfig";
 import TitleAndDesc from "../components/TitleAndDesc";
@@ -20,12 +22,12 @@ export default function HomePage() {
               <ol>
                 <li>
                   <button onClick={() => setView('projects')} title="Projects" className="btn btn-small">
-                    <span>📁</span>
+                    <span><img src={folderIcon} alt="Folder" width={30} height={30} /></span>
                   </button>
                 </li>
                 <li>
                   <button onClick={() => setView('user')} title="User" className="btn btn-small">
-                    <span>👤</span>
+                    <span><img src={userIcon} alt="User" width={30} height={30} /></span>
                   </button>
                 </li>
               </ol>
