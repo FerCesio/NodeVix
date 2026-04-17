@@ -17,7 +17,7 @@ export interface ProjectContent {
 export type UpdateProject = {
     name: string;
     description: string
-    content: ProjectContent
+    content: string
 }
 
 export type UpdateResponse = {

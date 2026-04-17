@@ -34,7 +34,7 @@ public class Project {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private ProjectContent content;
+    private String content;
 
     public Project() {
     }
@@ -51,7 +51,7 @@ public class Project {
         this.description = description;
     }
 
-    public void setContent(ProjectContent content) {
+    public void setContent(String content) {
         this.content = content;
     }
 
@@ -75,7 +75,7 @@ public class Project {
         return modifiedOn;
     }
 
-    public ProjectContent getContent() {
+    public String getContent() {
         return content;
     }
 

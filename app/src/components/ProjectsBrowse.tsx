@@ -94,7 +94,7 @@ function ProjectCard({ project }: { project: any }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({
         name: project.name,
-        description: project.description || ""
+        description: ""
     });
     
     const handleSave = async () => {
@@ -106,11 +106,13 @@ function ProjectCard({ project }: { project: any }) {
             const payload: UpdateProject = {
                 name: editForm.name,
                 description: editForm.description,
-                content: project.content || {} // Mantenemos el contenido existente
+                content: project.content // Mantenemos el contenido existente
             };
 
             const res = await api.put<UpdateResponse>(`/manage/${project.id}`, payload);
-
+            console.log(res.headers);
+            console.log(res.data);
+            
             // Éxito
             toast.success("¡Cambios guardados!", { id: loadingToast });
             setIsEditing(false);

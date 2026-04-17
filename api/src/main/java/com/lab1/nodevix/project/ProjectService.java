@@ -59,34 +59,35 @@ public class ProjectService {
 
     @Transactional
     public UpdateResponse update(Long projectID, Long userID, UpdateProject up) {
-        // 1. Buscamos el proyecto
+        // 1. Verificación de seguridad y existencia
         Project project = projectRepo.findById(projectID)
                 .orElseThrow(() -> new RuntimeException("No existe el proyecto"));
 
-        // 2. Verificación de propiedad (Sustituye al hasRepo)
-        // Buscamos si el usuario está en la lista de propietarios del proyecto
-        // Nota: Esto requiere que en Project.java tengas la lista 'users' o 'owners'
         if (!userRepo.hasProject(userID, projectID)) {
             throw new RuntimeException("Acceso denegado");
         }
 
-        // 3. Actualización de datos
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-
+        // 2. Actualización de metadatos básicos
         project.setName(up.getName());
         project.setDescription(up.getDescription());
+
+        // 3. PIPELINE DE CONTENIDO (Opcional)
+        // Si el 'content' en la request es null, el proyecto mantiene su JSON anterior
         if (up.getContent() != null) {
             project.setContent(up.getContent());
         }
 
-        // saveAndFlush asegura que los cambios se envíen a la DB inmediatamente
+        // 4. Persistencia
         Project saved = projectRepo.saveAndFlush(project);
+
+        // 5. Formateo de respuesta
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
         return new UpdateResponse(
                 saved.getId(),
                 saved.getName(),
                 saved.getDescription(),
-                saved.getContent(),
+                saved.getContent(), // Siempre devolvemos el estado final del JSON
                 saved.getModifiedOn().format(formatter));
     }
 
