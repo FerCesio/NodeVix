@@ -110,13 +110,17 @@ function ProjectCard({ project }: { project: any }) {
             };
 
             const res = await api.put<UpdateResponse>(`/manage/${project.id}`, payload);
-            console.log(res.headers);
-            console.log(res.data);
             
             // Éxito
             toast.success("¡Cambios guardados!", { id: loadingToast });
             setIsEditing(false);
-
+            
+            console.log(res.status);
+            if (res.status) {
+                project.name = editForm.name
+                project.description = editForm.description
+            }
+            
             /* IMPORTANTE: 
             Para que la UI se actualice (el nombre en la card y la fecha),
             lo ideal es que el componente padre refresque la lista o 
@@ -129,6 +133,7 @@ function ProjectCard({ project }: { project: any }) {
             toast.error(msg, { id: loadingToast });
         }
     };
+  
     
     const handleCancel = () => {
         setEditForm({
@@ -148,7 +153,7 @@ function ProjectCard({ project }: { project: any }) {
                             value={editForm.name}
                             onChange={(e) => setEditForm({...editForm, name: e.target.value})}
                         />
-                        <textarea 
+                        <input 
                             className="edit-input desc"
                             value={editForm.description}
                             onChange={(e) => setEditForm({...editForm, description: e.target.value})}
