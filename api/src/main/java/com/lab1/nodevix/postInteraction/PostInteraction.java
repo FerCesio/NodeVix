@@ -4,6 +4,7 @@ import com.lab1.nodevix.post.Post;
 import com.lab1.nodevix.user.User;
 import jakarta.persistence.*;
 
+@Entity
 public class PostInteraction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,6 +25,9 @@ public class PostInteraction {
         this.user = user;
         this.post = post;
         this.isLike = isLike;
+    }
+
+    public PostInteraction() {
     }
 
     public boolean isLike() {
