@@ -4,9 +4,11 @@ import "../styles/general.css";
 import "../styles/userProjects.css";
 import type { CreateProject } from "../types/project";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function ProjectCreationForm() {
     const [projectName, setName] = useState("");
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,6 +27,8 @@ export default function ProjectCreationForm() {
             await api.post("/manage/create", newProject);
             
             toast.success("¡Proyecto creado con éxito!");
+
+            navigate("/home");
 
         } catch (err: any) {
             console.error(err);

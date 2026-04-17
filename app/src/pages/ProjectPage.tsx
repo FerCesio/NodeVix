@@ -5,11 +5,13 @@ import RegisterForm from "../components/RegisterForm"; // Tu formulario existent
 import "../styles/general.css";
 import type { CreateProject } from "../types/project";
 import { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function ProjectPage() {
     const [projectName, setProjectName] = useState("");
     const [view, setView] = useState<'none' | 'auth'>('none');
     const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+    const navigate = useNavigate();
 
     const handleSaveTrigger = () => {
         // A) Verificamos si existe el token en localStorage
@@ -23,7 +25,7 @@ export default function ProjectPage() {
             };
             
             api.post("/manage/create", newProject);
-            
+            navigate("/home");
           } else {
             // CASO B: No hay sesión, abrimos el formulario
             setView('auth');
