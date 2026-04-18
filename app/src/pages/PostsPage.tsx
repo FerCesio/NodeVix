@@ -27,10 +27,10 @@ export default function PostsPage() {
 
     const filteredPosts = posts.filter((post) => {
         const term = searchTerm.toLowerCase();
-        return (
-            post.projectName.toLowerCase().includes(term) ||
-            post.projectDescription.toLowerCase().includes(term)
-        );
+        const name = (post.projectName || "").toLowerCase();
+        const desc = (post.projectDescription || "").toLowerCase();
+        
+        return name.includes(term) || desc.includes(term);
     });
 
     if (loading) return <div className="loader">Cargando comunidad...</div>;
