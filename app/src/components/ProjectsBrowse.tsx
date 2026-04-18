@@ -164,14 +164,14 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
     
     const handleDeleteClick = () => {
         Swal.fire({
-            title: '¿Estás seguro?',
-            text: `Vas a eliminar el proyecto "${project.name}". Esta acción no se puede deshacer.`,
+            title: '¿Are you sure?',
+            text: `You are about to delete project "${project.name}". This action cannot be undone.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Yes, delete',
+            cancelButtonText: 'Cancel',
             background: '#1a1a1a', // Ajusta al color de tu app
             color: '#fff'
         }).then(async (result) => {
@@ -179,14 +179,14 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
                 const success = await onDelete(project.id);
                 if (success) {
                     Swal.fire({
-                        title: '¡Eliminado!',
-                        text: 'El proyecto ha sido borrado.',
+                        title: 'Deleted!',
+                        text: 'The project has been deleted.',
                         icon: 'success',
                         timer: 2000,
                         showConfirmButton: false
                     });
                 } else {
-                    Swal.fire('Error', 'No se pudo eliminar el proyecto.', 'error');
+                    Swal.fire('Error', 'Could not delete this project.', 'error');
                 }
             }
         });

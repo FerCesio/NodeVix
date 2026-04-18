@@ -19,6 +19,27 @@
     border: 1px solid #ddd;
 }
 
+.projects-community-list {
+    /* 1. Definimos el tamaño fijo */
+    height: 300px; /* O usa 70vh para que ocupe el 70% de la pantalla */
+    
+    
+    overflow-y: auto; 
+    
+    overflow-x: hidden;
+    
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 15px;
+    margin: 20px;
+    background-color: #f9f9f9; /* Cambié el verde para que no canse la vista */
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
 .project-card { 
     display: flex;
     justify-content: space-between; /* Empuja el contenido a los extremos */
@@ -30,6 +51,7 @@
     border-radius: 8px;
     color: white; /* Para que el texto sea legible sobre el rojo */
 }
+
 .project-card.wide {
     width: 100%;
     box-sizing: border-box; /* Crucial para que el padding no las ensanche de más */

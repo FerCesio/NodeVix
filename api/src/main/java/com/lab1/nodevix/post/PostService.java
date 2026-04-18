@@ -1,6 +1,7 @@
 package com.lab1.nodevix.post;
 
 import com.lab1.nodevix.post.dtos.InteractionResponse;
+import com.lab1.nodevix.post.dtos.PostListResponse;
 import com.lab1.nodevix.postInteraction.PostInteraction;
 import com.lab1.nodevix.postInteraction.PostInteractionRepository;
 import com.lab1.nodevix.project.Project;
@@ -11,7 +12,9 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -128,4 +131,23 @@ public class PostService {
         );
     }
 
+    public List<PostListResponse> getAll(){
+        return postRepo.findAllWithProject().stream().map(p -> {
+            String owner = userRepo.findByProjectId(p.getProject().getId())
+                    .stream()
+                    .findFirst()
+                    .map(User::getName)
+                    .orElse("Unknown");
+
+            return new PostListResponse(
+                    p.getId(),
+                    p.getViews(),
+                    p.getLikes(),
+                    p.getDislikes(),
+                    p.getProject().getName(),
+                    p.getProject().getDescription(),
+                    owner
+            );
+        }).collect(Collectors.toList());
+    }
 }

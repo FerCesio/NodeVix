@@ -236,6 +236,18 @@
   font-size: 14px;
 }
 
+.nav-community-input {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 6px; /* ← ambos extremos */
+  color: white;
+  padding: 10px 15px;
+  font-size: 14px;
+  width: 100%; /* ← ocupa todo el espacio disponible */
+  max-width: 600px; /* ← ajustá este valor a tu gusto */
+  box-sizing: border-box;
+}
+
 /* Ajuste para el botón de save pegado al input */
 .btn-nav-save {
   background-color: #ffffff;

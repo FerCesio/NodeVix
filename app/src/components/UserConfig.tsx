@@ -4,6 +4,7 @@ import type { UpdateRequest, UpdateResponse } from "../types/user";
 import "../styles/userProjects.css";
 import "../styles/general.css";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 export default function UserConfig() {
   const [form, setForm] = useState<UpdateRequest>({
@@ -45,25 +46,37 @@ export default function UserConfig() {
 
   // --- BORRAR ---
   const handleDelete = async () => {
-    const confirmacion = window.confirm(
-      "ARE YOU SURE? This action is irreversible and will delete all your projects and data."
-    );
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "This action is irreversible and will delete all your projects and data.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#c0392b",
+    cancelButtonColor: "#333",
+    confirmButtonText: "Yes, delete",
+    cancelButtonText: "Cancel",
+    background: "#1a1a1a",
+    color: "#fff",
+  });
 
-    if (!confirmacion) return;
-
+  if (result.isConfirmed) {
     try {
-      
-      await api.delete("/users/me"); 
-      
-      toast("Account deleted.");
-      
-      // Limpiamos todo y afuera
+      await api.delete("/users/me");
+      await Swal.fire({
+        title: "Deleted!",
+        text: "Your account has been deleted.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+        background: "#1a1a1a",
+        color: "#fff",
+      });
       localStorage.removeItem("token");
-      
       window.location.href = "/login";
     } catch (err: any) {
-      const msg = err.response?.data?.message || "No se pudo eliminar la cuenta.";
-      toast(msg);
+        const msg = err.response?.data?.message || "Could not delete account.";
+        Swal.fire("Error", msg, "error");
+      }
     }
   };
 

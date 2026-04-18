@@ -7,6 +7,7 @@ import type { CreateProject, UpdateProject } from "../types/project";
 import toast, { Toaster } from "react-hot-toast";
 import ReturnButton from "../components/ReturnButton";
 import { useNavigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
 
 export default function ProjectPage() {
     // 1. Capturamos el ID de la URL
@@ -102,7 +103,35 @@ export default function ProjectPage() {
     };
     
     const handlePublish = async () => {
-      
+      if (!id || id === "new") {
+        toast.error("Save project before publishing");
+        return;
+      }
+
+      const result = await Swal.fire({
+        title: "Publish project?",
+        text: "Once published, your project will be visible to the community. This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#0d0d0d",
+        cancelButtonColor: "#888",
+        confirmButtonText: "Yes, publish",
+        cancelButtonText: "Cancel",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+
+      if (!result.isConfirmed) return;
+
+      const loadingToast = toast.loading("Publishing...");
+
+      try {
+        await api.post(`/posts/create/${id}`);
+        toast.success("Project published!", { id: loadingToast });
+      } catch (err: any) {
+        const msg = err.response?.data?.message || "Could not publish the project.";
+        toast.error(msg, { id: loadingToast });
+      }
     };
     
     return (

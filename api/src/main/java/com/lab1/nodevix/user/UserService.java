@@ -76,16 +76,16 @@ public class UserService {
 
     @Transactional
     public UpdateResponse update(Long id, UpdateRequest request) {
-
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("No existe el usuario con id: " + id));
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         if (request.getUserName() != null && !request.getUserName().isBlank()) {
             user.setName(request.getUserName());
         }
 
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            user.setPassword(request.getPassword());
+            user.setPassword(encodedPassword);
         }
 
         User saved = userRepo.saveAndFlush(user);

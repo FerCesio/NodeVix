@@ -1,10 +1,13 @@
 package com.lab1.nodevix.post;
 
 import com.lab1.nodevix.post.dtos.InteractionResponse;
+import com.lab1.nodevix.post.dtos.PostListResponse;
 import com.lab1.nodevix.security.JWTService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @Controller
@@ -50,6 +53,11 @@ public class PostController {
     @PatchMapping("/{id}/view")
     public ResponseEntity<InteractionResponse> view(@PathVariable Long id) {
         return ResponseEntity.ok(postService.view(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PostListResponse>> getAll(){
+        return ResponseEntity.ok(postService.getAll());
     }
 
 
