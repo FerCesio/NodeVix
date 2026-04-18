@@ -27,9 +27,9 @@ public class PostController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-       postService.delete(id);
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> delete(@PathVariable Long postId) {
+       postService.delete(postId);
        return ResponseEntity.noContent().build();
     }
 
@@ -58,6 +58,13 @@ public class PostController {
     @GetMapping
     public ResponseEntity<List<PostListResponse>> getAll(){
         return ResponseEntity.ok(postService.getAll());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<PostListResponse>> getUserPosts(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        Long userID = jwtService.extractUserId(token);
+        return ResponseEntity.ok(postService.getUserPosts(userID));
     }
 
 

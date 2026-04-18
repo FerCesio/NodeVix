@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -148,6 +149,31 @@ public class PostService {
                     p.getProject().getDescription(),
                     owner
             );
+        }).collect(Collectors.toList());
+    }
+
+    public List<PostListResponse> getUserPosts(Long userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        List<Project> userProjects = user.getProjects();
+
+        if (userProjects.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Post> userPosts = postRepo.findByProjectIn(userProjects);
+
+        return userPosts.stream().map(p -> {
+            return new PostListResponse(
+                    p.getId(),
+                    p.getViews(),
+                    p.getLikes(),
+                    p.getDislikes(),
+                    p.getProject().getName(),
+                    p.getProject().getDescription(),
+                    user.getName()
+            );
+
         }).collect(Collectors.toList());
     }
 }
