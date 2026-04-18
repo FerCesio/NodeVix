@@ -43,7 +43,7 @@ export default function MyPublishedProjects() {
 
     return (
         <div className="projects-container">
-            <h1>Your posts</h1>
+            <h1>Posts</h1>
             
             <div className="projects-list">
                 {posts.length > 0 ? (
@@ -112,13 +112,13 @@ function PublishedPostCard({ post, onDelete }: PostCardProps) {
         <div className="project-card wide">
             <div className="project-info">
                 <h3>{post.projectName}</h3>
-                <p className="project-desc">{post.projectDescription || "No description"}</p>
+                <p className="project-desc">{post.projectDescription || "No description available."}</p>
                 
                 {/* Visualización de las métricas del DTO */}
                 <div className="project-stats-row" style={{ display: 'flex', gap: '15px', marginTop: '10px', color: '#bbb', fontSize: '0.85rem' }}>
-                    <span>👁️ {post.views} visitas</span>
-                    <span>👍 {post.likes} likes</span>
-                    <span>👎 {post.dislikes} dislikes</span>
+                    <span>👁️ {post.views} </span>
+                    <span>👍 {post.likes} </span>
+                    <span>👎 {post.dislikes} </span>
                 </div>
 
         
