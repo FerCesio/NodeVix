@@ -65,13 +65,12 @@ public class ProjectService {
             throw new RuntimeException("Acceso denegado");
         }
 
-        // 2. Actualización de metadatos básicos
         project.setName(up.getName());
         project.setDescription(up.getDescription());
 
         // 3. PIPELINE DE CONTENIDO (Opcional)
         // Si el 'content' en la request es null, el proyecto mantiene su JSON anterior
-        if (up.getContent() != null) {
+        if (up.getContent() != null && !up.getContent().isBlank()) {
             project.setContent(up.getContent());
         }
 

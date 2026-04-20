@@ -110,7 +110,7 @@ export default function ProjectPage() {
 
       const result = await Swal.fire({
         title: "Publish project?",
-        text: "Once published, your project will be visible to the community. This action cannot be undone.",
+        text: "Once published, your project will be visible to the community.",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#0d0d0d",
