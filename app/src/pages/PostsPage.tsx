@@ -83,7 +83,7 @@ function PostCard({ post }: { post: PostListResponse }) {
             </div>
 
             <div className="project-actions-vertical">
-                <button className="action-btn enter" title="View Simulation">
+                <button className="action-btn enter" title="View Simulation" onClick={() => window.location.href = `/posts/${post.id}`}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>

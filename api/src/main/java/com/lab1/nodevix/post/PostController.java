@@ -67,5 +67,20 @@ public class PostController {
         return ResponseEntity.ok(postService.getUserPosts(userID));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<PostListResponse> getById(@PathVariable Long id){
+        return ResponseEntity.ok(postService.getById(id));
+    }
+
+    @GetMapping("/{id}/interaction")
+    public ResponseEntity<InteractionResponse> getInteractionById(@PathVariable Long id, @RequestHeader(value = "Authorization", required = false) String authHeader){
+
+        Long userId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            userId = jwtService.extractUserId(token);
+        }
+        return ResponseEntity.ok(postService.getInteraction(id, userId));
+    }
 
 }
