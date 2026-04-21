@@ -5,12 +5,19 @@ import "../styles/userProjects.css";
 import "../styles/general.css";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+import AvatarSelector from "./AvatarSelector";
 
 export default function UserConfig() {
+
   const [form, setForm] = useState<UpdateRequest>({
     userName: "",
     password: "",
+    avatarUrl: "avatar_0.png" // Valor por defecto
   });
+
+  const handleAvatarChange = (avatarName: string) => {
+    setForm({ ...form, avatarUrl: avatarName });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,28 +26,16 @@ export default function UserConfig() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const payload: Partial<UpdateRequest> = {};
-    if (form.userName.trim()) payload.userName = form.userName;
-    if (form.password.trim()) payload.password = form.password;
-
-    if (Object.keys(payload).length === 0) {
-      toast("Completá al menos un campo para actualizar.");
-      return;
-    }
-
-    console.log("Payload mandado: ", payload)
-
     try {
-      const res = await api.put<UpdateResponse>("/users", payload);
-      console.log(res.data);
-      toast("Usuario actualizado correctamente.");
-    } catch (err: any) {
-      if (err.response?.data?.message) {
-        toast(err.response.data.message);
-      } else {
-        toast("Error de conexión con el servidor.");
-      }
-      console.error(err);
+      // Como ahora todo es texto, enviamos JSON normal
+      await api.put("/user/update", {
+        userName: form.userName,
+        password: form.password,
+        avatarUrl: form.avatarUrl // Enviamos el string "avatar_x.png"
+      });
+      toast.success("Profile updated");
+    } catch (error) {
+      toast.error("Error updating profile");
     }
   };
 
@@ -84,7 +79,10 @@ export default function UserConfig() {
     <div className="user-config-view">
       <h1>User Config</h1>
       <p>Update your access information</p>
-
+      <AvatarSelector 
+        selectedAvatar={form.avatarUrl} 
+        onSelect={handleAvatarChange} 
+      />
       <form onSubmit={handleSubmit} style={{ textAlign: "left" }}>
         <div style={{ marginBottom: "15px" }}>
           <label style={{ fontSize: "14px", fontWeight: "bold", color: "#666" }}>
