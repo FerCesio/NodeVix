@@ -159,9 +159,9 @@ public class PostService {
         return userPosts.stream().map(p -> {
             return new PostListResponse(
                     p.getId(),
-                    p.getViews(),
                     p.getLikes(),
                     p.getDislikes(),
+                    p.getViews(),
                     p.getProject().getName(),
                     p.getProject().getDescription(),
                     user.getName()
@@ -179,9 +179,9 @@ public class PostService {
 
         return new PostListResponse(
                 post.getId(),
-                post.getViews(),
                 post.getLikes(),
                 post.getDislikes(),
+                post.getViews(),
                 post.getProject().getName(),
                 post.getProject().getDescription(),
                 user.getName()
