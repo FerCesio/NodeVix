@@ -115,7 +115,9 @@ public class PostService {
     public InteractionResponse view(Long postId){
         Post post = postRepo.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post no encontrado"));
+
         post.setViews(post.getViews() + 1);
+        postRepo.save(post);
         return new InteractionResponse(
                 post.getLikes(),
                 post.getDislikes(),
@@ -159,9 +161,9 @@ public class PostService {
         return userPosts.stream().map(p -> {
             return new PostListResponse(
                     p.getId(),
-                    p.getViews(),
                     p.getLikes(),
                     p.getDislikes(),
+                    p.getViews(),
                     p.getProject().getName(),
                     p.getProject().getDescription(),
                     user.getName()
@@ -179,9 +181,9 @@ public class PostService {
 
         return new PostListResponse(
                 post.getId(),
-                post.getViews(),
                 post.getLikes(),
                 post.getDislikes(),
+                post.getViews(),
                 post.getProject().getName(),
                 post.getProject().getDescription(),
                 user.getName()
