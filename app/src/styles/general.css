@@ -148,6 +148,17 @@
   --font-size: 12px;
 }
 
+.btn-small:hover::before {
+  transform: translateX(-101%) !important;
+}
+
+/* Evita que el texto cambie a blanco y mantiene el estilo original */
+.btn-small:not(:disabled):hover {
+  color: #0d0d0d; /* Mantiene el color oscuro original */
+  box-shadow: none; /* Elimina el borde blanco si no lo deseas */
+  
+}
+
 /* BUTTON ANIMATIONS :)*/
 .btn::before {
   content: '';
