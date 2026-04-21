@@ -96,7 +96,7 @@ export default function UserConfig() {
 
   return (
     <div className="user-config-view">
-      <h1>User Config</h1>
+      <h1>- User Config -</h1>
       <p>Update your access information</p>
       <AvatarSelector 
         selectedAvatar={form.avatarUrl} 

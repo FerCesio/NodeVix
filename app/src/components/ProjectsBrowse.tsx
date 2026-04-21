@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 export default function ProjectsBrowse() {
     const [projects, setProjects] = useState<ReadListResponse[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const deleteProject = async (projectId: number) => {
         try {
@@ -59,18 +60,34 @@ export default function ProjectsBrowse() {
         return dateB - dateA;
     });
 
+    const filteredProjects = sortedProjects.filter((project) => {
+        const term = searchTerm.toLowerCase();
+        // Ajustamos las propiedades a 'name' y 'description' que usa tu ReadListResponse
+        const name = (project.name || "").toLowerCase();
+        const desc = (project.description || "").toLowerCase();
+        
+        return name.includes(term) || desc.includes(term);
+    });
+    
     if (loading) return <div className="loader">Cargando proyectos...</div>;
 
     return (
         <div className="projects-container">
-            <h1>My projects</h1>
-            <form onSubmit={(e) => e.preventDefault()}>
-                <input name="searched" placeholder="Search..." className="search-input" />
-            </form>
+            <h1>- My projects -</h1>
+            {/* Sección de búsqueda mejorada */}
+            <div className="search-section" style={{ marginBottom: "20px" }}>
+                <input
+                    className="search-input" // O "nav-community-input" según tu CSS
+                    placeholder="Search by name or description..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
             
             <div className="projects-list">
-                {sortedProjects.length > 0 ? (
-                    sortedProjects.map((item) => (
+                {/* Usamos filteredProjects en lugar de sortedProjects */}
+                {filteredProjects.length > 0 ? (
+                    filteredProjects.map((item) => (
                         <ProjectCard 
                             key={item.id} 
                             project={item} 
@@ -78,7 +95,11 @@ export default function ProjectsBrowse() {
                         />
                     ))
                 ) : (
-                    <p>You don't have any projects yet</p>
+                    <p>
+                        {searchTerm 
+                            ? `No projects found matching "${searchTerm}"` 
+                            : "You don't have any projects yet"}
+                    </p>
                 )}
             </div>
 

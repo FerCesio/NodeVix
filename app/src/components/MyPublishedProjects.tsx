@@ -43,7 +43,7 @@ export default function MyPublishedProjects() {
 
     return (
         <div className="projects-container">
-            <h1>Posts</h1>
+            <h1>- My Posts -</h1>
             
             <div className="projects-list">
                 {posts.length > 0 ? (
