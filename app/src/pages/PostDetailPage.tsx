@@ -20,6 +20,7 @@ export default function PostDetailPage() {
     useEffect(() => {
         const fetchPost = async () => {
             try {
+                await api.patch(`/posts/${id}/view`);
                 const res = await api.get<PostListResponse>(`/posts/${id}`);
                 setPost(res.data);
                 if (isLoggedIn) {
