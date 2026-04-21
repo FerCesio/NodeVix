@@ -5,3 +5,7 @@ export type CommentResponse = {
     modifiedOn: string;
     isOwner: boolean;
 }
+
+export type MessageRequest = {
+    message: string;
+}
