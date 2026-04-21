@@ -3,6 +3,7 @@ package com.lab1.nodevix.user.dtos;
 public class UpdateRequest {
     private String userName;
     private String password;
+    private String avatarUrl;
 
 
     public String getUserName(){
@@ -13,4 +14,7 @@ public class UpdateRequest {
         return password;
     }
 
+    public String getAvatarUrl(){
+        return avatarUrl;
+    }
 }

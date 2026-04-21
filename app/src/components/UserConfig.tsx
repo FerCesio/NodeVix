@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../services/api";
 import type { UpdateRequest, UpdateResponse } from "../types/user";
 import "../styles/userProjects.css";
@@ -12,8 +12,26 @@ export default function UserConfig() {
   const [form, setForm] = useState<UpdateRequest>({
     userName: "",
     password: "",
-    avatarUrl: "avatar_0.png" // Valor por defecto
+    avatarUrl: "" // Valor por defecto
   });
+  
+  // Runs when the component is used
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await api.get("/users/get"); // Tu endpoint de perfil
+        setForm({
+          userName: response.data.name,
+          password: "", // El password no se suele pedir al GET
+          avatarUrl: response.data.avatarUrl || "avatar_0.png" // Sincronización clave
+        });
+        console.log("received: " + response.data.userName)
+      } catch (error) {
+        console.error("Error al cargar datos", error);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   const handleAvatarChange = (avatarName: string) => {
     setForm({ ...form, avatarUrl: avatarName });
@@ -28,7 +46,7 @@ export default function UserConfig() {
     
     try {
       // Como ahora todo es texto, enviamos JSON normal
-      await api.put("/user/update", {
+      await api.put("/users/update", {
         userName: form.userName,
         password: form.password,
         avatarUrl: form.avatarUrl // Enviamos el string "avatar_x.png"
@@ -41,39 +59,40 @@ export default function UserConfig() {
 
   // --- BORRAR ---
   const handleDelete = async () => {
-  const result = await Swal.fire({
-    title: "Are you sure?",
-    text: "This action is irreversible and will delete all your projects and data.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#c0392b",
-    cancelButtonColor: "#333",
-    confirmButtonText: "Yes, delete",
-    cancelButtonText: "Cancel",
-    background: "#1a1a1a",
-    color: "#fff",
-  });
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This action is irreversible and will delete all your projects and data.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#c0392b",
+      cancelButtonColor: "#333",
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
+      background: "#1a1a1a",
+      color: "#fff",
+    });
 
-  if (result.isConfirmed) {
-    try {
-      await api.delete("/users/me");
-      await Swal.fire({
-        title: "Deleted!",
-        text: "Your account has been deleted.",
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-        background: "#1a1a1a",
-        color: "#fff",
-      });
-      localStorage.removeItem("token");
-      window.location.href = "/login";
-    } catch (err: any) {
-        const msg = err.response?.data?.message || "Could not delete account.";
-        Swal.fire("Error", msg, "error");
+    if (result.isConfirmed) {
+      try {
+        await api.delete("/users/me");
+        await Swal.fire({
+          title: "Deleted!",
+          text: "Your account has been deleted.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+          background: "#1a1a1a",
+          color: "#fff",
+        });
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      } catch (err: any) {
+          const msg = err.response?.data?.message || "Could not delete account.";
+          Swal.fire("Error", msg, "error");
+        }
       }
-    }
   };
+
 
   return (
     <div className="user-config-view">

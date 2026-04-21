@@ -7,9 +7,11 @@ interface AvatarSelectorProps {
 }
 
 export default function AvatarSelector({ selectedAvatar, onSelect }: AvatarSelectorProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const currentAvatarObj = AVATAR_LIST.find(a => a.id === selectedAvatar);
   
+  const [isExpanded, setIsExpanded] = useState(false);
+  // Intentamos buscar el seleccionado, si no, usamos el primero de la lista
+  const currentAvatarObj = AVATAR_LIST.find(a => a.id === selectedAvatar) || AVATAR_LIST[0];
+
   const handleSelect = (avatar: string) => {
     onSelect(avatar);
     setIsExpanded(false); // Contraer al seleccionar
@@ -39,7 +41,7 @@ export default function AvatarSelector({ selectedAvatar, onSelect }: AvatarSelec
           onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
           <img 
-            src={currentAvatarObj ? currentAvatarObj.img : AVATAR_LIST[0].img} 
+            src={currentAvatarObj.img} 
             alt="Selected Avatar" 
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
