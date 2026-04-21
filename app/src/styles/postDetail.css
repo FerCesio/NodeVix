@@ -11,6 +11,7 @@
     border-bottom: 0.5px solid #333;
     padding: 10px 16px;
     display: flex;
+    height: 50px;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -23,9 +24,11 @@
 }
 
 .post-project-title {
-    font-size: 15px;
+    font-size: 30px;
     font-weight: 500;
     color: #fff;
+    margin-left: 25px;
+    white-space: nowrap;
 }
 
 .post-topbar-right {

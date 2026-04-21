@@ -30,14 +30,14 @@ public class CommentController {
     }
 
     @PostMapping("/post/{postId}")
-    public ResponseEntity<Void> create(
+    public ResponseEntity<CommentResponse> create(
             @PathVariable Long postId,
             @RequestBody MessageRequest mr,
             @RequestHeader("Authorization") String authHeader) {
 
         Long userId = getUserIdFromHeader(authHeader);
-        commentService.create(postId, userId, mr);
-        return ResponseEntity.ok().build();
+
+        return ResponseEntity.ok(commentService.create(postId, userId, mr));
     }
 
     @PatchMapping("/{commentId}")
@@ -63,7 +63,7 @@ public class CommentController {
     }
 
     @GetMapping("/post/{postId}")
-    public ResponseEntity<List<CommentResponse>> getCommentsFromPost(@PathVariable Long postId, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<List<CommentResponse>> getCommentsFromPost(@PathVariable Long postId, @RequestHeader(value="Authorization", required = false) String authHeader) {
         Long userId = getUserIdFromHeader(authHeader);
         return ResponseEntity.ok(commentService.getByPost(postId, userId));
     }

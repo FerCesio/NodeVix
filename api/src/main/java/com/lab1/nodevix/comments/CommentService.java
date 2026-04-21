@@ -28,7 +28,7 @@ public class CommentService {
     }
 
     @Transactional
-    public void create(Long postId, Long userId, MessageRequest mr){
+    public CommentResponse create(Long postId, Long userId, MessageRequest mr){
         Post post = postRepo.findById(postId).orElseThrow();
         User user = userRepo.findById(userId).orElseThrow();
 
@@ -37,7 +37,15 @@ public class CommentService {
         comment.setUser(user);
         comment.setMessage(mr.getMessage());
 
-        commentRepo.save(comment);
+        Comment saved = commentRepo.save(comment);
+
+        return new CommentResponse(
+                saved.getId(),
+                user.getName(),
+                saved.getMessage(),
+                saved.getModifiedOn() != null ? saved.getModifiedOn().toString() : "S/F",
+                true
+        );
     }
 
     @Transactional

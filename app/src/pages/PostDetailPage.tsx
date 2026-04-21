@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { api } from "../services/api";
 import toast, { Toaster } from "react-hot-toast";
 import "../styles/postDetail.css";
-import type {CommentResponse} from "../types/comment";
+import type {CommentResponse, MessageRequest} from "../types/comment";
 import type { PostListResponse, InteractionResponse } from "../types/post";
 
 
@@ -37,6 +37,7 @@ export default function PostDetailPage() {
     const fetchComments = async () => {
         try {
             const res = await api.get<CommentResponse[]>(`/comments/post/${id}`);
+            console.log("Comentarios: ", res.data);
             setComments(res.data);
         } catch {
             toast.error("No se pudieron cargar los comentarios.");
@@ -50,8 +51,13 @@ export default function PostDetailPage() {
 
     const handleComment = async () => {
         if (!newComment.trim()) return;
+
+        const requestBody: MessageRequest = {
+            message: newComment
+        };
+
         try {
-            const res = await api.post<CommentResponse>(`/comments/post/${id}`, { message: newComment });
+            const res = await api.post<CommentResponse>(`/comments/post/${id}`, requestBody);
             setComments(prev => [res.data, ...prev]);
             setNewComment("");
         } catch {
@@ -95,7 +101,7 @@ export default function PostDetailPage() {
             <Toaster />
             <div className="post-topbar">
                 <div className="post-topbar-left">
-                    <button className="btn btn-small" onClick={() => window.location.href = "/posts"}>
+                    <button className="btn" onClick={() => window.location.href = "/posts"}>
                         <span>← Back</span>
                     </button>
                     <span className="post-project-title">{post.projectName}</span>
