@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 export default function MyPublishedProjects() {
     const [posts, setPosts] = useState<PostListResponse[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const deletePost = async (postId: number) => {
         try {
@@ -40,14 +41,30 @@ export default function MyPublishedProjects() {
     }, []);
 
     if (loading) return <div className="loader">Cargando tus publicaciones...</div>;
+    
+    const filteredPosts = posts.filter((post) => {
+        const term = searchTerm.toLowerCase();
+        const name = (post.projectName || "").toLowerCase();
+        const desc = (post.projectDescription || "").toLowerCase();
+        
+        return name.includes(term) || desc.includes(term);
+    });
 
     return (
         <div className="projects-container">
             <h1>- My Posts -</h1>
-            
+            <div className="search-section" style={{ marginBottom: "20px" }}>
+                <input
+                    className="search-input" 
+                    placeholder="Search by name or description..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
             <div className="projects-list">
-                {posts.length > 0 ? (
-                    posts.map((item) => (
+                {/* CAMBIO: Usar filteredPosts aquí */}
+                {filteredPosts.length > 0 ? (
+                    filteredPosts.map((item) => (
                         <PublishedPostCard 
                             key={item.id} 
                             post={item} 
@@ -55,7 +72,11 @@ export default function MyPublishedProjects() {
                         />
                     ))
                 ) : (
-                    <p>You haven't published anything yet</p>
+                    <p>
+                        {searchTerm 
+                            ? `No posts found matching "${searchTerm}"` 
+                            : "You haven't published anything yet"}
+                    </p>
                 )}
             </div>
         </div>

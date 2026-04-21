@@ -30,4 +30,6 @@ public class AuthController {
     public ResponseEntity<LoginResponse> loginUser(@RequestBody UserLogin ul) {
         return ResponseEntity.status(201).body(userService.login(ul));
     }
+
+    
 }
