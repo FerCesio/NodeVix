@@ -149,6 +149,7 @@ export default function PostDetailPage() {
                                         )}
                                     </div>
                                     <p>{c.message}</p>
+                                    <p>{c.modifiedOn}</p>
                                 </div>
                             ))}
                         </div>
