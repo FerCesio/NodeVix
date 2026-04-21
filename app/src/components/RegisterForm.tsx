@@ -62,12 +62,12 @@ export default function RegisterForm({onSuccess}: Props) {
         if (window.location.pathname !== "/project") {
           window.location.href = "/home";
         } else {
-          toast.success("¡Cuenta creada y sesión iniciada!");
+          toast.success("Account created!");
         }
 
       } catch (loginErr: any) {
         console.error("Error en login automático:", loginErr);
-        toast.success("Cuenta creada, pero hubo un error al iniciar sesión automáticamente. Por favor, logueate manualmente.");
+        toast.success("Automatic log in failed. Please log in manually.");
       }
 
     } catch (err: any) {
@@ -75,7 +75,7 @@ export default function RegisterForm({onSuccess}: Props) {
       if (err.response && err.response.data) {
         toast.error(err.response.data.message);
       } else {
-        toast.error("Error de conexión al intentar registrarse");
+        toast.error("Couldn't register.");
       }
       console.error(err);
     }

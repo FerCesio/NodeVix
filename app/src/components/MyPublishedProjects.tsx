@@ -30,7 +30,7 @@ export default function MyPublishedProjects() {
             setPosts(response.data);
         } catch (error) {
             console.error("Error cargando mis posts:", error);
-            toast.error("No se pudieron cargar tus publicaciones");
+            toast.error("Couldn't load posts.");
         } finally {
             setLoading(false);
         }

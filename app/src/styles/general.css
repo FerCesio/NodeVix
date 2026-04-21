@@ -160,6 +160,7 @@
   --font-size: 12px;
 }
 
+
 .btn-small:hover::before {
   transform: translateX(-101%) !important;
 }

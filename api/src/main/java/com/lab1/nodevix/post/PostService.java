@@ -1,5 +1,6 @@
 package com.lab1.nodevix.post;
 
+import com.lab1.nodevix.comments.CommentRepository;
 import com.lab1.nodevix.post.dtos.InteractionResponse;
 import com.lab1.nodevix.post.dtos.PostListResponse;
 import com.lab1.nodevix.postInteraction.PostInteraction;
@@ -25,12 +26,14 @@ public class PostService {
     private final ProjectRepository projectRepo;
     private final PostInteractionRepository postLikeRepo;
     private final UserRepository userRepo;
+    private final CommentRepository commentRepo;
 
-    public PostService(PostRepository postRepo, ProjectRepository projectRepo, PostInteractionRepository postLikeRepo, UserRepository userRepo) {
+    public PostService(PostRepository postRepo, ProjectRepository projectRepo, PostInteractionRepository postLikeRepo, UserRepository userRepo, CommentRepository commentRepo) {
         this.postRepo = postRepo;
         this.projectRepo = projectRepo;
         this.postLikeRepo = postLikeRepo;
         this.userRepo = userRepo;
+        this.commentRepo = commentRepo;
     }
 
     @Transactional
@@ -49,6 +52,7 @@ public class PostService {
         if (!postRepo.existsById(postId)) {
             throw new EntityNotFoundException("No existe el post con id: " + postId);
         }
+        commentRepo.deleteByPostId(postId);
         postLikeRepo.deleteByPostId(postId);
         postRepo.deleteById(postId);
     }

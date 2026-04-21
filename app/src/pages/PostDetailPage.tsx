@@ -28,7 +28,7 @@ export default function PostDetailPage() {
                     setInteraction(interactionRes.data);
                 }
             } catch {
-                toast.error("No se pudo cargar el post.");
+                toast.error("Could't load post.");
             }
         };
         fetchPost();
@@ -36,11 +36,13 @@ export default function PostDetailPage() {
 
     const fetchComments = async () => {
         try {
-            const res = await api.get<CommentResponse[]>(`/comments/post/${id}`);
-            console.log("Comentarios: ", res.data);
-            setComments(res.data);
+            if (isLoggedIn) {
+                const res = await api.get<CommentResponse[]>(`/comments/post/${id}`);
+                console.log("Comentarios: ", res.data);
+                setComments(res.data);
+            }
         } catch {
-            toast.error("No se pudieron cargar los comentarios.");
+            toast.error("Couldn't load comments.");
         }
     };
 
@@ -61,7 +63,7 @@ export default function PostDetailPage() {
             setComments(prev => [res.data, ...prev]);
             setNewComment("");
         } catch {
-            toast.error("No se pudo enviar el comentario.");
+            toast.error("Couldn't send comment.");
         }
     };
 
@@ -70,7 +72,7 @@ export default function PostDetailPage() {
             await api.delete(`/comments/${commentId}`);
             setComments(prev => prev.filter(c => c.id !== commentId));
         } catch {
-            toast.error("No se pudo borrar el comentario.");
+            toast.error("Couldn't delete comment.");
         }
     };
 
@@ -80,7 +82,7 @@ export default function PostDetailPage() {
             setInteraction(res.data);
             setPost(prev => prev ? { ...prev, likes: res.data.likes } : prev);
         } catch {
-            toast.error("Error al dar like.");
+            toast.error("Failed to like.");
         }
     };
 
@@ -90,7 +92,7 @@ export default function PostDetailPage() {
             setInteraction(res.data);
             setPost(prev => prev ? { ...prev, dislikes: res.data.dislikes } : prev);
         } catch {
-            toast.error("Error al dar dislike.");
+            toast.error("Failed to dislike.");
         }
     };
 
@@ -132,8 +134,11 @@ export default function PostDetailPage() {
                         </div>
 
                         <div className="post-comments-list">
-                            {comments.length === 0 && (
+                            {(comments.length === 0 && isLoggedIn) && (
                                 <p className="no-comments">No comments yet. Be the first!</p>
+                            )}
+                            {(comments.length === 0 && !isLoggedIn) && (
+                                <p className="no-comments">Log in to see comments.</p>
                             )}
                             {comments.map(c => (
                                 <div key={c.id} className="post-comment">

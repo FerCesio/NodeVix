@@ -33,7 +33,7 @@ export default function ProjectsBrowse() {
             setProjects(response.data);
         } catch (error) {
             console.error("Error cargando proyectos:", error);
-            toast.error("Error al cargar la lista de proyectos");
+            toast.error("Error while loading project list.");
         } finally {
             setLoading(false);
         }
@@ -129,7 +129,7 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
     });
     
     const handleSave = async () => {
-        const loadingToast = toast.loading("Actualizando proyecto...");
+        const loadingToast = toast.loading("Updating project...");
         try {
             const payload: UpdateProject = {
                 name: editForm.name,
@@ -139,7 +139,7 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
 
             await api.put<UpdateResponse>(`/manage/${project.id}`, payload);
             
-            toast.success("¡Cambios guardados!", { id: loadingToast });
+            toast.success("Changes saved!", { id: loadingToast });
             setIsEditing(false);
             
             // Actualización local de la referencia para no esperar a un refetch
@@ -148,7 +148,7 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
             
         } catch (err: any) {
             console.error(err);
-            const msg = err.response?.data?.message || "Error al conectar con el servidor";
+            const msg = err.response?.data?.message || "Failed server connection.";
             toast.error(msg, { id: loadingToast });
         }
     };
