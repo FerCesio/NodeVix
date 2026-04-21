@@ -10,6 +10,7 @@ import com.lab1.nodevix.user.User;
 import com.lab1.nodevix.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ public class PostService {
         if (!postRepo.existsById(postId)) {
             throw new EntityNotFoundException("No existe el post con id: " + postId);
         }
+        postLikeRepo.deleteByPostId(postId);
         postRepo.deleteById(postId);
     }
 
@@ -56,28 +58,28 @@ public class PostService {
         Post post = postRepo.findById(postId).orElseThrow();
         User user = userRepo.findById(userId).orElseThrow();
 
-        // Buscamos si ya existe un registro en la tabla intermedia
-        Optional<PostInteraction> existingLike = postLikeRepo.findByPostAndUser(post, user);
+        Optional<PostInteraction> existing = postLikeRepo.findByPostAndUser(post, user);
 
-        boolean userLikedNow = false;
-
-        if (existingLike.isEmpty()) {
+        if (existing.isPresent()) {
+            PostInteraction interaction = existing.get();
+            if (interaction.isLike()) {
+                postLikeRepo.delete(interaction);
+                postLikeRepo.flush();
+                post.setLikes(Math.max(0, post.getLikes() - 1));
+            } else {
+                interaction.setLike(true);
+                postLikeRepo.save(interaction);
+                post.setLikes(post.getLikes() + 1);
+                post.setDislikes(Math.max(0, post.getDislikes() - 1));
+            }
+        } else {
             PostInteraction newLike = new PostInteraction(user, post, true);
             postLikeRepo.save(newLike);
             post.setLikes(post.getLikes() + 1);
-            userLikedNow = true;
         }
 
         postRepo.save(post);
-
-
-        return new InteractionResponse(
-                post.getLikes(),
-                post.getDislikes(),
-                post.getViews(),
-                userLikedNow,
-                false
-        );
+        return getInteraction(postId, userId); // Reutilizamos el método para devolver el estado real
     }
 
     @Transactional
@@ -85,37 +87,28 @@ public class PostService {
         Post post = postRepo.findById(postId).orElseThrow();
         User user = userRepo.findById(userId).orElseThrow();
 
-        // Buscamos si ya existe un registro en la tabla intermedia
-        Optional<PostInteraction> existingInteraction = postLikeRepo.findByPostAndUser(post, user);
+        Optional<PostInteraction> existing = postLikeRepo.findByPostAndUser(post, user);
 
-        boolean userDislikedNow = false;
-
-        if (existingInteraction.isEmpty()) {
-            PostInteraction newLike = new PostInteraction(user, post, false);
-            postLikeRepo.save(newLike);
-            post.setDislikes(post.getDislikes() + 1);
-            userDislikedNow = true;
-        } else {
-            PostInteraction interaction = existingInteraction.get();
-            if (interaction.isLike()){
+        if (existing.isPresent()) {
+            PostInteraction interaction = existing.get();
+            if (!interaction.isLike()) {
+                postLikeRepo.delete(interaction);
+                postLikeRepo.flush();
+                post.setDislikes(Math.max(0, post.getDislikes() - 1));
+            } else {
                 interaction.setLike(false);
                 postLikeRepo.save(interaction);
-
-                post.setLikes(Math.max(0, post.getLikes() - 1));
                 post.setDislikes(post.getDislikes() + 1);
-                userDislikedNow = true;
+                post.setLikes(Math.max(0, post.getLikes() - 1));
             }
+        } else {
+            PostInteraction newDislike = new PostInteraction(user, post, false);
+            postLikeRepo.save(newDislike);
+            post.setDislikes(post.getDislikes() + 1);
         }
 
         postRepo.save(post);
-
-        return new InteractionResponse(
-                post.getLikes(),
-                post.getDislikes(),
-                post.getViews(),
-                false,
-                userDislikedNow
-        );
+        return getInteraction(postId, userId);
     }
 
     @Transactional
@@ -142,9 +135,9 @@ public class PostService {
 
             return new PostListResponse(
                     p.getId(),
-                    p.getViews(),
                     p.getLikes(),
                     p.getDislikes(),
+                    p.getViews(),
                     p.getProject().getName(),
                     p.getProject().getDescription(),
                     owner
@@ -175,5 +168,60 @@ public class PostService {
             );
 
         }).collect(Collectors.toList());
+    }
+
+    public PostListResponse getById(Long id) {
+        Post post = postRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Post no encontrado"));
+        Long realProjectId = post.getProject().getId();
+
+        User user = userRepo.findByProjectId(realProjectId).orElseThrow(() -> new EntityNotFoundException("No se encontró el proyecto: " + realProjectId));
+
+        return new PostListResponse(
+                post.getId(),
+                post.getViews(),
+                post.getLikes(),
+                post.getDislikes(),
+                post.getProject().getName(),
+                post.getProject().getDescription(),
+                user.getName()
+        );
+    }
+
+    public InteractionResponse getInteraction(Long id, Long userID) {
+        Post post = postRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Post no encontrado"));
+
+        if (userID == null){
+            return new InteractionResponse(
+                    post.getLikes(),
+                    post.getDislikes(),
+                    post.getViews(),
+                    false,
+                    false
+            );
+        }
+
+        User user = userRepo.findById(userID).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        Optional<PostInteraction> interaction = postLikeRepo.findByPostAndUser(post, user);
+
+        if (interaction.isEmpty()){
+            return new InteractionResponse(
+                    post.getLikes(),
+                    post.getDislikes(),
+                    post.getViews(),
+                    false,
+                    false
+            );
+        }
+
+        boolean liked = interaction.get().isLike();
+        PostInteraction pi = interaction.get();
+        return new InteractionResponse(
+                post.getLikes(),
+                post.getDislikes(),
+                post.getViews(),
+                pi.isLike(),
+                !pi.isLike()
+        );
     }
 }
