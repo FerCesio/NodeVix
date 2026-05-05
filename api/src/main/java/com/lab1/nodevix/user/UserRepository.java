@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> { // Ya viene 
 
     @Query("SELECT COUNT(u) > 0 FROM User u JOIN u.projects p WHERE u.id = :userId AND p.id = :projectId")
     boolean hasProject(@Param("userId") Long userId, @Param("projectId") Long projectId);
+
+    @Query("SELECT u FROM User u JOIN u.projects p WHERE p.id = :projectId")
+    Optional<User> findByProjectId(@Param("projectId") Long projectId);
 }

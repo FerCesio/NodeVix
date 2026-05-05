@@ -7,6 +7,7 @@ import type { CreateProject, UpdateProject } from "../types/project";
 import toast, { Toaster } from "react-hot-toast";
 import ReturnButton from "../components/ReturnButton";
 import { useNavigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
 
 export default function ProjectPage() {
     // 1. Capturamos el ID de la URL
@@ -31,7 +32,7 @@ export default function ProjectPage() {
               setProjectContent(res.data.content);
               
           } catch (err) {
-              toast.error("Proyecto no encontrado");
+              toast.error("Project not found.");
               navigate("/home");
           }
       };
@@ -54,7 +55,7 @@ export default function ProjectPage() {
             return;
         }
 
-        const loadingToast = toast.loading(id ? "Actualizando..." : "Creando...");
+        const loadingToast = toast.loading(id ? "Updating..." : "Creating...");
 
         try {
             if (!id || id === "new") {
@@ -68,7 +69,7 @@ export default function ProjectPage() {
                 // (Asegúrate de que tu Backend devuelva el objeto creado o su ID)
                 const newId = response.data.id; 
 
-                toast.success("¡Proyecto creado!", { id: loadingToast });
+                toast.success("Project successfully created!", { id: loadingToast });
 
                 // 3. CAMBIO DE RUTA SILENCIOSO:
                 // En lugar de ir a /home, navegamos a la ruta de edición de este nuevo ID
@@ -86,12 +87,12 @@ export default function ProjectPage() {
                 
                 await api.put(`/manage/${id}`, updateProj);
                 
-                toast.success("Cambios guardados", { id: loadingToast });
+                toast.success("Changes saved", { id: loadingToast });
                  
             }
         } catch (error: any) {
             console.error(error);
-            toast.error("Error al guardar", { id: loadingToast });
+            toast.error("Error while saving", { id: loadingToast });
         }
     };
     
@@ -102,7 +103,35 @@ export default function ProjectPage() {
     };
     
     const handlePublish = async () => {
-      
+      if (!id || id === "new") {
+        toast.error("Save project before publishing");
+        return;
+      }
+
+      const result = await Swal.fire({
+        title: "Publish project?",
+        text: "Once published, your project will be visible to the community.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#0d0d0d",
+        cancelButtonColor: "#888",
+        confirmButtonText: "Yes, publish",
+        cancelButtonText: "Cancel",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+
+      if (!result.isConfirmed) return;
+
+      const loadingToast = toast.loading("Publishing...");
+
+      try {
+        await api.post(`/posts/create/${id}`);
+        toast.success("Project published!", { id: loadingToast });
+      } catch (err: any) {
+        const msg = err.response?.data?.message || "Could not publish the project.";
+        toast.error(msg, { id: loadingToast });
+      }
     };
     
     return (
@@ -112,7 +141,7 @@ export default function ProjectPage() {
             <div className="top-left-nav">
              
               <div className="nav-save-group">
-                  <button className="btn btn-small" onClick={() => window.location.assign("/home")}>
+                  <button className="btn btn-return" onClick={() => window.location.assign("/home")}>
                     <span>Home</span>
                   </button>
 
@@ -123,11 +152,11 @@ export default function ProjectPage() {
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                   />
-                  <button className="btn btn-nav-save btn-small " onClick={handleSaveTrigger}>
+                  <button className="btn btn-nav-save btn-return" onClick={handleSaveTrigger}>
                       <span>Save</span>
                   </button>
                   {isLoggedIn && (
-                    <button className="btn btn-small" onClick={handlePublish}>
+                    <button className="btn btn-return" onClick={handlePublish}>
                       <span>Publish</span>
                     </button>
                   )}

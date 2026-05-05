@@ -37,7 +37,7 @@ export default function LoginForm({ onSuccess }: Props) {
       if(onSuccess) onSuccess();
       
       console.log(res.data) ;
-      toast("Usuario inicio sesion");
+      toast.success("Welcome!");
   
       // Chequeo para evitar el cambio de ruta
       if (window.location.pathname != "/project/new") {
@@ -47,9 +47,9 @@ export default function LoginForm({ onSuccess }: Props) {
     } catch (err:any) {
 
       if (err.response && err.response.data){
-        toast(err.response.data.message)
+        toast.error(err.response.data.message)
       } else {
-        toast("Error de conexión con el servidor")
+        toast.error("Failed server connection.")
       }
 
       console.error(err);

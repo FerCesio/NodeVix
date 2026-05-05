@@ -87,4 +87,8 @@ public class User {
         return projects;
     }
 
+    public String getAvatar() {
+        return avatar_url;
+    }
+
 }

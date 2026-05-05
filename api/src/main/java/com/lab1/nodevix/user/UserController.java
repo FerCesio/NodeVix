@@ -18,7 +18,7 @@ public class UserController {
         this.jwtService = jwtService;
     }
 
-    @PutMapping
+    @PutMapping("/update")
     public ResponseEntity<UpdateResponse> update(@RequestHeader("Authorization") String authHeader, @RequestBody UpdateRequest upd) {
         String token = authHeader.substring(7);
         Long id = jwtService.extractUserId(token);
@@ -37,6 +37,13 @@ public class UserController {
         userService.delete(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/get")
+    public ResponseEntity<UserResponse> getProfile(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        Long id = jwtService.extractUserId(token);
+        return ResponseEntity.ok(userService.getProfile(id));
     }
 
 }

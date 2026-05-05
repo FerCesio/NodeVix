@@ -26,13 +26,13 @@ export default function ProjectCreationForm() {
             // El backend debería recibir un objeto con "name"
             await api.post("/manage/create", newProject);
             
-            toast.success("¡Proyecto creado con éxito!");
+            toast.success("Project successfully created!");
 
             navigate("/home");
 
         } catch (err: any) {
             console.error(err);
-            toast.error(err.response?.data?.message || "Error al crear el proyecto");
+            toast.error(err.response?.data?.message || "Failed to create the project.");
         }
     };
     

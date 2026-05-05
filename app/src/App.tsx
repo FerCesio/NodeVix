@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage"
 import ProjectPage from "./pages/ProjectPage"
 import HomePage from "./pages/HomePage"
 import PostsPage from "./pages/PostsPage"
+import PostDetailPage from "./pages/PostDetailPage";
 
 // JWT with spring boot
 // protected paths for front
@@ -35,6 +36,8 @@ function App() {
         
         {/* Ruta para el proyecto del usuario */}
         <Route path="/posts" element={<PostsPage />} />
+
+        <Route path="/posts/:id" element={<PostDetailPage />} />
 
         {/* Ruta para errores (404 Not Found) */}
         <Route path="*" element={<h1>Página no encontrada - 404</h1>} />

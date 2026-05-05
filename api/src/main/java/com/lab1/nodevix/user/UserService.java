@@ -76,21 +76,31 @@ public class UserService {
 
     @Transactional
     public UpdateResponse update(Long id, UpdateRequest request) {
-
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("No existe el usuario con id: " + id));
 
+        // Solo actualiza el nombre si se envió uno válido
         if (request.getUserName() != null && !request.getUserName().isBlank()) {
             user.setName(request.getUserName());
         }
 
+        // CLAVE: Solo encripta si el password NO es nulo ni está en blanco
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            user.setPassword(request.getPassword());
+            String encodedPassword = passwordEncoder.encode(request.getPassword());
+            user.setPassword(encodedPassword);
         }
 
+        if (request.getAvatarUrl() != null && !request.getAvatarUrl().isBlank()) {
+            // Asegúrate que el método en la entidad sea setAvatarUrl si así se llama la columna
+            user.setAvatar(request.getAvatarUrl()); 
+        }
+
+        // En JPA, gracias a @Transactional, el save no es estrictamente necesario 
+        // al final de la transacción, pero saveAndFlush asegura la persistencia inmediata.
         User saved = userRepo.saveAndFlush(user);
 
-        return new UpdateResponse(saved.getId(), saved.getName());
+        // Sugerencia: Incluye el avatar en la respuesta para actualizar el estado en React
+        return new UpdateResponse(saved.getId(), saved.getName(), saved.getAvatar());
     }
 
     @Transactional
@@ -99,5 +109,17 @@ public class UserService {
             throw new RuntimeException("Usuario no encontrado");
         }
         userRepo.deleteById(id);
+    }
+
+    public UserResponse getProfile(Long id) {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        
+        // Retornamos el DTO con los datos necesarios para el form
+        return new UserResponse(
+            user.getId(),
+            user.getName(),
+            user.getAvatar() // El string "avatar_x.png"
+        );
     }
 }

@@ -1,19 +1,19 @@
 package com.lab1.nodevix.comments;
 
+import com.lab1.nodevix.comments.dtos.CommentResponse;
 import com.lab1.nodevix.comments.dtos.MessageRequest;
 import com.lab1.nodevix.comments.dtos.UpdateResponse;
 import com.lab1.nodevix.post.Post;
 import com.lab1.nodevix.post.PostRepository;
-import com.lab1.nodevix.security.JWTService;
 import com.lab1.nodevix.user.User;
 import com.lab1.nodevix.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestHeader;
 
-import java.nio.file.AccessDeniedException;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentService {
@@ -28,7 +28,7 @@ public class CommentService {
     }
 
     @Transactional
-    public void create(Long postId, Long userId, MessageRequest mr){
+    public CommentResponse create(Long postId, Long userId, MessageRequest mr){
         Post post = postRepo.findById(postId).orElseThrow();
         User user = userRepo.findById(userId).orElseThrow();
 
@@ -37,7 +37,15 @@ public class CommentService {
         comment.setUser(user);
         comment.setMessage(mr.getMessage());
 
-        commentRepo.save(comment);
+        Comment saved = commentRepo.save(comment);
+
+        return new CommentResponse(
+                saved.getId(),
+                user.getName(),
+                saved.getMessage(),
+                saved.getModifiedOn() != null ? saved.getModifiedOn().toString() : "S/F",
+                true
+        );
     }
 
     @Transactional
@@ -63,6 +71,19 @@ public class CommentService {
             throw new RuntimeException("No tiene permiso para borrar el comentario");
         }
         commentRepo.delete(comment);
+    }
+
+    public List<CommentResponse> getByPost(Long postId, Long userId){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        return commentRepo.findByPostId(postId).stream()
+                .map(c -> new CommentResponse(
+                        c.getId(),
+                        c.getUser().getName(),
+                        c.getMessage(),
+                        formatter.format(c.getModifiedOn()),
+                        c.getUser().getId().equals(userId)
+                ))
+                .collect(Collectors.toList());
     }
 
 }

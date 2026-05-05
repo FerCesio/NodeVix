@@ -1,11 +1,14 @@
 package com.lab1.nodevix.comments;
 
+import com.lab1.nodevix.comments.dtos.CommentResponse;
 import com.lab1.nodevix.comments.dtos.MessageRequest;
 import com.lab1.nodevix.comments.dtos.UpdateResponse;
 import com.lab1.nodevix.security.JWTService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @Controller
@@ -27,14 +30,14 @@ public class CommentController {
     }
 
     @PostMapping("/post/{postId}")
-    public ResponseEntity<Void> create(
+    public ResponseEntity<CommentResponse> create(
             @PathVariable Long postId,
             @RequestBody MessageRequest mr,
             @RequestHeader("Authorization") String authHeader) {
 
         Long userId = getUserIdFromHeader(authHeader);
-        commentService.create(postId, userId, mr);
-        return ResponseEntity.ok().build();
+
+        return ResponseEntity.ok(commentService.create(postId, userId, mr));
     }
 
     @PatchMapping("/{commentId}")
@@ -59,5 +62,9 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
 
-
+    @GetMapping("/post/{postId}")
+    public ResponseEntity<List<CommentResponse>> getCommentsFromPost(@PathVariable Long postId, @RequestHeader(value="Authorization", required = false) String authHeader) {
+        Long userId = getUserIdFromHeader(authHeader);
+        return ResponseEntity.ok(commentService.getByPost(postId, userId));
+    }
 }

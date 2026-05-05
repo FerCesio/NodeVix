@@ -29,6 +29,7 @@ export type LoginResponse = {
 export type UpdateRequest = {
   userName: string
   password: string
+  avatarUrl: string
 };
 
 export type UpdateResponse = {

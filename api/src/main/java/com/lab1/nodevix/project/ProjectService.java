@@ -4,6 +4,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.lab1.nodevix.post.PostRepository;
 import com.lab1.nodevix.project.dtos.*;
 import com.lab1.nodevix.user.User;
 import com.lab1.nodevix.user.UserRepository;
@@ -15,10 +16,12 @@ import org.springframework.stereotype.Service;
 public class ProjectService {
     private final ProjectRepository projectRepo;
     private final UserRepository userRepo;
+    private final PostRepository postRepo;
 
-    public ProjectService(ProjectRepository projectRepo, UserRepository userRepo) {
+    public ProjectService(ProjectRepository projectRepo, UserRepository userRepo, PostRepository postRepo) {
         this.projectRepo = projectRepo;
         this.userRepo = userRepo;
+        this.postRepo = postRepo;
     }
 
     @Transactional
@@ -38,11 +41,6 @@ public class ProjectService {
         // 4. Guardamos el proyecto (esto genera el ID y los timestamps)
         Project saved = projectRepo.save(project);
 
-        // Nota: No hace falta guardar el 'user' explícitamente si tienes
-        // CascadeType.PERSIST
-        // pero guardar el proyecto es lo que nos da los datos para la respuesta.
-
-        // 5. Mapeo de la respuesta
         CreateResponse pr = new CreateResponse(saved.getId(), saved.getName(), saved.getDescription());
 
         DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
@@ -67,13 +65,12 @@ public class ProjectService {
             throw new RuntimeException("Acceso denegado");
         }
 
-        // 2. Actualización de metadatos básicos
         project.setName(up.getName());
         project.setDescription(up.getDescription());
 
         // 3. PIPELINE DE CONTENIDO (Opcional)
         // Si el 'content' en la request es null, el proyecto mantiene su JSON anterior
-        if (up.getContent() != null) {
+        if (up.getContent() != null && !up.getContent().isBlank()) {
             project.setContent(up.getContent());
         }
 
@@ -93,25 +90,22 @@ public class ProjectService {
 
     @Transactional
     public DeleteResponse delete(Long projectID, Long userID) {
-        // 1. Verificación rápida de propiedad usando el nuevo método del repositorio
         if (!userRepo.hasProject(userID, projectID)) {
             throw new RuntimeException("No tienes permiso o el proyecto no existe");
         }
-
-        // 2. Buscamos las entidades para operar sobre ellas
         User user = userRepo.findById(userID)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
         Project project = projectRepo.findById(projectID)
                 .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado"));
 
-        // 3. Rompemos la relación en la tabla intermedia 'has'
-        // Al removerlo de la lista, JPA genera el DELETE en la tabla de unión al hacer
-        // flush/commit
+        if (postRepo.existsByProjectId(projectID)) {
+            throw new IllegalStateException("El proyecto está publicado. Elimina el post primero.");
+        }
+
         user.getProjects().remove(project);
         userRepo.save(user);
 
-        // 4. Borramos el proyecto físicamente de su tabla
         projectRepo.delete(project);
 
         return new DeleteResponse("Proyecto con id: " + projectID + " eliminado correctamente");

@@ -10,7 +10,7 @@ export default function ReturnButton({ to }: ReturnButtonProps) {
 
     return (
         <button 
-            className="btn btn-small" 
+            className="btn btn-return" 
             onClick={() => navigate(to)}
             style={{ 
                 display: 'flex', 

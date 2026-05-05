@@ -1,10 +1,13 @@
 package com.lab1.nodevix.post;
 
 import com.lab1.nodevix.post.dtos.InteractionResponse;
+import com.lab1.nodevix.post.dtos.PostListResponse;
 import com.lab1.nodevix.security.JWTService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @Controller
@@ -24,9 +27,9 @@ public class PostController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-       postService.delete(id);
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> delete(@PathVariable Long postId) {
+       postService.delete(postId);
        return ResponseEntity.noContent().build();
     }
 
@@ -52,5 +55,32 @@ public class PostController {
         return ResponseEntity.ok(postService.view(id));
     }
 
+    @GetMapping
+    public ResponseEntity<List<PostListResponse>> getAll(){
+        return ResponseEntity.ok(postService.getAll());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<PostListResponse>> getUserPosts(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        Long userID = jwtService.extractUserId(token);
+        return ResponseEntity.ok(postService.getUserPosts(userID));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PostListResponse> getById(@PathVariable Long id){
+        return ResponseEntity.ok(postService.getById(id));
+    }
+
+    @GetMapping("/{id}/interaction")
+    public ResponseEntity<InteractionResponse> getInteractionById(@PathVariable Long id, @RequestHeader(value = "Authorization", required = false) String authHeader){
+
+        Long userId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            userId = jwtService.extractUserId(token);
+        }
+        return ResponseEntity.ok(postService.getInteraction(id, userId));
+    }
 
 }
