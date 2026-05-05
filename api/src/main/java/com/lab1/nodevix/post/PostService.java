@@ -12,6 +12,8 @@ import com.lab1.nodevix.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -131,8 +133,9 @@ public class PostService {
         );
     }
 
-    public List<PostListResponse> getAll(){
-        return postRepo.findAllWithProject().stream().map(p -> {
+    public Page<PostListResponse> getAll(Pageable pageable){
+        Page<Post> postsPage = postRepo.findAll(pageable);
+        return postsPage.map(p -> {
             String owner = userRepo.findByProjectId(p.getProject().getId())
                     .stream()
                     .findFirst()
@@ -148,7 +151,7 @@ public class PostService {
                     p.getProject().getDescription(),
                     owner
             );
-        }).collect(Collectors.toList());
+        });
     }
 
     public List<PostListResponse> getUserPosts(Long userId) {
