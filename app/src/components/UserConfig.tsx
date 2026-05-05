@@ -133,6 +133,9 @@ export default function UserConfig() {
           <span>Save Changes</span>
         </button>
       </form>
+      <button className="btn" style={{marginTop: '10px'}} onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("userId"); window.location.href = "/login";}}>
+        <span>Log out</span>
+      </button>
       <button className="btn-danger" onClick={handleDelete}>
         <span>
           Delete Account

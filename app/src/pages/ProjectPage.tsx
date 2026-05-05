@@ -8,6 +8,8 @@ import toast, { Toaster } from "react-hot-toast";
 import ReturnButton from "../components/ReturnButton";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
+const [nodes, setNodes] = useState<any[]>([]);
+const [links, setLinks] = useState<any[]>([]);
 
 export default function ProjectPage() {
     // 1. Capturamos el ID de la URL
@@ -30,6 +32,11 @@ export default function ProjectPage() {
               setProjectName(res.data.name);
               setProjectDesc(res.data.description);
               setProjectContent(res.data.content);
+
+              // Parseamos el contenido si existe, sino arrancamos vacío
+              const content = res.data.content ? JSON.parse(res.data.content) : { nodes: [], links: [] };
+              setNodes(content.nodes || []);
+              setLinks(content.links || []);
               
           } catch (err) {
               toast.error("Project not found.");
@@ -133,6 +140,8 @@ export default function ProjectPage() {
         toast.error(msg, { id: loadingToast });
       }
     };
+
+
     
     return (
         <div className="main-container" style={{ flexDirection: 'column', gap: '20px' }}>
