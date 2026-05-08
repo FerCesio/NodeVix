@@ -21,7 +21,7 @@ export default function UserConfig() {
       try {
         const response = await api.get("/users/get"); // Tu endpoint de perfil
         setForm({
-          userName: response.data.name,
+          userName: response.data.userName,
           password: "", // El password no se suele pedir al GET
           avatarUrl: response.data.avatarUrl || "avatar_0.png" // Sincronización clave
         });

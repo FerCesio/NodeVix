@@ -13,7 +13,7 @@ export default function PostsPage() {
     // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const pageSize = 10; 
+    const pageSize = 3; 
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -82,7 +82,7 @@ export default function PostsPage() {
                             paddingBottom: '20px' 
                         }}>
                             <button 
-                                className="btn-nav"
+                                className="btn btn-return"
                                 disabled={currentPage === 0}
                                 onClick={() => setCurrentPage(prev => prev - 1)}
                             >
@@ -94,7 +94,7 @@ export default function PostsPage() {
                             </span>
 
                             <button 
-                                className="btn-nav"
+                                className="btn btn-return"
                                 disabled={currentPage >= totalPages - 1}
                                 onClick={() => setCurrentPage(prev => prev + 1)}
                             >

@@ -1,5 +1,6 @@
 package com.lab1.nodevix.comments;
 
+import com.lab1.nodevix.EmailService;
 import com.lab1.nodevix.comments.dtos.CommentResponse;
 import com.lab1.nodevix.comments.dtos.MessageRequest;
 import com.lab1.nodevix.comments.dtos.UpdateResponse;
@@ -20,17 +21,27 @@ public class CommentService {
     private final CommentRepository commentRepo;
     private final PostRepository postRepo;
     private final UserRepository userRepo;
+    private final EmailService emailService;
 
-    public CommentService(CommentRepository commentRepo, PostRepository postRepo, UserRepository userRepo) {
+    public CommentService(CommentRepository commentRepo, PostRepository postRepo, UserRepository userRepo, EmailService emailService) {
         this.commentRepo = commentRepo;
         this.postRepo = postRepo;
         this.userRepo = userRepo;
+        this.emailService = emailService;
     }
 
     @Transactional
     public CommentResponse create(Long postId, Long userId, MessageRequest mr){
         Post post = postRepo.findById(postId).orElseThrow();
         User user = userRepo.findById(userId).orElseThrow();
+        User owner = userRepo.findByProjectId(post.getProject().getId()).orElseThrow();
+
+        emailService.sendInteractionNotification(
+                owner.getEmail(),
+                owner.getName(),
+                "COMMENT",
+                post.getProject().getName()
+        );
 
         Comment comment = new Comment();
         comment.setPost(post);
