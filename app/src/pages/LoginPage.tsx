@@ -15,6 +15,12 @@ export default function LoginPage() {
         
       
         <LoginForm/> 
+        <p>
+          or
+        </p>
+        <button className="btn-google" onClick={() => window.location.href = "http://localhost:8080/oauth2/authorization/google"}>
+          Login with Google
+        </button>
 
         <button className="btn" onClick={() => window.location.href = "/project/new"}>
             <span>Create Project</span>
