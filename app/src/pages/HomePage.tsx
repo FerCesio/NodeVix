@@ -7,7 +7,7 @@ import myProjectsIcon from "../assets/redaccion.svg";
 
 import UserConfig from "../components/UserConfig";
 import TitleAndDesc from "../components/TitleAndDesc";
-import ProjectsBrowse from "../components/ProjectsBrowse";
+import ProjectsBrowse from "../components/project/ProjectsBrowse";
 import MyPublishedProjects from "../components/MyPublishedProjects"; 
 import { Toaster } from "react-hot-toast";
 
