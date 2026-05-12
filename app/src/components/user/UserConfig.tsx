@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { api } from "../services/api";
-import type { UpdateRequest, UpdateResponse } from "../types/user";
-import "../styles/userProjects.css";
-import "../styles/general.css";
+import { api } from "../../services/api";
+import type { UpdateRequest, UpdateResponse } from "../../types/user";
+import "../../styles/userProjects.css";
+import "../../styles/general.css";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import AvatarSelector from "./AvatarSelector";

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AVATAR_LIST } from "../utils/avatars";
+import { AVATAR_LIST } from "../../utils/avatars";
 
 interface AvatarSelectorProps {
   selectedAvatar: string; // Ej: "avatar_0.png"

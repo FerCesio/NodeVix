@@ -7,7 +7,7 @@ export interface Entity {
 }
 
 export interface Edge {
-  end: Node;
+  end: INode;
   weight: number;
 }
 

@@ -1,5 +1,5 @@
-import { AVAILABLE_TOOLS, type ToolMode } from "../types/tools";
-import '../styles/sandbox.css'
+import { AVAILABLE_TOOLS, type ToolMode } from "../../types/tools";
+import '../../styles/sandbox.css'
 
 interface ToolsPanelProps {
   activeMode: ToolMode;

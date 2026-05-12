@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { api } from "../services/api";
-import "../styles/userProjects.css";
-import type { PostListResponse } from "../types/post"; // Usando tu DTO
+import { api } from "../../services/api";
+import "../../styles/userProjects.css";
+import type { PostListResponse } from "../../types/post"; // Usando tu DTO
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 

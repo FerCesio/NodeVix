@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
-import LoginForm from "../components/LoginForm"; // Tu formulario existente
-import RegisterForm from "../components/RegisterForm"; // Tu formulario existente
+import LoginForm from "../components/user/LoginForm"; // Tu formulario existente
+import RegisterForm from "../components/user/RegisterForm"; // Tu formulario existente
 import "../styles/general.css";
 import type { CreateProject, UpdateProject } from "../types/project";
 import toast, { Toaster } from "react-hot-toast";
-import ReturnButton from "../components/ReturnButton";
+import ReturnButton from "../components/general/ReturnButton";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { SimulationCanvas } from "../components/SimulationCanvas";
+import { SimulationCanvas } from "../components/sandbox/SimulationCanvas";
 
 export default function ProjectPage() {
     // 1. Capturamos el ID de la URL

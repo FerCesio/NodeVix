@@ -21,7 +21,7 @@ export class DefaultNode implements INode {
     this.edges = [];
   }
 
-  addEdge(target: Node, weight: number = 1): void {
+  addEdge(target: INode, weight: number = 1): void {
     this.edges.push({ end: target, weight });
   }
 }

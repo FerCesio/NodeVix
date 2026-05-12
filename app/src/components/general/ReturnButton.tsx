@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import "../styles/general.css";
+import "../../styles/general.css";
 
 interface ReturnButtonProps {
     to: string; // El endpoint a donde debe volver

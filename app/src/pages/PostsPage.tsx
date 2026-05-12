@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "../styles/general.css";
 import { Toaster } from "react-hot-toast";
 import { api } from "../services/api";
-import ReturnButton from "../components/ReturnButton";
+import ReturnButton from "../components/general/ReturnButton";
 import type { PostListResponse } from "../types/post";
 
 export default function PostsPage() {
