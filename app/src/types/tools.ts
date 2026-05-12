@@ -1,4 +1,4 @@
-export type ToolMode = 'SELECT' | 'ADD_CIRCLE' | 'ADD_SQUARE';
+export type ToolMode = 'SELECT' | 'ADD_NODE' | 'CONNECT';
 
 export interface ToolConfig {
   mode: ToolMode;
@@ -7,7 +7,7 @@ export interface ToolConfig {
 }
 
 export const AVAILABLE_TOOLS: ToolConfig[] = [
-  { mode: 'SELECT', label: 'SELECT', icon: '🖱️' },
-  { mode: 'ADD_CIRCLE', label: 'CIRCLE', icon: '⭕' },
-  { mode: 'ADD_SQUARE', label: 'SQUARE', icon: '🟩' },
+  { mode: 'SELECT', label: 'Seleccionar', icon: '🖱️' },
+  { mode: 'ADD_NODE', label: 'Nuevo Nodo', icon: '⚪' },
+  { mode: 'CONNECT', label: 'Conectar', icon: '🔗' }
 ];

@@ -1,3 +1,5 @@
+import * as d3 from 'd3';
+
 export interface Entity {
   id: string;
   pos: { x: number; y: number };
@@ -9,7 +11,7 @@ export interface Edge {
   weight: number;
 }
 
-export interface Node extends Entity {
+export interface INode extends Entity, d3.SimulationNodeDatum {
   value: number;
   edges: Edge[];
 }

@@ -1,7 +1,11 @@
-import type { Node, Edge } from './interfaces';
+import type { INode, Edge } from './interfaces';
 
-export class DefaultNode implements Node {
+export class DefaultNode implements INode {
   id: string;
+  x?: number;
+  y?: number;
+  vx?: number;
+  vy?: number;
   pos: { x: number; y: number };
   scale: number;
   value: number;
@@ -10,6 +14,8 @@ export class DefaultNode implements Node {
   constructor(id: string, value: number, x: number = 0, y: number = 0) {
     this.id = id;
     this.value = value;
+    this.x = x;
+    this.y = y;
     this.pos = { x, y };
     this.scale = 1;
     this.edges = [];

@@ -8,7 +8,7 @@ import toast, { Toaster } from "react-hot-toast";
 import ReturnButton from "../components/ReturnButton";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import SimulationCanvas from "../components/SimulationCanvas";
+import { SimulationCanvas } from "../components/SimulationCanvas";
 
 export default function ProjectPage() {
     // 1. Capturamos el ID de la URL
