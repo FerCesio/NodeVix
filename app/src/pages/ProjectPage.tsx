@@ -31,11 +31,10 @@ export default function ProjectPage() {
               setProjectName(res.data.name);
               setProjectDesc(res.data.description);
               setProjectContent(res.data.content);
-              
-          } catch (err) {
+            } catch (err) {
               toast.error("Project not found.");
               navigate("/home");
-          }
+            }
       };
       
       loadProject();
@@ -134,6 +133,8 @@ export default function ProjectPage() {
         toast.error(msg, { id: loadingToast });
       }
     };
+
+
     
     return (
         <div className="main-container" style={{ flexDirection: 'column', gap: '20px' }}>

@@ -3,6 +3,9 @@ package com.lab1.nodevix.post;
 import com.lab1.nodevix.post.dtos.InteractionResponse;
 import com.lab1.nodevix.post.dtos.PostListResponse;
 import com.lab1.nodevix.security.JWTService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -56,8 +59,9 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PostListResponse>> getAll(){
-        return ResponseEntity.ok(postService.getAll());
+    public ResponseEntity<Page<PostListResponse>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(postService.getAll(pageable));
     }
 
     @GetMapping("/me")

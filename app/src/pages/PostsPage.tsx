@@ -5,17 +5,26 @@ import { api } from "../services/api";
 import ReturnButton from "../components/ReturnButton";
 import type { PostListResponse } from "../types/post";
 
-
 export default function PostsPage() {
     const [posts, setPosts] = useState<PostListResponse[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
 
+    // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const pageSize = 3; 
+
     useEffect(() => {
         const fetchPosts = async () => {
+            setLoading(true);
             try {
-                const response = await api.get<PostListResponse[]>("/posts");
-                setPosts(response.data);
+                // Ahora enviamos page y size como parámetros
+                const response = await api.get(`/posts?page=${currentPage}&size=${pageSize}`);
+                
+                // Spring Data devuelve la lista en .content y el total en .totalPages
+                setPosts(response.data.content); 
+                setTotalPages(response.data.totalPages);
             } catch (error) {
                 console.error("Error al cargar posts:", error);
             } finally {
@@ -23,7 +32,7 @@ export default function PostsPage() {
             }
         };
         fetchPosts();
-    }, []);
+    }, [currentPage]); 
 
     const filteredPosts = posts.filter((post) => {
         const term = searchTerm.toLowerCase();
@@ -32,8 +41,6 @@ export default function PostsPage() {
         
         return name.includes(term) || desc.includes(term);
     });
-
-    if (loading) return <div className="loader">Cargando comunidad...</div>;
 
     return (
         <div className="main-container">
@@ -51,15 +58,51 @@ export default function PostsPage() {
                     />
                 </div>
 
-                <div className="projects-community-list">
-                    {filteredPosts.length > 0 ? (
-                        filteredPosts.map((post) => (
-                            <PostCard key={post.id} post={post} />
-                        ))
-                    ) : (
-                        <p className="main-description">No posts found matching your search.</p>
-                    )}
-                </div>
+                {loading ? (
+                    <div className="loader">Cargando comunidad...</div>
+                ) : (
+                    <>
+                        <div className="projects-community-list">
+                            {filteredPosts.length > 0 ? (
+                                filteredPosts.map((post) => (
+                                    <PostCard key={post.id} post={post} />
+                                ))
+                            ) : (
+                                <p className="main-description">No posts found matching your search.</p>
+                            )}
+                        </div>
+
+                        {/* --- CONTROLES DE PAGINACIÓN --- */}
+                        <div className="pagination-controls" style={{ 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center', 
+                            gap: '15px', 
+                            marginTop: '30px',
+                            paddingBottom: '20px' 
+                        }}>
+                            <button 
+                                className="btn btn-return"
+                                disabled={currentPage === 0}
+                                onClick={() => setCurrentPage(prev => prev - 1)}
+                            >
+                                Previous
+                            </button>
+                            
+                            <span className="page-info">
+                                Page <strong>{currentPage + 1}</strong> of {totalPages}
+                            </span>
+
+                            <button 
+                                className="btn btn-return"
+                                disabled={currentPage >= totalPages - 1}
+                                onClick={() => setCurrentPage(prev => prev + 1)}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

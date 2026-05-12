@@ -20,9 +20,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JWTAuthFilter jwtAuthFilter;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
-    public SecurityConfig(JWTAuthFilter jwtAuthFilter) {
+    public SecurityConfig(JWTAuthFilter jwtAuthFilter,  OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
     }
 
     @Bean
@@ -37,7 +39,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oauth -> oauth
+                        .successHandler(oAuth2LoginSuccessHandler)
+                );
 
         return http.build();
     }

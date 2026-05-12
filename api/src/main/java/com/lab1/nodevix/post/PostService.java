@@ -1,5 +1,8 @@
 package com.lab1.nodevix.post;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.lab1.nodevix.EmailService;
 import com.lab1.nodevix.comments.CommentRepository;
 import com.lab1.nodevix.post.dtos.InteractionResponse;
 import com.lab1.nodevix.post.dtos.PostListResponse;
@@ -11,12 +14,14 @@ import com.lab1.nodevix.user.User;
 import com.lab1.nodevix.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -27,13 +32,18 @@ public class PostService {
     private final PostInteractionRepository postLikeRepo;
     private final UserRepository userRepo;
     private final CommentRepository commentRepo;
+    private final EmailService emailService;
+    private final Cache<String, Boolean> notificationCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(2, TimeUnit.MINUTES)
+            .build();
 
-    public PostService(PostRepository postRepo, ProjectRepository projectRepo, PostInteractionRepository postLikeRepo, UserRepository userRepo, CommentRepository commentRepo) {
+    public PostService(PostRepository postRepo, ProjectRepository projectRepo, PostInteractionRepository postLikeRepo, UserRepository userRepo, CommentRepository commentRepo, EmailService emailService) {
         this.postRepo = postRepo;
         this.projectRepo = projectRepo;
         this.postLikeRepo = postLikeRepo;
         this.userRepo = userRepo;
         this.commentRepo = commentRepo;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -61,6 +71,21 @@ public class PostService {
     public InteractionResponse like(Long postId, Long userId){
         Post post = postRepo.findById(postId).orElseThrow();
         User user = userRepo.findById(userId).orElseThrow();
+
+        String cacheKey = postId + "-" + userId;
+
+        if (notificationCache.getIfPresent(cacheKey) == null) {
+            // Si no está en la caché, mandamos el mail y lo anotamos
+            User owner = userRepo.findByProjectId(post.getProject().getId()).orElseThrow();
+            emailService.sendInteractionNotification(
+                    owner.getEmail(),
+                    owner.getName(),
+                    "LIKE",
+                    post.getProject().getName()
+            );
+
+            notificationCache.put(cacheKey, true); // Bloqueamos futuros mails por X min
+        }
 
         Optional<PostInteraction> existing = postLikeRepo.findByPostAndUser(post, user);
 
@@ -90,6 +115,22 @@ public class PostService {
     public InteractionResponse dislike(Long postId, Long userId){
         Post post = postRepo.findById(postId).orElseThrow();
         User user = userRepo.findById(userId).orElseThrow();
+
+        String cacheKey = postId + "-" + userId;
+
+        if (notificationCache.getIfPresent(cacheKey) == null) {
+            // Si no está en la caché, mandamos el mail y lo anotamos
+            User owner = userRepo.findByProjectId(post.getProject().getId()).orElseThrow();
+            emailService.sendInteractionNotification(
+                    owner.getEmail(),
+                    owner.getName(),
+                    "DISLIKE",
+                    post.getProject().getName()
+            );
+
+            notificationCache.put(cacheKey, true); // Bloqueamos futuros mails por 5 min
+        }
+
 
         Optional<PostInteraction> existing = postLikeRepo.findByPostAndUser(post, user);
 
@@ -131,8 +172,9 @@ public class PostService {
         );
     }
 
-    public List<PostListResponse> getAll(){
-        return postRepo.findAllWithProject().stream().map(p -> {
+    public Page<PostListResponse> getAll(Pageable pageable){
+        Page<Post> postsPage = postRepo.findAll(pageable);
+        return postsPage.map(p -> {
             String owner = userRepo.findByProjectId(p.getProject().getId())
                     .stream()
                     .findFirst()
@@ -148,7 +190,7 @@ public class PostService {
                     p.getProject().getDescription(),
                     owner
             );
-        }).collect(Collectors.toList());
+        });
     }
 
     public List<PostListResponse> getUserPosts(Long userId) {

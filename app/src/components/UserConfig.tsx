@@ -21,7 +21,7 @@ export default function UserConfig() {
       try {
         const response = await api.get("/users/get"); // Tu endpoint de perfil
         setForm({
-          userName: response.data.name,
+          userName: response.data.userName,
           password: "", // El password no se suele pedir al GET
           avatarUrl: response.data.avatarUrl || "avatar_0.png" // Sincronización clave
         });
@@ -133,6 +133,9 @@ export default function UserConfig() {
           <span>Save Changes</span>
         </button>
       </form>
+      <button className="btn" style={{marginTop: '10px'}} onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("userId"); window.location.href = "/login";}}>
+        <span>Log out</span>
+      </button>
       <button className="btn-danger" onClick={handleDelete}>
         <span>
           Delete Account

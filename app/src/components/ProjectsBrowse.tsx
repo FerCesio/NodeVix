@@ -108,9 +108,6 @@ export default function ProjectsBrowse() {
                 <span>Create Project</span>
             </button>
             
-            <button className="btn" style={{marginTop: '10px'}} onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("userId"); window.location.href = "/login";}}>
-                <span>Log out</span>
-            </button>
         </div>
     );
 }
