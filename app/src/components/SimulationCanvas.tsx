@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import "../styles/canvas.css"
+import { ToolsPanel } from './ToolsPanel';
+import type { ToolMode } from '../types/tools';
 
 // Definición de tipos para nuestros datos
 interface CustomNode extends d3.SimulationNodeDatum {
@@ -14,8 +16,16 @@ interface CustomLink extends d3.SimulationLinkDatum<CustomNode> {
 }
 
 const SimulationCanvas: React.FC = () => {
-    const svgRef = useRef<SVGSVGElement | null>(null);
+    // Usamos referencia al modo para que no quede fijo en uno
+    const [mode, setMode] = useState<ToolMode>('SELECT');
+    const modeRef = useRef(mode);
     
+    // Sincronizar Ref para que D3 siempre lea el modo actual sin re-renders
+    useEffect(() => {
+        modeRef.current = mode;
+    }, [mode]);
+    
+    const svgRef = useRef<SVGSVGElement | null>(null);
     const width = window.innerWidth;
     const height = window.innerHeight;
     const links_length = 100;
@@ -59,7 +69,9 @@ const SimulationCanvas: React.FC = () => {
         
         // La capa interna (se mueve con el zoom)
         const container = svg.append("g");
-
+        
+        const linkGroup = container.append("g").attr("class", "links-layer");
+        const nodeGroup = container.append("g").attr("class", "nodes-layer");
         
         const defs = svg.append("defs");
 
@@ -99,47 +111,99 @@ const SimulationCanvas: React.FC = () => {
             .attr("x", -width * 5)          // Centrarlo respecto al origen
             .attr("y", -height * 5)
             .attr("fill", "url(#grid)");    // Referencia al ID del patrón
-      
-        const link = container.append("g")
-            .selectAll("line")
-            .data(links)
-            .join("line")
-            .attr("stroke", "var(--line-color)")
-            .attr("stroke-opacity", 0.6)
-            .attr("stroke-width", d => Math.sqrt(d.value));
 
-        // 4. Renderizado de los nodos (círculos)
-        const node = container.append("g")
-            .selectAll("g")
-            .data(nodes)
-            .join("g")
-            .call(drag(simulation) as any); // Habilitar arrastre
+        
+        
+        
+        const updateVisuals = () => {
+            // Añadir círculos a los nodos tipo 'circle'
+            // 1. Seleccionamos sobre el grupo ya existente, NO hacemos append general
+                const link = linkGroup.selectAll("line")
+                    .data(links)
+                    .join("line")
+                    .attr("stroke", "var(--line-color)")
+                    .attr("stroke-opacity", 0.6)
+                    .attr("stroke-width", d => Math.sqrt(d.value || 1));
 
-        // Añadir círculos a los nodos tipo 'circle'
-        node.filter(d => d.type === 'circle')
-            .append("circle")
-            .attr("r", 15)
-            .attr("fill", "var(--circle-color)");
+                // 2. Seleccionamos sobre el grupo de nodos
+                const node = nodeGroup.selectAll(".node-group")
+                    .data(nodes, d => d.id) // USAR KEY (d.id) es vital para estabilidad
+                    .join(
+                        enter => {
+                            // Solo lo que entra (nodos nuevos) recibe esto
+                            const g = enter.append("g").attr("class", "node-group");
+                            
+                            g.filter(d => d.type === 'circle')
+                                .append("circle")
+                                .attr("r", 15)
+                                .attr("fill", "var(--circle-color)");
 
-        // Añadir cuadrados a los nodos tipo 'square'
-        node.filter(d => d.type === 'square')
-            .append("rect")
-            .attr("width", 24)
-            .attr("height", 24)
-            .attr("x", -12) // Centrar el cuadrado respecto al punto (x,y)
-            .attr("y", -12)
-            .attr("fill", "var(--square-color)"); // Verde
+                            g.filter(d => d.type === 'square')
+                                .append("rect")
+                                .attr("width", 24).attr("height", 24)
+                                .attr("x", -12).attr("y", -12)
+                                .attr("fill", "var(--square-color)");
 
-        // 5. El "Tick": Función que actualiza las posiciones en cada cuadro
-        simulation.on("tick", () => {
-            link
-                .attr("x1", d => (d.source as any).x)
-                .attr("y1", d => (d.source as any).y)
-                .attr("x2", d => (d.target as any).x)
-                .attr("y2", d => (d.target as any).y);
+                            return g;
+                        }
+                    )
+                    .call(drag(simulation) as any);
+            // 5. El "Tick": Función que actualiza las posiciones en cada cuadro
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => (d.source as any).x)
+                    .attr("y1", d => (d.source as any).y)
+                    .attr("x2", d => (d.target as any).x)
+                    .attr("y2", d => (d.target as any).y);
 
-            node.attr("transform", d => `translate(${d.x}, ${d.y})`);
-            
+                node.attr("transform", d => `translate(${d.x}, ${d.y})`);
+                
+            });
+        }
+        updateVisuals()
+
+        const addNewNode = (newNode: CustomNode) => {
+            // Actualizar el array de datos (puedes usar un estado de React o mutar el array original)
+            nodes.push(newNode);
+
+            // Reinyectar los nodos a la simulación
+            simulation.nodes(nodes);
+
+            // Volver a vincular los elementos del DOM
+            // Esta es la parte donde ejecutas de nuevo el .data().join() para los círculos/rectángulos
+            updateVisuals(); 
+
+            // Dar un pequeño impulso para que se acomoden
+            simulation.alpha(0.3).restart();
+        };
+        
+        // Cuando le damos al click
+        svg.on("click", (event) => {
+            const currentMode = modeRef.current;
+
+            // Si estamos en modo selección, no creamos nada
+            if (currentMode === 'SELECT') return;
+
+            // 1. Obtener posición del mouse relativa al SVG
+            const [mouseX, mouseY] = d3.pointer(event);
+
+            // 2. Ajustar por el Zoom actual para obtener coordenadas reales
+            const transform = d3.zoomTransform(svg.node() as any);
+            const realX = (mouseX - transform.x) / transform.k;
+            const realY = (mouseY - transform.y) / transform.k;
+
+            // 3. Crear el nuevo objeto nodo
+            const newNode: CustomNode = {
+                id: `node-${Date.now()}`, // ID único temporal
+                type: currentMode === 'ADD_CIRCLE' ? 'circle' : 'square',
+                x: realX,
+                y: realY,
+                vx: 0,
+                vy: 0
+            };
+
+            // 4. Actualizar datos y reiniciar simulación
+            addNewNode(newNode);
         });
 
         // Limpieza al desmontar el componente
@@ -147,6 +211,7 @@ const SimulationCanvas: React.FC = () => {
             simulation.stop()
         };
     }, []);
+    
 
   // Función auxiliar para el comportamiento de arrastre (Drag & Drop)
   function drag(simulation: d3.Simulation<CustomNode, undefined>) {
@@ -168,8 +233,12 @@ const SimulationCanvas: React.FC = () => {
   }
 
   return (
-    <div className="canvas-wrapper" style={{ textAlign: 'center', marginTop: '20px' }}>
-      <svg ref={svgRef}></svg>
+    <div className="canvas-container">
+      <ToolsPanel activeMode={mode} onModeChange={setMode} />
+      
+      <svg ref={svgRef}>
+        {/* La lógica de D3 usará modeRef.current para decidir si crea nodos */}
+      </svg>
     </div>
   );
 };
