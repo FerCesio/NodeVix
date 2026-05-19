@@ -15,10 +15,16 @@ export class CameraSystem {
   }
 
   init(): void {
-    this.zoom.on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
-      this.container.attr('transform', event.transform.toString());
-    });
+    this.zoom
+      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+        this.container.attr('transform', event.transform.toString());
+      });
     this.svg.call(this.zoom);
+    // Desactivar pan por drag para no bloquear clicks
+    this.svg.on('mousedown.zoom', null)
+            .on('touchstart.zoom', null)
+            .on('touchmove.zoom', null)
+            .on('touchend.zoom', null);
   }
 
   zoomTo(x: number, y: number, scale: number): void {

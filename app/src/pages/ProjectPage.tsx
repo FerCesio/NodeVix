@@ -137,7 +137,7 @@ export default function ProjectPage() {
 
     
     return (
-        <div className="main-container" style={{ flexDirection: 'column', gap: '20px' }}>
+        <div className="main-container" style={{ flexDirection: 'column', gap: '20px', position: 'relative', padding: 0 }}>
             <Toaster/>
             {/* Sección de Input de Proyecto */}
             <div className="top-left-nav">

@@ -3,6 +3,7 @@ import { ToolsPanel } from './ToolsPanel';
 import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
 import '../../styles/sandbox.css';
+import '../../styles/canvas.css';
 import { SimulationCore } from './modules/SimulationCore';
 import { PhysicsEngine } from './modules/PhysicsEngine';
 import { CanvasRenderer } from './modules/CanvasRenderer';
@@ -24,7 +25,7 @@ export const SimulationCanvas: React.FC = () => {
   const selectedNodeRef = useRef<INode | null>(null);
 
 
-  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { modeRef.current = mode; console.log('[Canvas] mode:', mode); }, [mode]);
 
   useEffect(() => {
     // 1. SETUP: Inicialización de la infraestructura base

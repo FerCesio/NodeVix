@@ -12,9 +12,9 @@ export class SimulationCore {
     constructor(svgEl: SVGSVGElement | null) {
       if (!svgEl) throw new Error('SVG element is required');
 
-      this.svg = d3.select(svgEl)
-        .attr('width', '100%')
-        .attr('height', '100%');
+      this.svg = d3.select(svgEl);
+
+      this.svg.selectAll('*').remove();
 
       this.container = this.svg.append('g').attr('class', 'container');
 

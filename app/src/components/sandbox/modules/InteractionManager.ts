@@ -17,7 +17,6 @@ export class InteractionManager {
   private physics: PhysicsEngine;
   private renderer: CanvasRenderer;
   private refs!: InteractionRefs;
-  private onCanvasClick: ((e: MouseEvent) => void) | null = null;
 
   constructor(
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -34,14 +33,13 @@ export class InteractionManager {
   }
 
   setupListeners(): void {
-    const svgEl = this.svg.node()!;
-
-    this.onCanvasClick = (e: MouseEvent) => {
-      const target = e.target as Element;
+    this.svg.on('click.interaction', (event: MouseEvent) => {
+      const target = event.target as Element;
       const mode = this.refs.modeRef.current;
+      console.log('[Interaction] click | mode:', mode, '| target:', target.tagName);
 
-      if (mode === 'ADD_NODE' && target === svgEl) {
-        const [x, y] = d3.pointer(e, svgEl);
+      if (mode === 'ADD_NODE' && !target.closest('g.node')) {
+        const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
         const node = new DefaultNode(crypto.randomUUID(), 0, x, y);
         this.refs.nodesRef.current.push(node);
         this.physics.updateNodes(this.refs.nodesRef.current);
@@ -74,17 +72,13 @@ export class InteractionManager {
         const clickedNode = this.getNodeFromTarget(target);
         this.refs.selectedNodeRef.current = clickedNode;
       }
-    };
+    });
 
-    svgEl.addEventListener('click', this.onCanvasClick);
     this.applyDrag();
   }
 
   destroy(): void {
-    const svgEl = this.svg.node();
-    if (svgEl && this.onCanvasClick) {
-      svgEl.removeEventListener('click', this.onCanvasClick);
-    }
+    this.svg.on('click.interaction', null);
   }
 
   private applyDrag(): void {
