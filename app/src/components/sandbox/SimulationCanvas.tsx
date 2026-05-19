@@ -4,6 +4,10 @@ import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
 import '../../styles/sandbox.css';
 import { SimulationCore } from './modules/SimulationCore';
+import { PhysicsEngine } from './modules/PhysicsEngine';
+import { CanvasRenderer } from './modules/CanvasRenderer';
+import { CameraSystem } from './modules/CameraSystem';
+import { InteractionManager } from './modules/InteractionManager';
 
 
 
@@ -17,6 +21,7 @@ export const SimulationCanvas: React.FC = () => {
   const modeRef = useRef(mode);
   const nodesRef = useRef<INode[]>([]);
   const linksRef = useRef<{ source: INode; target: INode; value: number }[]>([]);
+  const selectedNodeRef = useRef<INode | null>(null);
 
 
   useEffect(() => { modeRef.current = mode; }, [mode]);
