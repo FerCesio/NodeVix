@@ -1,6 +1,6 @@
-import LoginForm from "../components/LoginForm"; // Importás el corazón
+import LoginForm from "../components/user/LoginForm"; // Importás el corazón
 import "../styles/general.css";
-import TitleAndDesc from "../components/TitleAndDesc";
+import TitleAndDesc from "../components/general/TitleAndDesc";
 import { Toaster } from "react-hot-toast";
 
 export default function LoginPage() {

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { api } from "../services/api";
-import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from "../types/user";
+import { api } from "../../services/api";
+import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from "../../types/user";
 import toast from "react-hot-toast";
 
 

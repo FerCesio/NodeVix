@@ -1,9 +1,9 @@
-import RegisterForm from "../components/RegisterForm";
+import RegisterForm from "../components/user/RegisterForm";
 import "../styles/general.css";
 
-import TitleAndDesc from "../components/TitleAndDesc";
+import TitleAndDesc from "../components/general/TitleAndDesc";
 import { Toaster } from "react-hot-toast";
-import ReturnButton from "../components/ReturnButton";
+import ReturnButton from "../components/general/ReturnButton";
 
 export default function RegisterPage(){
     return (

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { api } from "../services/api";
-import "../styles/general.css";
-import "../styles/userProjects.css";
-import type { CreateProject } from "../types/project";
+import { api } from "../../services/api";
+import "../../styles/general.css";
+import "../../styles/userProjects.css";
+import type { CreateProject } from "../../types/project";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -18,7 +18,7 @@ export default function ProjectCreationForm() {
         };
 
         if (!projectName.trim()) {
-            toast.error("El nombre es obligatorio");
+            toast.error("The name is NOT optional");
             return;
         }
 

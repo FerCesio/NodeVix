@@ -5,10 +5,10 @@ import folderIcon from "../assets/carpeta.svg";
 // Podés importar un ícono de "mis proyectos" o "check", uso folder por ahora
 import myProjectsIcon from "../assets/redaccion.svg"; 
 
-import UserConfig from "../components/UserConfig";
-import TitleAndDesc from "../components/TitleAndDesc";
-import ProjectsBrowse from "../components/ProjectsBrowse";
-import MyPublishedProjects from "../components/MyPublishedProjects"; 
+import UserConfig from "../components/user/UserConfig";
+import TitleAndDesc from "../components/general/TitleAndDesc";
+import ProjectsBrowse from "../components/project/ProjectsBrowse";
+import MyPublishedProjects from "../components/user/MyPublishedProjects"; 
 import { Toaster } from "react-hot-toast";
 
 export default function HomePage() {

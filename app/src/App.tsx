@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/project/ProtectedRoute";
 
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
@@ -7,7 +7,7 @@ import ProjectPage from "./pages/ProjectPage"
 import HomePage from "./pages/HomePage"
 import PostsPage from "./pages/PostsPage"
 import PostDetailPage from "./pages/PostDetailPage";
-import OAuth2RedirectHandler from "./components/OAuth2RedirectHandler";
+import OAuth2RedirectHandler from "./components/general/OAuth2RedirectHandler";
 
 // JWT with spring boot
 // protected paths for front

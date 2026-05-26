@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"; // Importante para navegación interna
-import "../styles/general.css";
+import "../../styles/general.css";
 
 export default function TitleAndDesc() {
   return (
