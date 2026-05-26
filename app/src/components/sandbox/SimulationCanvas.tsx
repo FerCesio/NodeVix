@@ -1,12 +1,18 @@
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { SandboxPanel } from './SandboxPanel';
+import { FlagsPanel } from './FlagsPanel';
 import React, { useEffect, useRef, useState } from 'react';
 import { ToolsPanel } from './ToolsPanel';
 import { PropertyPanel } from './PropertyPanel'; // Importamos el inspector
 import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
+import { StructureManager, type StructureInfo } from '../../sandbox/StructureManager';
+import { PRESETS } from '../../sandbox/presets';
+import { AVAILABLE_ALGORITHMS } from '../../sandbox/algorithms';
 import '../../styles/sandbox.css';
 import '../../styles/canvas.css';
 import { SimulationCore } from './modules/SimulationCore';
-import { PhysicsEngine } from './modules/PhysicsEngine';
+import { PhysicsEngine, type SimLink } from './modules/PhysicsEngine';
 import { CanvasRenderer } from './modules/CanvasRenderer';
 import { CameraSystem } from './modules/CameraSystem';
 import { InteractionManager } from './modules/InteractionManager';
@@ -20,8 +26,26 @@ export const SimulationCanvas: React.FC = () => {
   
   const modeRef = useRef(mode);
   const nodesRef = useRef<INode[]>([]);
-  const linksRef = useRef<{ source: INode; target: INode; value: number }[]>([]);
+  const linksRef = useRef<{ source: INode; target: INode; value: number; directed: boolean }[]>([]);
   const selectedNodeRef = useRef<INode | null>(null);
+  const [structures, setStructures] = useState<StructureInfo[]>([]);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const structureManagerRef = useRef<StructureManager>(new StructureManager(setStructures));
+  const physicsRef = useRef<PhysicsEngine | null>(null);
+  const rendererRef = useRef<CanvasRenderer | null>(null);
+  const eventsRef = useRef<InteractionManager | null>(null);
+  const pendingPresetRef = useRef<string | null>(null);
+
+  const handleGeneratePreset = useCallback((presetId: string) => {
+    pendingPresetRef.current = presetId;
+  }, []);
+
+  const handleRunAlgorithm = useCallback((algorithmId: string) => {
+    const alg = AVAILABLE_ALGORITHMS.find(a => a.id === algorithmId);
+    if (!alg || nodesRef.current.length === 0) return;
+    alg.run(nodesRef.current);
+    rendererRef.current?.update();
+  }, []);
 
   // Guardamos la instancia del renderer para forzar redibujados desde los inputs
   const rendererRef = useRef<CanvasRenderer | null>(null);
@@ -45,11 +69,18 @@ export const SimulationCanvas: React.FC = () => {
     };
 
     const events = new InteractionManager(svg, simulation, renderer);
+
+    physicsRef.current = simulation;
+    rendererRef.current = renderer;
+    eventsRef.current = events;
     events.bindContext({
         modeRef,
         nodesRef,
         linksRef,
         selectedNodeRef,
+        structureManagerRef,
+        pendingPresetRef,
+        onSelectNode: setSelectedNodeId,
         onNodeSelected // <-- Inyectamos la función puente en el contexto del manager
     });
     events.setupListeners();
@@ -77,13 +108,11 @@ export const SimulationCanvas: React.FC = () => {
   };
 
   return (
-    <div className="canvas-wrapper" style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-    <ToolsPanel activeMode={mode} onModeChange={setMode} />
-    
-    {/* Forzamos al SVG a ocupar toda la pantalla */}
-    <svg ref={svgRef} style={{ width: '100%', height: '100%', display: 'block' }}></svg>
-
-    <PropertyPanel 
+    <div className={`canvas-wrapper${mode === 'DELETE_ANY' ? ' mode-delete' : ''}`}>
+      <SandboxPanel activeMode={mode} onModeChange={setMode} onGeneratePreset={handleGeneratePreset} onRunAlgorithm={handleRunAlgorithm} />
+      <FlagsPanel structures={structures} selectedNodeId={selectedNodeId} />
+      <svg ref={svgRef}></svg>
+          <PropertyPanel 
       node={activeNode} 
       onUpdate={handleUpdateNode}
       onClose={() => {
@@ -92,6 +121,6 @@ export const SimulationCanvas: React.FC = () => {
         if (rendererRef.current) rendererRef.current.update();
       }}
     />
-  </div>
+    </div>
   );
 };

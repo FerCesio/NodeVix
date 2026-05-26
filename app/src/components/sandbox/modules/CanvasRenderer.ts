@@ -17,16 +17,26 @@ export class CanvasRenderer {
   constructor(layers: Layers, physics: PhysicsEngine) {
     this.layers = layers;
     this.physics = physics;
+    this.defineMarkers();
     this.physics.onTick(() => this.tick());
   }
 
-  highlight(nodeId: string | null): void {
-    console.log('[CanvasRenderer] highlight id:', nodeId);
-    this.selectedNodeId = nodeId;
-    
-    this.layers.nodes.selectAll('.node circle')
-      .style('stroke', (d: any) => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
-      .style('stroke-width', (d: any) => d.id === this.selectedNodeId ? '4px' : '0px');
+  private defineMarkers(): void {
+    const svg = this.layers.links.select(function() { return this.ownerSVGElement!; });
+    let defs = svg.select<SVGDefsElement>('defs');
+    if (defs.empty()) defs = svg.append('defs') as any;
+
+    defs.append('marker')
+      .attr('id', 'arrowhead')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 28)
+      .attr('refY', 5)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
+      .attr('fill', '#e74c3c');
   }
 
   update(): void {
@@ -38,8 +48,9 @@ export class CanvasRenderer {
       .selectAll<SVGLineElement, SimLink>('line')
       .data(links)
       .join('line')
-      .attr('stroke', '#555')
-      .attr('stroke-width', 2);
+      .attr('stroke', d => d.directed ? '#e74c3c' : '#555')
+      .attr('stroke-width', 2)
+      .attr('marker-end', d => d.directed ? 'url(#arrowhead)' : null);
 
     this.nodeSelection = this.layers.nodes
       .selectAll<SVGGElement, INode>('g.node')

@@ -15,6 +15,71 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+.sandbox-panel {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    min-width: 180px;
+}
+
+.panel-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.section-tab {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: #aaa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+
+.section-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e0e0e0;
+}
+
+.section-tab.active {
+    color: #2ecc71;
+}
+
+.tab-indicator {
+    font-size: 0.65rem;
+}
+
+.section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 0 6px 8px;
+}
+
+.section-placeholder {
+    font-size: 0.75rem;
+    color: #666;
+    padding: 4px 12px;
+    font-style: italic;
+}
+
 .tool-button {
     display: flex;
     align-items: center;
@@ -47,4 +112,53 @@
 .tool-label {
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+.flags-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 300px;
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.flag-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.structure-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    width: 100%;
+}
+
+.structure-group:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.structure-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #888;
+    margin-right: 4px;
 }
