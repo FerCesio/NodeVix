@@ -21,7 +21,7 @@ export const SimulationCanvas: React.FC = () => {
   // Refs para mantener la simulación y el modo sincronizados sin re-renders
   const modeRef = useRef(mode);
   const nodesRef = useRef<INode[]>([]);
-  const linksRef = useRef<{ source: INode; target: INode; value: number }[]>([]);
+  const linksRef = useRef<{ source: INode; target: INode; value: number; directed: boolean }[]>([]);
   const selectedNodeRef = useRef<INode | null>(null);
 
 

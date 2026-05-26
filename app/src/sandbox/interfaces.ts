@@ -9,6 +9,7 @@ export interface Entity {
 export interface Edge {
   end: INode;
   weight: number;
+  directed: boolean;
 }
 
 export interface INode extends Entity, d3.SimulationNodeDatum {

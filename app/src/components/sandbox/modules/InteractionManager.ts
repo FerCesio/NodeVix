@@ -58,8 +58,13 @@ export class InteractionManager {
         } else {
           const source = this.refs.selectedNodeRef.current;
           if (source.id !== clickedNode.id) {
-            const link: SimLink = { source, target: clickedNode, value: 1 };
+            const directed = event.shiftKey;
+            const link: SimLink = { source, target: clickedNode, value: 1, directed };
             this.refs.linksRef.current.push(link);
+            source.edges.push({ end: clickedNode, weight: 1, directed });
+            if (!directed) {
+              clickedNode.edges.push({ end: source, weight: 1, directed: false });
+            }
             this.physics.updateLinks(this.refs.linksRef.current);
             this.renderer.update();
             this.applyDrag();
