@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ToolsPanel } from './ToolsPanel';
+import { FlagsPanel } from './FlagsPanel';
 import type { ToolMode } from '../../types/tools';
+import type { StructureFlag } from '../../types/structure';
 import type { INode } from '../../sandbox/interfaces';
 import { Structure } from '../../sandbox/Structure';
 import '../../styles/sandbox.css';
@@ -24,7 +26,8 @@ export const SimulationCanvas: React.FC = () => {
   const nodesRef = useRef<INode[]>([]);
   const linksRef = useRef<{ source: INode; target: INode; value: number; directed: boolean }[]>([]);
   const selectedNodeRef = useRef<INode | null>(null);
-  const structureRef = useRef<Structure>(new Structure(crypto.randomUUID()));
+  const [flags, setFlags] = useState<StructureFlag[]>(['GRAPH']);
+  const structureRef = useRef<Structure>(new Structure(crypto.randomUUID(), setFlags));
 
 
   useEffect(() => { modeRef.current = mode; console.log('[Canvas] mode:', mode); }, [mode]);
@@ -72,6 +75,7 @@ export const SimulationCanvas: React.FC = () => {
   return (
     <div className="canvas-wrapper">
       <ToolsPanel activeMode={mode} onModeChange={setMode} />
+      <FlagsPanel flags={flags} />
       <svg ref={svgRef}></svg>
     </div>
   );

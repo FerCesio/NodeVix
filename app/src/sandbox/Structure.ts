@@ -28,13 +28,15 @@ export class Structure {
   links: SimLink[];
   flags: Set<StructureFlag>;
   private dirty: Set<StructureFlag>;
+  private onChange?: (flags: StructureFlag[]) => void;
 
-  constructor(id: string) {
+  constructor(id: string, onChange?: (flags: StructureFlag[]) => void) {
     this.id = id;
     this.nodes = [];
     this.links = [];
     this.flags = new Set(['GRAPH']);
     this.dirty = new Set();
+    this.onChange = onChange;
   }
 
   addNode(node: INode): void {
@@ -118,5 +120,6 @@ export class Structure {
     if (needsBipartite && validateBipartite(this.nodes, this.links)) this.flags.add('BIPARTITE');
 
     this.dirty.clear();
+    this.onChange?.([...this.flags]);
   }
 }

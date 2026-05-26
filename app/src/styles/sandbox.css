@@ -48,3 +48,30 @@
     font-size: 0.9rem;
     font-weight: 500;
 }
+
+.flags-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 300px;
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.flag-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
