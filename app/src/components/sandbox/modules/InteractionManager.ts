@@ -15,6 +15,7 @@ export interface InteractionRefs {
   structureManagerRef: React.MutableRefObject<StructureManager>;
   pendingPresetRef: React.MutableRefObject<string | null>;
   onSelectNode: (nodeId: string | null) => void;
+  onNodeSelected: (node: INode | null) => void;
 }
 
 export class InteractionManager {
@@ -140,6 +141,10 @@ export class InteractionManager {
         this.refs.selectedNodeRef.current = clickedNode;
         this.refs.onSelectNode(clickedNode?.id ?? null);
         this.highlightStructure(clickedNode?.id ?? null);
+        if (this.refs.onNodeSelected) {
+          this.refs.onNodeSelected(clickedNode);
+        }
+        this.renderer.highlight(clickedNode?.id ?? null);
       }
     });
 
