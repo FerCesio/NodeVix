@@ -78,6 +78,42 @@ export class InteractionManager {
         }
       }
 
+      if (mode === 'DELETE_ANY') {
+        const clickedNode = this.getNodeFromTarget(target);
+        if (clickedNode) {
+          // Remove node and its edges
+          this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => n.id !== clickedNode.id);
+          this.refs.linksRef.current = this.refs.linksRef.current.filter(
+            l => (l.source as INode).id !== clickedNode.id && (l.target as INode).id !== clickedNode.id
+          );
+          // Clean edges from other nodes
+          for (const n of this.refs.nodesRef.current) {
+            n.edges = n.edges.filter(e => e.end.id !== clickedNode.id);
+          }
+        } else if (target.tagName === 'line') {
+          // Remove clicked link
+          const datum = d3.select<Element, SimLink>(target).datum();
+          if (datum) {
+            const srcId = (datum.source as INode).id;
+            const tgtId = (datum.target as INode).id;
+            this.refs.linksRef.current = this.refs.linksRef.current.filter(l => l !== datum);
+            // Clean edges from nodes
+            const srcNode = this.refs.nodesRef.current.find(n => n.id === srcId);
+            const tgtNode = this.refs.nodesRef.current.find(n => n.id === tgtId);
+            if (srcNode) srcNode.edges = srcNode.edges.filter(e => e.end.id !== tgtId);
+            if (tgtNode && !datum.directed) tgtNode.edges = tgtNode.edges.filter(e => e.end.id !== srcId);
+          }
+        } else {
+          return;
+        }
+        this.physics.updateNodes(this.refs.nodesRef.current);
+        this.physics.updateLinks(this.refs.linksRef.current);
+        this.renderer.update();
+        this.applyDrag();
+        this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        return;
+      }
+
       if (mode === 'SELECT') {
         const clickedNode = this.getNodeFromTarget(target);
         this.refs.selectedNodeRef.current = clickedNode;

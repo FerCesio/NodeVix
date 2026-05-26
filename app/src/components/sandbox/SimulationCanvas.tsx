@@ -74,7 +74,7 @@ export const SimulationCanvas: React.FC = () => {
 
 
   return (
-    <div className="canvas-wrapper">
+    <div className={`canvas-wrapper${mode === 'DELETE_ANY' ? ' mode-delete' : ''}`}>
       <SandboxPanel activeMode={mode} onModeChange={setMode} />
       <FlagsPanel structures={structures} selectedNodeId={selectedNodeId} />
       <svg ref={svgRef}></svg>
