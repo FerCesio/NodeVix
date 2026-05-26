@@ -128,7 +128,7 @@ export class InteractionManager {
     this.svg.on('click.interaction', null);
   }
 
-  private applyDrag(): void {
+  applyDrag(): void {
     const physics = this.physics;
     const modeRef = this.refs.modeRef;
 

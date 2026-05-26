@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { SandboxPanel } from './SandboxPanel';
 import { FlagsPanel } from './FlagsPanel';
 import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
 import { StructureManager, type StructureInfo } from '../../sandbox/StructureManager';
+import { PRESETS } from '../../sandbox/presets';
 import '../../styles/sandbox.css';
 import '../../styles/canvas.css';
 import { SimulationCore } from './modules/SimulationCore';
-import { PhysicsEngine } from './modules/PhysicsEngine';
+import { PhysicsEngine, type SimLink } from './modules/PhysicsEngine';
 import { CanvasRenderer } from './modules/CanvasRenderer';
 import { CameraSystem } from './modules/CameraSystem';
 import { InteractionManager } from './modules/InteractionManager';
@@ -28,6 +29,22 @@ export const SimulationCanvas: React.FC = () => {
   const [structures, setStructures] = useState<StructureInfo[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const structureManagerRef = useRef<StructureManager>(new StructureManager(setStructures));
+  const physicsRef = useRef<PhysicsEngine | null>(null);
+  const rendererRef = useRef<CanvasRenderer | null>(null);
+  const eventsRef = useRef<InteractionManager | null>(null);
+
+  const handleGeneratePreset = useCallback((presetId: string) => {
+    const preset = PRESETS.find(p => p.id === presetId);
+    if (!preset || !physicsRef.current || !rendererRef.current) return;
+    const { nodes, links } = preset.generate(0, 0);
+    nodesRef.current.push(...nodes);
+    linksRef.current.push(...links);
+    physicsRef.current.updateNodes(nodesRef.current);
+    physicsRef.current.updateLinks(linksRef.current);
+    rendererRef.current.update();
+    eventsRef.current?.applyDrag();
+    structureManagerRef.current.sync(nodesRef.current, linksRef.current);
+  }, []);
 
 
   useEffect(() => { modeRef.current = mode; console.log('[Canvas] mode:', mode); }, [mode]);
@@ -51,6 +68,10 @@ export const SimulationCanvas: React.FC = () => {
     // 4. EVENT HANDLER: Gestión de interacción por modos
     // Implementa el mapa de estrategias (toolActions) y listeners
     const events = new InteractionManager(svg, simulation, renderer);
+
+    physicsRef.current = simulation;
+    rendererRef.current = renderer;
+    eventsRef.current = events;
     events.bindContext({
         modeRef,
         nodesRef,
@@ -75,7 +96,7 @@ export const SimulationCanvas: React.FC = () => {
 
   return (
     <div className={`canvas-wrapper${mode === 'DELETE_ANY' ? ' mode-delete' : ''}`}>
-      <SandboxPanel activeMode={mode} onModeChange={setMode} />
+      <SandboxPanel activeMode={mode} onModeChange={setMode} onGeneratePreset={handleGeneratePreset} />
       <FlagsPanel structures={structures} selectedNodeId={selectedNodeId} />
       <svg ref={svgRef}></svg>
     </div>
