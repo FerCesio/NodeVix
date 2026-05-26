@@ -9,6 +9,8 @@ import { validateBST } from './validators/bstValidator';
 import { validateLinkedList } from './validators/linkedListValidator';
 import { validateDoublyLinkedList } from './validators/doublyLinkedListValidator';
 import { validateDAG } from './validators/dagValidator';
+import { validateComplete } from './validators/completeValidator';
+import { validateBipartite } from './validators/bipartiteValidator';
 
 export class Structure {
   id: string;
@@ -69,5 +71,7 @@ export class Structure {
 
     if (validateLinkedList(this.nodes, this.links)) this.flags.add('LINKED_LIST');
     if (validateDoublyLinkedList(this.nodes, this.links)) this.flags.add('DOUBLY_LINKED_LIST');
+    if (validateComplete(this.nodes, this.links)) this.flags.add('COMPLETE');
+    if (validateBipartite(this.nodes, this.links)) this.flags.add('BIPARTITE');
   }
 }
