@@ -1,6 +1,8 @@
 import type { INode } from './interfaces';
 import type { SimLink } from '../components/sandbox/modules/PhysicsEngine';
 import type { StructureFlag } from '../types/structure';
+import { validateDirection } from './validators/directionValidator';
+import { validateCyclic } from './validators/cycleValidator';
 
 export class Structure {
   id: string;
@@ -17,6 +19,7 @@ export class Structure {
 
   addNode(node: INode): void {
     this.nodes.push(node);
+    this.recalculate();
   }
 
   removeNode(nodeId: string): void {
@@ -24,15 +27,29 @@ export class Structure {
     this.links = this.links.filter(
       l => (l.source as INode).id !== nodeId && (l.target as INode).id !== nodeId
     );
+    this.recalculate();
   }
 
   addEdge(link: SimLink): void {
     this.links.push(link);
+    this.recalculate();
   }
 
   removeEdge(sourceId: string, targetId: string): void {
     this.links = this.links.filter(
       l => !((l.source as INode).id === sourceId && (l.target as INode).id === targetId)
     );
+    this.recalculate();
+  }
+
+  recalculate(): void {
+    this.flags = new Set(['GRAPH']);
+
+    const dir = validateDirection(this.links);
+    if (dir) this.flags.add(dir);
+
+    if (validateCyclic(this.nodes, this.links)) {
+      this.flags.add('CYCLIC');
+    }
   }
 }
