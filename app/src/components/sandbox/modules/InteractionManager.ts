@@ -144,7 +144,7 @@ export class InteractionManager {
         if (this.refs.onNodeSelected) {
           this.refs.onNodeSelected(clickedNode);
         }
-        this.renderer.highlight(clickedNode?.id ?? null);
+        
       }
     });
 

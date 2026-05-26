@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { SandboxPanel } from './SandboxPanel';
 import { FlagsPanel } from './FlagsPanel';
-import React, { useEffect, useRef, useState } from 'react';
-import { ToolsPanel } from './ToolsPanel';
-import { PropertyPanel } from './PropertyPanel'; // Importamos el inspector
+import { PropertyPanel } from './PropertyPanel'; 
 import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
 import { StructureManager, type StructureInfo } from '../../sandbox/StructureManager';
@@ -30,9 +28,10 @@ export const SimulationCanvas: React.FC = () => {
   const selectedNodeRef = useRef<INode | null>(null);
   const [structures, setStructures] = useState<StructureInfo[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  
   const structureManagerRef = useRef<StructureManager>(new StructureManager(setStructures));
   const physicsRef = useRef<PhysicsEngine | null>(null);
-  const rendererRef = useRef<CanvasRenderer | null>(null);
+  const rendererRef = useRef<CanvasRenderer | null>(null); // <-- Única declaración correcta
   const eventsRef = useRef<InteractionManager | null>(null);
   const pendingPresetRef = useRef<string | null>(null);
 
@@ -47,9 +46,6 @@ export const SimulationCanvas: React.FC = () => {
     rendererRef.current?.update();
   }, []);
 
-  // Guardamos la instancia del renderer para forzar redibujados desde los inputs
-  const rendererRef = useRef<CanvasRenderer | null>(null);
-
   useEffect(() => { modeRef.current = mode; console.log('[Canvas] mode:', mode); }, [mode]);
 
   useEffect(() => {
@@ -58,7 +54,6 @@ export const SimulationCanvas: React.FC = () => {
     const simulation = new PhysicsEngine(nodesRef.current, linksRef.current);
     
     const renderer = new CanvasRenderer(layers, simulation);
-    rendererRef.current = renderer; // Seteamos la ref del renderer
     
     const camera = new CameraSystem(svg, container);
     camera.init();
@@ -71,8 +66,9 @@ export const SimulationCanvas: React.FC = () => {
     const events = new InteractionManager(svg, simulation, renderer);
 
     physicsRef.current = simulation;
-    rendererRef.current = renderer;
+    rendererRef.current = renderer; // <-- Acá guardamos la instancia
     eventsRef.current = events;
+    
     events.bindContext({
         modeRef,
         nodesRef,
@@ -81,7 +77,7 @@ export const SimulationCanvas: React.FC = () => {
         structureManagerRef,
         pendingPresetRef,
         onSelectNode: setSelectedNodeId,
-        onNodeSelected // <-- Inyectamos la función puente en el contexto del manager
+        onNodeSelected 
     });
     events.setupListeners();
 
@@ -112,15 +108,15 @@ export const SimulationCanvas: React.FC = () => {
       <SandboxPanel activeMode={mode} onModeChange={setMode} onGeneratePreset={handleGeneratePreset} onRunAlgorithm={handleRunAlgorithm} />
       <FlagsPanel structures={structures} selectedNodeId={selectedNodeId} />
       <svg ref={svgRef}></svg>
-          <PropertyPanel 
-      node={activeNode} 
-      onUpdate={handleUpdateNode}
-      onClose={() => {
-        selectedNodeRef.current = null;
-        setActiveNode(null);
-        if (rendererRef.current) rendererRef.current.update();
-      }}
-    />
+      <PropertyPanel 
+        node={activeNode} 
+        onUpdate={handleUpdateNode}
+        onClose={() => {
+          selectedNodeRef.current = null;
+          setActiveNode(null);
+          if (rendererRef.current) rendererRef.current.update();
+        }}
+      />
     </div>
   );
 };
