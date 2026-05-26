@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ToolsPanel } from './ToolsPanel';
+import { SandboxPanel } from './SandboxPanel';
 import { FlagsPanel } from './FlagsPanel';
 import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
@@ -75,7 +75,7 @@ export const SimulationCanvas: React.FC = () => {
 
   return (
     <div className="canvas-wrapper">
-      <ToolsPanel activeMode={mode} onModeChange={setMode} />
+      <SandboxPanel activeMode={mode} onModeChange={setMode} />
       <FlagsPanel structures={structures} selectedNodeId={selectedNodeId} />
       <svg ref={svgRef}></svg>
     </div>
