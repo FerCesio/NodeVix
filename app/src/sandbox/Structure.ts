@@ -73,7 +73,11 @@ export class Structure {
   }
 
   recalculate(): void {
-    if (this.dirty.size === 0) return;
+    if (this.dirty.size === 0) {
+      // Full recalculate (called externally, e.g. from StructureManager)
+      this.flags = new Set(['GRAPH']);
+      this.dirty = new Set(['DIRECTED', 'UNDIRECTED', 'CYCLIC', 'DAG', 'TREE', 'BINARY_TREE', 'BST', 'LINKED_LIST', 'DOUBLY_LINKED_LIST', 'COMPLETE', 'BIPARTITE']);
+    }
 
     const needsDirection = this.dirty.has('DIRECTED') || this.dirty.has('UNDIRECTED');
     const needsCycle = this.dirty.has('CYCLIC');

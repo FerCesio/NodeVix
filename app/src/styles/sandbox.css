@@ -75,3 +75,25 @@
     color: #2ecc71;
     border: 1px solid rgba(46, 204, 113, 0.3);
 }
+
+.structure-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    width: 100%;
+}
+
+.structure-group:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.structure-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #888;
+    margin-right: 4px;
+}

@@ -1,17 +1,27 @@
-import type { StructureFlag } from '../../types/structure';
+import type { StructureInfo } from '../../sandbox/StructureManager';
 import '../../styles/sandbox.css';
 
 interface FlagsPanelProps {
-  flags: StructureFlag[];
+  structures: StructureInfo[];
+  selectedNodeId: string | null;
 }
 
-export const FlagsPanel: React.FC<FlagsPanelProps> = ({ flags }) => {
-  if (flags.length === 0) return null;
+export const FlagsPanel: React.FC<FlagsPanelProps> = ({ structures, selectedNodeId }) => {
+  if (structures.length === 0) return null;
+
+  const visible = selectedNodeId
+    ? structures.filter(s => s.nodeIds.includes(selectedNodeId))
+    : structures;
 
   return (
     <div className="flags-panel">
-      {flags.map(flag => (
-        <span key={flag} className="flag-badge">{flag}</span>
+      {visible.map((s, i) => (
+        <div key={s.id} className="structure-group">
+          {visible.length > 1 && <span className="structure-label">#{i + 1}</span>}
+          {s.flags.map(flag => (
+            <span key={flag} className="flag-badge">{flag}</span>
+          ))}
+        </div>
       ))}
     </div>
   );

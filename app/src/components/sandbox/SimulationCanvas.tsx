@@ -2,9 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ToolsPanel } from './ToolsPanel';
 import { FlagsPanel } from './FlagsPanel';
 import type { ToolMode } from '../../types/tools';
-import type { StructureFlag } from '../../types/structure';
 import type { INode } from '../../sandbox/interfaces';
-import { Structure } from '../../sandbox/Structure';
+import { StructureManager, type StructureInfo } from '../../sandbox/StructureManager';
 import '../../styles/sandbox.css';
 import '../../styles/canvas.css';
 import { SimulationCore } from './modules/SimulationCore';
@@ -26,8 +25,9 @@ export const SimulationCanvas: React.FC = () => {
   const nodesRef = useRef<INode[]>([]);
   const linksRef = useRef<{ source: INode; target: INode; value: number; directed: boolean }[]>([]);
   const selectedNodeRef = useRef<INode | null>(null);
-  const [flags, setFlags] = useState<StructureFlag[]>(['GRAPH']);
-  const structureRef = useRef<Structure>(new Structure(crypto.randomUUID(), setFlags));
+  const [structures, setStructures] = useState<StructureInfo[]>([]);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const structureManagerRef = useRef<StructureManager>(new StructureManager(setStructures));
 
 
   useEffect(() => { modeRef.current = mode; console.log('[Canvas] mode:', mode); }, [mode]);
@@ -56,7 +56,8 @@ export const SimulationCanvas: React.FC = () => {
         nodesRef,
         linksRef,
         selectedNodeRef,
-        structureRef
+        structureManagerRef,
+        onSelectNode: setSelectedNodeId
     });
     events.setupListeners();
 
@@ -75,7 +76,7 @@ export const SimulationCanvas: React.FC = () => {
   return (
     <div className="canvas-wrapper">
       <ToolsPanel activeMode={mode} onModeChange={setMode} />
-      <FlagsPanel flags={flags} />
+      <FlagsPanel structures={structures} selectedNodeId={selectedNodeId} />
       <svg ref={svgRef}></svg>
     </div>
   );
