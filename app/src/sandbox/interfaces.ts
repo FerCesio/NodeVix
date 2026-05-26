@@ -14,6 +14,7 @@ export interface Edge {
 export interface INode extends Entity, d3.SimulationNodeDatum {
   value: number;
   edges: Edge[];
+  color?: string;
 }
 
 export interface Algorithm {

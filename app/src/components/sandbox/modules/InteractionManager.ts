@@ -10,6 +10,7 @@ export interface InteractionRefs {
   nodesRef: React.MutableRefObject<INode[]>;
   linksRef: React.MutableRefObject<SimLink[]>;
   selectedNodeRef: React.MutableRefObject<INode | null>;
+  onNodeSelected: (node: INode | null) => void;
 }
 
 export class InteractionManager {
@@ -71,6 +72,10 @@ export class InteractionManager {
       if (mode === 'SELECT') {
         const clickedNode = this.getNodeFromTarget(target);
         this.refs.selectedNodeRef.current = clickedNode;
+        if (this.refs.onNodeSelected) {
+          this.refs.onNodeSelected(clickedNode);
+        }
+        this.renderer.highlight(clickedNode?.id ?? null);
       }
     });
 

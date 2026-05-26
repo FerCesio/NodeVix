@@ -12,12 +12,21 @@ export class CanvasRenderer {
   private physics: PhysicsEngine;
   private nodeSelection: d3.Selection<SVGGElement, INode, SVGGElement, unknown> | null = null;
   private linkSelection: d3.Selection<SVGLineElement, SimLink, SVGGElement, unknown> | null = null;
+  private selectedNodeId: string | null = null;
 
   constructor(layers: Layers, physics: PhysicsEngine) {
     this.layers = layers;
     this.physics = physics;
-
     this.physics.onTick(() => this.tick());
+  }
+
+  highlight(nodeId: string | null): void {
+    console.log('[CanvasRenderer] highlight id:', nodeId);
+    this.selectedNodeId = nodeId;
+    
+    this.layers.nodes.selectAll('.node circle')
+      .style('stroke', (d: any) => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
+      .style('stroke-width', (d: any) => d.id === this.selectedNodeId ? '4px' : '0px');
   }
 
   update(): void {
@@ -38,17 +47,34 @@ export class CanvasRenderer {
       .join(
         enter => {
           const g = enter.append('g').attr('class', 'node');
-          g.append('circle').attr('r', 20).attr('fill', '#2ecc71');
+          
+          g.append('circle')
+            .attr('r', d => 20 * (d.scale ?? 1))
+            // ACÁ: Leemos el color desde el nodo (d.color), si no tiene, usa el verde por defecto
+            .attr('fill', d => d.color ?? '#2ecc71')
+            .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
+            .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');
+            
           g.append('text')
             .attr('text-anchor', 'middle')
             .attr('dy', '0.35em')
             .attr('fill', '#fff')
             .attr('font-size', '12px')
             .text(d => d.value);
+            
           return g;
         },
         update => {
-          update.select('text').text(d => d.value);
+          update.select('circle')
+            .attr('r', d => 20 * (d.scale ?? 1))
+            // ACÁ: Refrescamos el color cuando se actualiza el canvas desde el panel
+            .attr('fill', d => d.color ?? '#2ecc71')
+            .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
+            .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');
+
+          update.select('text')
+            .text(d => d.value);
+            
           return update;
         }
       );
