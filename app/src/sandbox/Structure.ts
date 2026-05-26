@@ -6,6 +6,9 @@ import { validateCyclic } from './validators/cycleValidator';
 import { validateTree } from './validators/treeValidator';
 import { validateBinaryTree } from './validators/binaryTreeValidator';
 import { validateBST } from './validators/bstValidator';
+import { validateLinkedList } from './validators/linkedListValidator';
+import { validateDoublyLinkedList } from './validators/doublyLinkedListValidator';
+import { validateDAG } from './validators/dagValidator';
 
 export class Structure {
   id: string;
@@ -51,18 +54,20 @@ export class Structure {
     const dir = validateDirection(this.links);
     if (dir) this.flags.add(dir);
 
-    if (validateCyclic(this.nodes, this.links)) {
-      this.flags.add('CYCLIC');
-    }
+    const hasCycle = validateCyclic(this.nodes, this.links);
+    if (hasCycle) this.flags.add('CYCLIC');
+
+    if (validateDAG(this.links, hasCycle)) this.flags.add('DAG');
 
     if (validateTree(this.nodes, this.links)) {
       this.flags.add('TREE');
       if (validateBinaryTree(this.nodes, this.links)) {
         this.flags.add('BINARY_TREE');
-        if (validateBST(this.nodes, this.links)) {
-          this.flags.add('BST');
-        }
+        if (validateBST(this.nodes, this.links)) this.flags.add('BST');
       }
     }
+
+    if (validateLinkedList(this.nodes, this.links)) this.flags.add('LINKED_LIST');
+    if (validateDoublyLinkedList(this.nodes, this.links)) this.flags.add('DOUBLY_LINKED_LIST');
   }
 }
