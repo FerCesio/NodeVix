@@ -72,7 +72,7 @@ export class InteractionManager {
         this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
       }
 
-      if (mode === 'CONNECT') {
+      if (mode === 'LINK' || mode === 'ARROW') {
         const clickedNode = this.getNodeFromTarget(target);
         if (!clickedNode) {
           this.refs.selectedNodeRef.current = null;
@@ -83,7 +83,7 @@ export class InteractionManager {
         } else {
           const source = this.refs.selectedNodeRef.current;
           if (source.id !== clickedNode.id) {
-            const directed = event.shiftKey;
+            const directed = mode === 'ARROW';
             const link: SimLink = { source, target: clickedNode, value: 1, directed };
             this.refs.linksRef.current.push(link);
             source.edges.push({ end: clickedNode, weight: 1, directed });

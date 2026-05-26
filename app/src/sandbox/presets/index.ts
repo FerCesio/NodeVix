@@ -36,9 +36,8 @@ function binaryTree(cx: number, cy: number): { nodes: INode[]; links: SimLink[] 
   }
   const edges = [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]];
   for (const [p, c] of edges) {
-    links.push({ source: nodes[p], target: nodes[c], value: 1, directed: false });
-    nodes[p].edges.push({ end: nodes[c], weight: 1, directed: false });
-    nodes[c].edges.push({ end: nodes[p], weight: 1, directed: false });
+    links.push({ source: nodes[p], target: nodes[c], value: 1, directed: true });
+    nodes[p].edges.push({ end: nodes[c], weight: 1, directed: true });
   }
   return { nodes, links };
 }
