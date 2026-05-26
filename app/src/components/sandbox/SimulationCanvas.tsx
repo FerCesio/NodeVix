@@ -33,18 +33,10 @@ export const SimulationCanvas: React.FC = () => {
   const physicsRef = useRef<PhysicsEngine | null>(null);
   const rendererRef = useRef<CanvasRenderer | null>(null);
   const eventsRef = useRef<InteractionManager | null>(null);
+  const pendingPresetRef = useRef<string | null>(null);
 
   const handleGeneratePreset = useCallback((presetId: string) => {
-    const preset = PRESETS.find(p => p.id === presetId);
-    if (!preset || !physicsRef.current || !rendererRef.current) return;
-    const { nodes, links } = preset.generate(0, 0);
-    nodesRef.current.push(...nodes);
-    linksRef.current.push(...links);
-    physicsRef.current.updateNodes(nodesRef.current);
-    physicsRef.current.updateLinks(linksRef.current);
-    rendererRef.current.update();
-    eventsRef.current?.applyDrag();
-    structureManagerRef.current.sync(nodesRef.current, linksRef.current);
+    pendingPresetRef.current = presetId;
   }, []);
 
   const handleRunAlgorithm = useCallback((algorithmId: string) => {
@@ -86,6 +78,7 @@ export const SimulationCanvas: React.FC = () => {
         linksRef,
         selectedNodeRef,
         structureManagerRef,
+        pendingPresetRef,
         onSelectNode: setSelectedNodeId
     });
     events.setupListeners();

@@ -7,11 +7,9 @@ interface FlagsPanelProps {
 }
 
 export const FlagsPanel: React.FC<FlagsPanelProps> = ({ structures, selectedNodeId }) => {
-  if (structures.length === 0) return null;
+  if (!selectedNodeId) return null;
 
-  const visible = selectedNodeId
-    ? structures.filter(s => s.nodeIds.includes(selectedNodeId))
-    : structures;
+  const visible = structures.filter(s => s.nodeIds.includes(selectedNodeId));
 
   return (
     <div className="flags-panel">

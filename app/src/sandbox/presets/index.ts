@@ -14,7 +14,7 @@ function linkedList(cx: number, cy: number): { nodes: INode[]; links: SimLink[] 
   const nodes: INode[] = [];
   const links: SimLink[] = [];
   for (let i = 0; i < n; i++) {
-    nodes.push(new DefaultNode(crypto.randomUUID(), i + 1, cx - 200 + i * 100, cy));
+    nodes.push(new DefaultNode(crypto.randomUUID(), Math.floor(Math.random() * 99) + 1, cx - 200 + i * 100, cy));
   }
   for (let i = 0; i < n - 1; i++) {
     links.push({ source: nodes[i], target: nodes[i + 1], value: 1, directed: true });
@@ -26,7 +26,7 @@ function linkedList(cx: number, cy: number): { nodes: INode[]; links: SimLink[] 
 function binaryTree(cx: number, cy: number): { nodes: INode[]; links: SimLink[] } {
   const nodes: INode[] = [];
   const links: SimLink[] = [];
-  const values = [4, 2, 6, 1, 3, 5, 7];
+  const values = Array.from({ length: 7 }, () => Math.floor(Math.random() * 99) + 1);
   const positions = [
     [0, -90], [-120, 0], [120, 0],
     [-180, 90], [-60, 90], [60, 90], [180, 90]
@@ -49,7 +49,7 @@ function completeGraph(cx: number, cy: number): { nodes: INode[]; links: SimLink
   const links: SimLink[] = [];
   for (let i = 0; i < n; i++) {
     const angle = (2 * Math.PI * i) / n - Math.PI / 2;
-    nodes.push(new DefaultNode(crypto.randomUUID(), i + 1, cx + 100 * Math.cos(angle), cy + 100 * Math.sin(angle)));
+    nodes.push(new DefaultNode(crypto.randomUUID(), Math.floor(Math.random() * 99) + 1, cx + 100 * Math.cos(angle), cy + 100 * Math.sin(angle)));
   }
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
@@ -67,7 +67,7 @@ function cycle(cx: number, cy: number): { nodes: INode[]; links: SimLink[] } {
   const links: SimLink[] = [];
   for (let i = 0; i < n; i++) {
     const angle = (2 * Math.PI * i) / n - Math.PI / 2;
-    nodes.push(new DefaultNode(crypto.randomUUID(), i + 1, cx + 100 * Math.cos(angle), cy + 100 * Math.sin(angle)));
+    nodes.push(new DefaultNode(crypto.randomUUID(), Math.floor(Math.random() * 99) + 1, cx + 100 * Math.cos(angle), cy + 100 * Math.sin(angle)));
   }
   for (let i = 0; i < n; i++) {
     const next = (i + 1) % n;

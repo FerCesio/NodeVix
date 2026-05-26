@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import type { INode } from '../../../sandbox/interfaces';
 import type { ToolMode } from '../../../types/tools';
 import { DefaultNode } from '../../../sandbox/DefaultNode';
+import { PRESETS } from '../../../sandbox/presets';
 import type { StructureManager } from '../../../sandbox/StructureManager';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 import type { CanvasRenderer } from './CanvasRenderer';
@@ -12,6 +13,7 @@ export interface InteractionRefs {
   linksRef: React.MutableRefObject<SimLink[]>;
   selectedNodeRef: React.MutableRefObject<INode | null>;
   structureManagerRef: React.MutableRefObject<StructureManager>;
+  pendingPresetRef: React.MutableRefObject<string | null>;
   onSelectNode: (nodeId: string | null) => void;
 }
 
@@ -41,9 +43,28 @@ export class InteractionManager {
       const mode = this.refs.modeRef.current;
       console.log('[Interaction] click | mode:', mode, '| target:', target.tagName);
 
+      // Preset placement: si hay un preset pendiente, generarlo donde se hizo click
+      if (this.refs.pendingPresetRef.current && !target.closest('g.node')) {
+        const presetId = this.refs.pendingPresetRef.current;
+        this.refs.pendingPresetRef.current = null;
+        const preset = PRESETS.find(p => p.id === presetId);
+        if (preset) {
+          const [cx, cy] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+          const { nodes, links } = preset.generate(cx, cy);
+          this.refs.nodesRef.current.push(...nodes);
+          this.refs.linksRef.current.push(...links);
+          this.physics.updateNodes(this.refs.nodesRef.current);
+          this.physics.updateLinks(this.refs.linksRef.current);
+          this.renderer.update();
+          this.applyDrag();
+          this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        }
+        return;
+      }
+
       if (mode === 'ADD_NODE' && !target.closest('g.node')) {
         const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
-        const node = new DefaultNode(crypto.randomUUID(), 0, x, y);
+        const node = new DefaultNode(crypto.randomUUID(), Math.floor(Math.random() * 99) + 1, x, y);
         this.refs.nodesRef.current.push(node);
         this.physics.updateNodes(this.refs.nodesRef.current);
         this.renderer.update();
@@ -118,6 +139,7 @@ export class InteractionManager {
         const clickedNode = this.getNodeFromTarget(target);
         this.refs.selectedNodeRef.current = clickedNode;
         this.refs.onSelectNode(clickedNode?.id ?? null);
+        this.highlightStructure(clickedNode?.id ?? null);
       }
     });
 
@@ -159,5 +181,25 @@ export class InteractionManager {
     if (!g) return null;
     const datum = d3.select<Element, INode>(g).datum();
     return datum ?? null;
+  }
+
+  private highlightStructure(nodeId: string | null): void {
+    // Remove all highlights
+    this.svg.select('.layer-nodes').selectAll<SVGGElement, INode>('g.node')
+      .select('circle')
+      .style('stroke', null)
+      .style('stroke-width', null);
+
+    if (!nodeId) return;
+
+    const structure = this.refs.structureManagerRef.current.getStructureForNode(nodeId);
+    if (!structure) return;
+
+    const ids = new Set(structure.nodes.map(n => n.id));
+    this.svg.select('.layer-nodes').selectAll<SVGGElement, INode>('g.node')
+      .filter(d => ids.has(d.id))
+      .select('circle')
+      .style('stroke', '#f1c40f')
+      .style('stroke-width', '3px');
   }
 }
