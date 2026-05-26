@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import type { INode } from '../../../sandbox/interfaces';
 import type { ToolMode } from '../../../types/tools';
 import { DefaultNode } from '../../../sandbox/DefaultNode';
+import type { Structure } from '../../../sandbox/Structure';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 import type { CanvasRenderer } from './CanvasRenderer';
 
@@ -10,6 +11,7 @@ export interface InteractionRefs {
   nodesRef: React.MutableRefObject<INode[]>;
   linksRef: React.MutableRefObject<SimLink[]>;
   selectedNodeRef: React.MutableRefObject<INode | null>;
+  structureRef: React.MutableRefObject<Structure>;
 }
 
 export class InteractionManager {
@@ -41,6 +43,7 @@ export class InteractionManager {
       if (mode === 'ADD_NODE' && !target.closest('g.node')) {
         const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
         const node = new DefaultNode(crypto.randomUUID(), 0, x, y);
+        this.refs.structureRef.current.addNode(node);
         this.refs.nodesRef.current.push(node);
         this.physics.updateNodes(this.refs.nodesRef.current);
         this.renderer.update();
@@ -60,6 +63,7 @@ export class InteractionManager {
           if (source.id !== clickedNode.id) {
             const directed = event.shiftKey;
             const link: SimLink = { source, target: clickedNode, value: 1, directed };
+            this.refs.structureRef.current.addEdge(link);
             this.refs.linksRef.current.push(link);
             source.edges.push({ end: clickedNode, weight: 1, directed });
             if (!directed) {

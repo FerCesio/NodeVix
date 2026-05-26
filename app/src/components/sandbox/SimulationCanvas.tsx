@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ToolsPanel } from './ToolsPanel';
 import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
+import { Structure } from '../../sandbox/Structure';
 import '../../styles/sandbox.css';
 import '../../styles/canvas.css';
 import { SimulationCore } from './modules/SimulationCore';
@@ -23,6 +24,7 @@ export const SimulationCanvas: React.FC = () => {
   const nodesRef = useRef<INode[]>([]);
   const linksRef = useRef<{ source: INode; target: INode; value: number; directed: boolean }[]>([]);
   const selectedNodeRef = useRef<INode | null>(null);
+  const structureRef = useRef<Structure>(new Structure(crypto.randomUUID()));
 
 
   useEffect(() => { modeRef.current = mode; console.log('[Canvas] mode:', mode); }, [mode]);
@@ -50,7 +52,8 @@ export const SimulationCanvas: React.FC = () => {
         modeRef,
         nodesRef,
         linksRef,
-        selectedNodeRef
+        selectedNodeRef,
+        structureRef
     });
     events.setupListeners();
 
