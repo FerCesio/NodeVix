@@ -5,6 +5,7 @@ import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
 import { StructureManager, type StructureInfo } from '../../sandbox/StructureManager';
 import { PRESETS } from '../../sandbox/presets';
+import { AVAILABLE_ALGORITHMS } from '../../sandbox/algorithms';
 import '../../styles/sandbox.css';
 import '../../styles/canvas.css';
 import { SimulationCore } from './modules/SimulationCore';
@@ -44,6 +45,13 @@ export const SimulationCanvas: React.FC = () => {
     rendererRef.current.update();
     eventsRef.current?.applyDrag();
     structureManagerRef.current.sync(nodesRef.current, linksRef.current);
+  }, []);
+
+  const handleRunAlgorithm = useCallback((algorithmId: string) => {
+    const alg = AVAILABLE_ALGORITHMS.find(a => a.id === algorithmId);
+    if (!alg || nodesRef.current.length === 0) return;
+    alg.run(nodesRef.current);
+    rendererRef.current?.update();
   }, []);
 
 
@@ -96,7 +104,7 @@ export const SimulationCanvas: React.FC = () => {
 
   return (
     <div className={`canvas-wrapper${mode === 'DELETE_ANY' ? ' mode-delete' : ''}`}>
-      <SandboxPanel activeMode={mode} onModeChange={setMode} onGeneratePreset={handleGeneratePreset} />
+      <SandboxPanel activeMode={mode} onModeChange={setMode} onGeneratePreset={handleGeneratePreset} onRunAlgorithm={handleRunAlgorithm} />
       <FlagsPanel structures={structures} selectedNodeId={selectedNodeId} />
       <svg ref={svgRef}></svg>
     </div>

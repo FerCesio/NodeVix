@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { AVAILABLE_TOOLS, type PanelSection, type ToolMode } from '../../types/tools';
 import { StructuresSection } from './StructuresSection';
+import { AlgorithmsSection } from './AlgorithmsSection';
 import '../../styles/sandbox.css';
 
 interface SandboxPanelProps {
   activeMode: ToolMode;
   onModeChange: (mode: ToolMode) => void;
   onGeneratePreset: (presetId: string) => void;
+  onRunAlgorithm: (algorithmId: string) => void;
 }
 
 const SECTIONS: { id: PanelSection; label: string; icon: string }[] = [
@@ -15,7 +17,7 @@ const SECTIONS: { id: PanelSection; label: string; icon: string }[] = [
   { id: 'ALGORITHMS', label: 'Algorithms', icon: '⚡' },
 ];
 
-export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeChange, onGeneratePreset }) => {
+export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeChange, onGeneratePreset, onRunAlgorithm }) => {
   const [activeSection, setActiveSection] = useState<PanelSection>('TOOLS');
 
   const toggleSection = (section: PanelSection) => {
@@ -51,7 +53,7 @@ export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeCh
                 <StructuresSection onGenerate={onGeneratePreset} />
               )}
               {section.id === 'ALGORITHMS' && (
-                <span className="section-placeholder">Próximamente</span>
+                <AlgorithmsSection onRun={onRunAlgorithm} />
               )}
             </div>
           )}

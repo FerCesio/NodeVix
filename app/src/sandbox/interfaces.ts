@@ -18,5 +18,5 @@ export interface INode extends Entity, d3.SimulationNodeDatum {
 }
 
 export interface Algorithm {
-  execute(nodes: Node[]): void;
+  execute(nodes: INode[]): void;
 }
