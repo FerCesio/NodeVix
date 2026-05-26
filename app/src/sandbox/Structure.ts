@@ -3,6 +3,9 @@ import type { SimLink } from '../components/sandbox/modules/PhysicsEngine';
 import type { StructureFlag } from '../types/structure';
 import { validateDirection } from './validators/directionValidator';
 import { validateCyclic } from './validators/cycleValidator';
+import { validateTree } from './validators/treeValidator';
+import { validateBinaryTree } from './validators/binaryTreeValidator';
+import { validateBST } from './validators/bstValidator';
 
 export class Structure {
   id: string;
@@ -50,6 +53,16 @@ export class Structure {
 
     if (validateCyclic(this.nodes, this.links)) {
       this.flags.add('CYCLIC');
+    }
+
+    if (validateTree(this.nodes, this.links)) {
+      this.flags.add('TREE');
+      if (validateBinaryTree(this.nodes, this.links)) {
+        this.flags.add('BINARY_TREE');
+        if (validateBST(this.nodes, this.links)) {
+          this.flags.add('BST');
+        }
+      }
     }
   }
 }
