@@ -72,3 +72,9 @@ rect {
     stroke-width: 4px;
     cursor: pointer;
 }
+
+
+/* Ghost line (preview de conexión en LINK/ARROW) */
+.layer-ghost line.ghost-line {
+    pointer-events: none;
+}

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { SandboxPanel } from './SandboxPanel';
 import { FlagsPanel } from './FlagsPanel';
-import React, { useEffect, useRef, useState } from 'react';
 import { ToolsPanel } from './ToolsPanel';
 import { PropertyPanel } from './PropertyPanel'; // Importamos el inspector
 import type { ToolMode } from '../../types/tools';
@@ -48,7 +47,6 @@ export const SimulationCanvas: React.FC = () => {
   }, []);
 
   // Guardamos la instancia del renderer para forzar redibujados desde los inputs
-  const rendererRef = useRef<CanvasRenderer | null>(null);
 
   useEffect(() => { modeRef.current = mode; console.log('[Canvas] mode:', mode); }, [mode]);
 
@@ -68,7 +66,7 @@ export const SimulationCanvas: React.FC = () => {
       setActiveNode(node); 
     };
 
-    const events = new InteractionManager(svg, simulation, renderer);
+    const events = new InteractionManager(svg, simulation, renderer, layers.ghost);
 
     physicsRef.current = simulation;
     rendererRef.current = renderer;

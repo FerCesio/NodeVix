@@ -23,15 +23,19 @@ export class InteractionManager {
   private physics: PhysicsEngine;
   private renderer: CanvasRenderer;
   private refs!: InteractionRefs;
+  private ghostLine: d3.Selection<SVGLineElement, unknown, null, undefined> | null = null;
+  private ghostLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
 
   constructor(
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
     physics: PhysicsEngine,
-    renderer: CanvasRenderer
+    renderer: CanvasRenderer,
+    ghostLayer: d3.Selection<SVGGElement, unknown, null, undefined>
   ) {
     this.svg = svg;
     this.physics = physics;
     this.renderer = renderer;
+    this.ghostLayer = ghostLayer;
   }
 
   bindContext(refs: InteractionRefs): void {
@@ -39,6 +43,36 @@ export class InteractionManager {
   }
 
   setupListeners(): void {
+    // Ghost line: mousemove
+    this.svg.on('mousemove.ghost', (event: MouseEvent) => {
+      const mode = this.refs.modeRef.current;
+      if ((mode === 'LINK' || mode === 'ARROW') && this.refs.selectedNodeRef.current) {
+        const [mx, my] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+        const src = this.refs.selectedNodeRef.current;
+        if (!this.ghostLine) {
+          this.ghostLine = this.ghostLayer.append('line').attr('class', 'ghost-line');
+        }
+        this.ghostLine
+          .attr('x1', src.x ?? 0)
+          .attr('y1', src.y ?? 0)
+          .attr('x2', mx)
+          .attr('y2', my)
+          .attr('stroke', mode === 'ARROW' ? '#e74c3c' : '#888')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '6 4')
+          .attr('opacity', 0.6);
+      } else {
+        this.clearGhost();
+      }
+    });
+
+    // ESC: cancelar operaciones en curso
+    d3.select('body').on('keydown.interaction', (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        this.cancelPending();
+      }
+    });
+
     this.svg.on('click.interaction', (event: MouseEvent) => {
       const target = event.target as Element;
       const mode = this.refs.modeRef.current;
@@ -77,6 +111,7 @@ export class InteractionManager {
         const clickedNode = this.getNodeFromTarget(target);
         if (!clickedNode) {
           this.refs.selectedNodeRef.current = null;
+          this.clearGhost();
           return;
         }
         if (!this.refs.selectedNodeRef.current) {
@@ -97,6 +132,7 @@ export class InteractionManager {
             this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
           }
           this.refs.selectedNodeRef.current = null;
+          this.clearGhost();
         }
       }
 
@@ -153,6 +189,22 @@ export class InteractionManager {
 
   destroy(): void {
     this.svg.on('click.interaction', null);
+    this.svg.on('mousemove.ghost', null);
+    d3.select('body').on('keydown.interaction', null);
+    this.clearGhost();
+  }
+
+  private clearGhost(): void {
+    if (this.ghostLine) {
+      this.ghostLine.remove();
+      this.ghostLine = null;
+    }
+  }
+
+  private cancelPending(): void {
+    this.refs.selectedNodeRef.current = null;
+    this.refs.pendingPresetRef.current = null;
+    this.clearGhost();
   }
 
   applyDrag(): void {

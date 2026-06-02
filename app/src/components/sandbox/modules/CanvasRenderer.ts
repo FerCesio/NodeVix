@@ -4,6 +4,7 @@ import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 
 type Layers = {
   links: d3.Selection<SVGGElement, unknown, null, undefined>;
+  ghost: d3.Selection<SVGGElement, unknown, null, undefined>;
   nodes: d3.Selection<SVGGElement, unknown, null, undefined>;
 };
 
