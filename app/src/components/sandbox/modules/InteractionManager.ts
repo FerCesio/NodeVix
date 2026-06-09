@@ -6,6 +6,8 @@ import { PRESETS } from '../../../sandbox/presets';
 import { AVAILABLE_ALGORITHMS } from '../../../sandbox/algorithms';
 import { AlgorithmExecutor } from '../../../sandbox/AlgorithmExecutor';
 import { BubbleSort } from '../../../sandbox/algorithms/BubbleSort';
+import { Inorder } from '../../../sandbox/algorithms/Inorder';
+import { diffSnapshots } from '../../../sandbox/utils/diffSnapshots';
 import type { StructureManager } from '../../../sandbox/StructureManager';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 import type { CanvasRenderer } from './CanvasRenderer';
@@ -31,6 +33,7 @@ export class InteractionManager {
   private ghostLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
   private executors: Map<string, AlgorithmExecutor> = new Map();
   private autoPlayIntervals: Map<string, number> = new Map();
+  private animating = false;
 
   constructor(
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -251,24 +254,41 @@ export class InteractionManager {
   }
 
   private handleAlgoButton(algoNode: IAlgorithmNode, btn: Element): void {
+    if (this.animating) return;
     const executor = this.getOrCreateExecutor(algoNode);
     if (!executor) return;
 
     if (btn.classList.contains('btn-fwd')) {
       this.stopAutoPlay(algoNode.id);
-      executor.stepForward();
-      this.renderer.update();
+      this.animatedStep(algoNode, executor, 'forward');
     } else if (btn.classList.contains('btn-back')) {
       this.stopAutoPlay(algoNode.id);
-      executor.stepBack();
-      this.renderer.update();
+      this.animatedStep(algoNode, executor, 'back');
     } else if (btn.classList.contains('btn-play')) {
       if (this.autoPlayIntervals.has(algoNode.id)) {
         this.stopAutoPlay(algoNode.id);
       } else {
-        this.startAutoPlay(algoNode.id, executor);
+        this.startAutoPlay(algoNode.id, executor, algoNode);
       }
     }
+  }
+
+  private animatedStep(algoNode: IAlgorithmNode, executor: AlgorithmExecutor, direction: 'forward' | 'back', onDone?: () => void): void {
+    const { state } = algoNode;
+    const prevStep = state.currentStep;
+    const ok = direction === 'forward' ? executor.stepForward() : executor.stepBack();
+    if (!ok) { onDone?.(); return; }
+
+    const prev = state.snapshots[prevStep];
+    const next = state.snapshots[state.currentStep];
+    const swaps = diffSnapshots(prev, next);
+
+    this.animating = true;
+    this.renderer.animateSwaps(swaps, () => {
+      this.animating = false;
+      this.renderer.update();
+      onDone?.();
+    });
   }
 
   private getOrCreateExecutor(algoNode: IAlgorithmNode): AlgorithmExecutor | null {
@@ -291,21 +311,25 @@ export class InteractionManager {
 
   private resolveAlgorithm(algorithmId: string) {
     if (algorithmId === 'bubble-sort') return new BubbleSort();
+    if (algorithmId === 'inorder') return new Inorder();
     return null;
   }
 
-  private startAutoPlay(id: string, executor: AlgorithmExecutor): void {
-    const interval = window.setInterval(() => {
-      const ok = executor.stepForward();
-      this.renderer.update();
-      if (!ok) this.stopAutoPlay(id);
-    }, 500);
-    this.autoPlayIntervals.set(id, interval);
+  private startAutoPlay(id: string, executor: AlgorithmExecutor, algoNode: IAlgorithmNode): void {
+    const step = () => {
+      if (!this.autoPlayIntervals.has(id)) return;
+      this.animatedStep(algoNode, executor, 'forward', () => {
+        if (algoNode.state.status === 'done') { this.stopAutoPlay(id); return; }
+        const timeout = window.setTimeout(step, 200);
+        this.autoPlayIntervals.set(id, timeout);
+      });
+    };
+    this.autoPlayIntervals.set(id, window.setTimeout(step, 0));
   }
 
   private stopAutoPlay(id: string): void {
-    const interval = this.autoPlayIntervals.get(id);
-    if (interval != null) { clearInterval(interval); this.autoPlayIntervals.delete(id); }
+    const timeout = this.autoPlayIntervals.get(id);
+    if (timeout != null) { clearTimeout(timeout); this.autoPlayIntervals.delete(id); }
   }
 
   private clearGhost(): void {

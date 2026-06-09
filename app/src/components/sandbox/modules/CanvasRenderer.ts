@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import type { INode, IAlgorithmNode, CanvasNode } from '../../../sandbox/interfaces';
+import type { Swap } from '../../../sandbox/utils/diffSnapshots';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 
 type Layers = {
@@ -139,5 +140,47 @@ export class CanvasRenderer {
 
     this.algoSelection
       ?.attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);
+  }
+
+  animateSwaps(swaps: Swap[], onComplete: () => void): void {
+    if (swaps.length === 0) { onComplete(); return; }
+
+    const sim = this.physics.getSimulation();
+    const nodes = sim.nodes() as CanvasNode[];
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    let pending = swaps.length;
+
+    // Hide real texts of involved nodes
+    const involvedIds = new Set(swaps.flatMap(s => [s.fromNodeId, s.toNodeId]));
+    this.layers.nodes.selectAll<SVGGElement, INode>('g.node-data')
+      .filter(d => involvedIds.has(d.id))
+      .select('text').attr('opacity', 0);
+
+    for (const swap of swaps) {
+      const from = nodeMap.get(swap.fromNodeId);
+      const to = nodeMap.get(swap.toNodeId);
+      if (!from || !to) { pending--; continue; }
+
+      this.layers.nodes.append('text')
+        .attr('class', 'swap-ghost')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .attr('fill', '#fff')
+        .attr('font-size', '12px')
+        .text(swap.value)
+        .attr('x', from.x ?? 0)
+        .attr('y', from.y ?? 0)
+        .transition()
+        .duration(300)
+        .attr('x', to.x ?? 0)
+        .attr('y', to.y ?? 0)
+        .on('end', function () {
+          d3.select(this).remove();
+          pending--;
+          if (pending === 0) {
+            onComplete();
+          }
+        });
+    }
   }
 }
