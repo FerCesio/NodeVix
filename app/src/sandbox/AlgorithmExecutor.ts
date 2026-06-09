@@ -1,4 +1,4 @@
-import type { INode, IAlgorithmNode, Snapshot, Algorithm } from './interfaces';
+import type { INode, IAlgorithmNode, Algorithm } from './interfaces';
 
 export class AlgorithmExecutor {
   private algoNode: IAlgorithmNode;
@@ -10,9 +10,10 @@ export class AlgorithmExecutor {
     this.algorithm = algorithm;
   }
 
-  init(nodes: INode[]): void {
-    this.targetNodes = nodes;
-    const snapshots = this.algorithm.init(nodes);
+  init(entryNode: INode): void {
+    // Discover all reachable nodes from entry point
+    this.targetNodes = this.collectReachable(entryNode);
+    const snapshots = this.algorithm.init(entryNode);
     this.algoNode.state = { snapshots, currentStep: 0, status: 'idle' };
     this.applyStep(0);
   }
@@ -54,5 +55,34 @@ export class AlgorithmExecutor {
         node.value = snapshot.values[node.id];
       }
     }
+    if (snapshot.edges) {
+      const nodeMap = new Map(this.targetNodes.map(n => [n.id, n]));
+      for (const node of this.targetNodes) {
+        node.edges = node.edges.filter(e => !e.directed);
+      }
+      for (const edge of snapshot.edges) {
+        const src = nodeMap.get(edge.source);
+        const tgt = nodeMap.get(edge.target);
+        if (src && tgt) {
+          src.edges.push({ end: tgt, weight: 1, directed: true });
+        }
+      }
+    }
+  }
+
+  private collectReachable(root: INode): INode[] {
+    const nodes: INode[] = [];
+    const visited = new Set<string>();
+    const queue = [root];
+    while (queue.length > 0) {
+      const node = queue.shift()!;
+      if (visited.has(node.id)) continue;
+      visited.add(node.id);
+      nodes.push(node);
+      for (const edge of node.edges) {
+        if (edge.directed) queue.push(edge.end as INode);
+      }
+    }
+    return nodes;
   }
 }

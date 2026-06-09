@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import type { INode, IAlgorithmNode, CanvasNode } from '../../../sandbox/interfaces';
+import type { INode, IAlgorithmNode, CanvasNode, Snapshot } from '../../../sandbox/interfaces';
 import type { Swap } from '../../../sandbox/utils/diffSnapshots';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 
@@ -16,6 +16,7 @@ export class CanvasRenderer {
   private algoSelection: d3.Selection<SVGGElement, IAlgorithmNode, SVGGElement, unknown> | null = null;
   private linkSelection: d3.Selection<SVGLineElement, SimLink, SVGGElement, unknown> | null = null;
   private selectedNodeId: string | null = null;
+  private currentHighlights: Snapshot['highlights'] = undefined;
 
   constructor(layers: Layers, physics: PhysicsEngine) {
     this.layers = layers;
@@ -27,6 +28,19 @@ export class CanvasRenderer {
   highlight(nodeId: string | null): void {
     this.selectedNodeId = nodeId;
     this.update();
+  }
+
+  setHighlights(highlights: Snapshot['highlights']): void {
+    this.currentHighlights = highlights;
+    this.update();
+  }
+
+  private getNodeColor(d: INode): string {
+    const h = this.currentHighlights;
+    if (h?.swapping && h.swapping.includes(d.id)) return '#f1c40f';
+    if (h?.comparing && h.comparing.includes(d.id)) return '#e67e22';
+    if (h?.sorted && h.sorted.includes(d.id)) return '#27ae60';
+    return d.color ?? '#2ecc71';
   }
 
   private defineMarkers(): void {
@@ -54,7 +68,6 @@ export class CanvasRenderer {
     const algoNodes = allNodes.filter((n): n is IAlgorithmNode => n.kind === 'algorithm');
     const links = (sim.force('link') as d3.ForceLink<INode, SimLink>).links() as SimLink[];
 
-    // Links
     this.linkSelection = this.layers.links
       .selectAll<SVGLineElement, SimLink>('line')
       .data(links)
@@ -64,7 +77,6 @@ export class CanvasRenderer {
       .attr('stroke-dasharray', d => d.type === 'algorithm' ? '6 4' : null)
       .attr('marker-end', d => d.type === 'algorithm' ? null : d.directed ? 'url(#arrowhead)' : null);
 
-    // Data nodes (circles)
     this.nodeSelection = this.layers.nodes
       .selectAll<SVGGElement, INode>('g.node-data')
       .data(dataNodes, d => d.id)
@@ -73,7 +85,7 @@ export class CanvasRenderer {
           const g = enter.append('g').attr('class', 'node node-data');
           g.append('circle')
             .attr('r', d => 20 * (d.scale ?? 1))
-            .attr('fill', d => d.color ?? '#2ecc71')
+            .attr('fill', d => this.getNodeColor(d))
             .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
             .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');
           g.append('text')
@@ -87,7 +99,7 @@ export class CanvasRenderer {
         update => {
           update.select('circle')
             .attr('r', d => 20 * (d.scale ?? 1))
-            .attr('fill', d => d.color ?? '#2ecc71')
+            .attr('fill', d => this.getNodeColor(d))
             .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
             .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');
           update.select('text').text(d => d.value);
@@ -95,7 +107,6 @@ export class CanvasRenderer {
         }
       );
 
-    // Algorithm nodes (rects with buttons)
     this.algoSelection = this.layers.nodes
       .selectAll<SVGGElement, IAlgorithmNode>('g.node-algo')
       .data(algoNodes, d => d.id)
@@ -114,7 +125,6 @@ export class CanvasRenderer {
             .attr('fill', '#fff')
             .attr('font-size', '11px')
             .text(d => d.label);
-          // Buttons row
           const btns = g.append('g').attr('class', 'algo-buttons').attr('transform', 'translate(0, 12)');
           btns.append('text').attr('class', 'algo-btn btn-back').attr('x', -25).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('⏪');
           btns.append('text').attr('class', 'algo-btn btn-play').attr('x', 0).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('▶️');
@@ -126,6 +136,80 @@ export class CanvasRenderer {
           return update;
         }
       );
+  }
+
+  animateStep(swaps: Swap[], onComplete: () => void): void {
+    if (swaps.length === 0) { onComplete(); return; }
+
+    const sim = this.physics.getSimulation();
+    const nodes = sim.nodes() as CanvasNode[];
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    const processed = new Set<string>();
+    let pending = 0;
+
+    // Capture original positions before mutation
+    const originalPos = new Map<string, { x: number; y: number }>();
+    for (const swap of swaps) {
+      for (const id of [swap.fromNodeId, swap.toNodeId]) {
+        if (!originalPos.has(id)) {
+          const n = nodeMap.get(id);
+          if (n) originalPos.set(id, { x: n.x ?? 0, y: n.y ?? 0 });
+        }
+      }
+    }
+
+    // Mutate node positions immediately so links (tick) follow smoothly
+    for (const swap of swaps) {
+      const pairKey = [swap.fromNodeId, swap.toNodeId].sort().join('-');
+      if (!processed.has(pairKey)) {
+        processed.add(pairKey);
+        const nodeA = nodeMap.get(swap.fromNodeId);
+        const nodeB = nodeMap.get(swap.toNodeId);
+        if (nodeA && nodeB) {
+          const posA = originalPos.get(swap.fromNodeId)!;
+          const posB = originalPos.get(swap.toNodeId)!;
+          nodeA.x = posB.x; nodeA.y = posB.y; nodeA.pos = { x: posB.x, y: posB.y };
+          nodeB.x = posA.x; nodeB.y = posA.y; nodeB.pos = { x: posA.x, y: posA.y };
+        }
+      }
+    }
+
+    // Visually animate the <g> elements from old pos to new pos
+    processed.clear();
+    for (const swap of swaps) {
+      const pairKey = [swap.fromNodeId, swap.toNodeId].sort().join('-');
+      if (processed.has(pairKey)) continue;
+      processed.add(pairKey);
+
+      const posA = originalPos.get(swap.fromNodeId)!;
+      const posB = originalPos.get(swap.toNodeId)!;
+      pending += 2;
+
+      // Node A: starts at posA visually, transitions to posB
+      this.layers.nodes.selectAll<SVGGElement, INode>('g.node-data')
+        .filter(d => d.id === swap.fromNodeId)
+        .attr('transform', `translate(${posA.x},${posA.y})`)
+        .transition().duration(300)
+        .attr('transform', `translate(${posB.x},${posB.y})`)
+        .on('end', () => { pending--; if (pending === 0) onComplete(); });
+
+      // Node B: starts at posB visually, transitions to posA
+      this.layers.nodes.selectAll<SVGGElement, INode>('g.node-data')
+        .filter(d => d.id === swap.toNodeId)
+        .attr('transform', `translate(${posB.x},${posB.y})`)
+        .transition().duration(300)
+        .attr('transform', `translate(${posA.x},${posA.y})`)
+        .on('end', () => { pending--; if (pending === 0) onComplete(); });
+    }
+
+    // Also transition links smoothly
+    this.linkSelection?.transition().duration(300)
+      .attr('x1', d => (d.source as INode).x ?? 0)
+      .attr('y1', d => (d.source as INode).y ?? 0)
+      .attr('x2', d => (d.target as INode).x ?? 0)
+      .attr('y2', d => (d.target as INode).y ?? 0);
+
+    if (pending === 0) onComplete();
   }
 
   private tick(): void {
@@ -140,47 +224,5 @@ export class CanvasRenderer {
 
     this.algoSelection
       ?.attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);
-  }
-
-  animateSwaps(swaps: Swap[], onComplete: () => void): void {
-    if (swaps.length === 0) { onComplete(); return; }
-
-    const sim = this.physics.getSimulation();
-    const nodes = sim.nodes() as CanvasNode[];
-    const nodeMap = new Map(nodes.map(n => [n.id, n]));
-    let pending = swaps.length;
-
-    // Hide real texts of involved nodes
-    const involvedIds = new Set(swaps.flatMap(s => [s.fromNodeId, s.toNodeId]));
-    this.layers.nodes.selectAll<SVGGElement, INode>('g.node-data')
-      .filter(d => involvedIds.has(d.id))
-      .select('text').attr('opacity', 0);
-
-    for (const swap of swaps) {
-      const from = nodeMap.get(swap.fromNodeId);
-      const to = nodeMap.get(swap.toNodeId);
-      if (!from || !to) { pending--; continue; }
-
-      this.layers.nodes.append('text')
-        .attr('class', 'swap-ghost')
-        .attr('text-anchor', 'middle')
-        .attr('dy', '0.35em')
-        .attr('fill', '#fff')
-        .attr('font-size', '12px')
-        .text(swap.value)
-        .attr('x', from.x ?? 0)
-        .attr('y', from.y ?? 0)
-        .transition()
-        .duration(300)
-        .attr('x', to.x ?? 0)
-        .attr('y', to.y ?? 0)
-        .on('end', function () {
-          d3.select(this).remove();
-          pending--;
-          if (pending === 0) {
-            onComplete();
-          }
-        });
-    }
   }
 }

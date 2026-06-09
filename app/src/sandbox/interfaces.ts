@@ -20,10 +20,18 @@ export interface INode extends Entity, d3.SimulationNodeDatum {
 }
 
 export interface Algorithm {
-  init(nodes: INode[]): Snapshot[];
+  init(entryNode: INode): Snapshot[];
 }
 
-export type Snapshot = { values: Record<string, number> };
+export type Snapshot = {
+  values: Record<string, number>;
+  edges?: { source: string; target: string }[];
+  highlights?: {
+    comparing?: string[];
+    sorted?: string[];
+    swapping?: [string, string];
+  };
+};
 
 export type AlgorithmStatus = 'idle' | 'running' | 'paused' | 'done';
 

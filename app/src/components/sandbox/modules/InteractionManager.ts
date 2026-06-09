@@ -283,27 +283,50 @@ export class InteractionManager {
     const next = state.snapshots[state.currentStep];
     const swaps = diffSnapshots(prev, next);
 
+    // Apply highlights from the new snapshot
+    this.renderer.setHighlights(next.highlights);
+
+    // Sync links BEFORE animation so they animate together with nodes
+    if (next.edges) this.syncLinksFromEdges(next.edges);
+
     this.animating = true;
-    this.renderer.animateSwaps(swaps, () => {
+    this.renderer.animateStep(swaps, () => {
       this.animating = false;
       this.renderer.update();
       onDone?.();
     });
   }
 
+  private syncLinksFromEdges(edges: { source: string; target: string }[]): void {
+    const nodeMap = new Map(this.refs.nodesRef.current.map(n => [n.id, n]));
+    // Remove old directed links between structure nodes (keep algorithm links and undirected)
+    this.refs.linksRef.current = this.refs.linksRef.current.filter(
+      l => l.type === 'algorithm' || !l.directed
+    );
+    // Add new directed links from snapshot edges
+    for (const edge of edges) {
+      const src = nodeMap.get(edge.source);
+      const tgt = nodeMap.get(edge.target);
+      if (src && tgt) {
+        this.refs.linksRef.current.push({ source: src, target: tgt, value: 1, directed: true });
+      }
+    }
+    this.physics.updateLinks(this.refs.linksRef.current);
+  }
+
   private getOrCreateExecutor(algoNode: IAlgorithmNode): AlgorithmExecutor | null {
     if (this.executors.has(algoNode.id)) return this.executors.get(algoNode.id)!;
     if (!algoNode.connectedTo) return null;
 
-    // Find target structure nodes
-    const structure = this.refs.structureManagerRef.current.getStructureForNode(algoNode.connectedTo);
-    if (!structure) return null;
+    // Find the entry node directly
+    const entryNode = this.refs.nodesRef.current.find(n => n.id === algoNode.connectedTo);
+    if (!entryNode) return null;
 
     const algorithm = this.resolveAlgorithm(algoNode.algorithmId);
     if (!algorithm) return null;
 
     const executor = new AlgorithmExecutor(algoNode, algorithm);
-    executor.init(structure.nodes);
+    executor.init(entryNode);
     this.executors.set(algoNode.id, executor);
     this.renderer.update();
     return executor;
