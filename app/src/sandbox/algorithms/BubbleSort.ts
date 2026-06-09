@@ -4,7 +4,7 @@ export class BubbleSort implements Algorithm {
   init(nodes: INode[]): Snapshot[] {
     const values = nodes.map(n => n.value);
     const ids = nodes.map(n => n.id);
-    const snapshots: Snapshot[] = [Object.fromEntries(ids.map((id, i) => [id, values[i]])) as unknown as Snapshot];
+    const snapshots: Snapshot[] = [{ values: Object.fromEntries(ids.map((id, i) => [id, values[i]])) }];
 
     const n = values.length;
     for (let i = 0; i < n - 1; i++) {
