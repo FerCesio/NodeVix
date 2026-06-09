@@ -1,8 +1,9 @@
 import * as d3 from 'd3';
-import type { INode, CanvasNode } from '../../../sandbox/interfaces';
+import type { INode, CanvasNode, IAlgorithmNode } from '../../../sandbox/interfaces';
 import type { ToolMode } from '../../../types/tools';
 import { DefaultNode } from '../../../sandbox/DefaultNode';
 import { PRESETS } from '../../../sandbox/presets';
+import { AVAILABLE_ALGORITHMS } from '../../../sandbox/algorithms';
 import type { StructureManager } from '../../../sandbox/StructureManager';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 import type { CanvasRenderer } from './CanvasRenderer';
@@ -14,6 +15,7 @@ export interface InteractionRefs {
   selectedNodeRef: React.MutableRefObject<INode | null>;
   structureManagerRef: React.MutableRefObject<StructureManager>;
   pendingPresetRef: React.MutableRefObject<string | null>;
+  pendingAlgorithmRef: React.MutableRefObject<string | null>;
   onSelectNode: (nodeId: string | null) => void;
   onNodeSelected: (node: INode | null) => void;
 }
@@ -93,6 +95,32 @@ export class InteractionManager {
           this.renderer.update();
           this.applyDrag();
           this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        }
+        return;
+      }
+
+      // Algorithm placement: si hay un algoritmo pendiente, colocar nodo algoritmo
+      if (this.refs.pendingAlgorithmRef.current && !target.closest('g.node')) {
+        const algId = this.refs.pendingAlgorithmRef.current;
+        this.refs.pendingAlgorithmRef.current = null;
+        const alg = AVAILABLE_ALGORITHMS.find(a => a.id === algId);
+        if (alg) {
+          const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+          const algoNode: IAlgorithmNode = {
+            kind: 'algorithm',
+            id: crypto.randomUUID(),
+            algorithmId: algId,
+            label: alg.label,
+            pos: { x, y },
+            scale: 1,
+            x, y,
+            connectedTo: null,
+            state: { snapshots: [], currentStep: 0, status: 'idle' },
+          };
+          (this.refs.nodesRef.current as any[]).push(algoNode);
+          this.physics.updateNodes(this.refs.nodesRef.current);
+          this.renderer.update();
+          this.applyDrag();
         }
         return;
       }
@@ -204,6 +232,7 @@ export class InteractionManager {
   private cancelPending(): void {
     this.refs.selectedNodeRef.current = null;
     this.refs.pendingPresetRef.current = null;
+    this.refs.pendingAlgorithmRef.current = null;
     this.clearGhost();
   }
 

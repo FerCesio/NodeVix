@@ -6,8 +6,6 @@ import { PropertyPanel } from './PropertyPanel'; // Importamos el inspector
 import type { ToolMode } from '../../types/tools';
 import type { INode } from '../../sandbox/interfaces';
 import { StructureManager, type StructureInfo } from '../../sandbox/StructureManager';
-import { PRESETS } from '../../sandbox/presets';
-import { AVAILABLE_ALGORITHMS } from '../../sandbox/algorithms';
 import '../../styles/sandbox.css';
 import '../../styles/canvas.css';
 import { SimulationCore } from './modules/SimulationCore';
@@ -35,15 +33,14 @@ export const SimulationCanvas: React.FC = () => {
   const eventsRef = useRef<InteractionManager | null>(null);
   const pendingPresetRef = useRef<string | null>(null);
 
+  const pendingAlgorithmRef = useRef<string | null>(null);
+
   const handleGeneratePreset = useCallback((presetId: string) => {
     pendingPresetRef.current = presetId;
   }, []);
 
   const handleRunAlgorithm = useCallback((algorithmId: string) => {
-    const alg = AVAILABLE_ALGORITHMS.find(a => a.id === algorithmId);
-    if (!alg || nodesRef.current.length === 0) return;
-    alg.run(nodesRef.current);
-    rendererRef.current?.update();
+    pendingAlgorithmRef.current = algorithmId;
   }, []);
 
   // Guardamos la instancia del renderer para forzar redibujados desde los inputs
@@ -78,6 +75,7 @@ export const SimulationCanvas: React.FC = () => {
         selectedNodeRef,
         structureManagerRef,
         pendingPresetRef,
+        pendingAlgorithmRef,
         onSelectNode: setSelectedNodeId,
         onNodeSelected // <-- Inyectamos la función puente en el contexto del manager
     });

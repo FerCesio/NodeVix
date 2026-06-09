@@ -19,7 +19,8 @@ export class StructureManager {
   }
 
   sync(nodes: INode[], links: SimLink[]): void {
-    const components = findConnectedComponents(nodes, links);
+    const dataNodes = nodes.filter(n => (n as any).kind !== 'algorithm');
+    const components = findConnectedComponents(dataNodes, links);
     const newStructures = new Map<string, Structure>();
 
     for (const comp of components) {
