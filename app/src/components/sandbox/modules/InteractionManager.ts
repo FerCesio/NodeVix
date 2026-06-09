@@ -103,6 +103,13 @@ export class InteractionManager {
       if (mode === 'DELETE_ANY') {
         const clickedNode = this.getNodeFromTarget(target);
         if (clickedNode) {
+          if (this.refs.selectedNodeRef.current?.id === clickedNode.id) {
+            this.refs.selectedNodeRef.current = null;
+            if (this.refs.onNodeSelected) {
+              this.refs.onNodeSelected(null); // Le avisa a React que cierre el panel
+            }
+          }
+
           // Remove node and its edges
           this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => n.id !== clickedNode.id);
           this.refs.linksRef.current = this.refs.linksRef.current.filter(
@@ -144,7 +151,7 @@ export class InteractionManager {
         if (this.refs.onNodeSelected) {
           this.refs.onNodeSelected(clickedNode);
         }
-        this.renderer.highlight(clickedNode?.id ?? null);
+        
       }
     });
 

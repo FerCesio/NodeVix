@@ -11,6 +11,10 @@ export class DefaultNode implements INode {
   value: number;
   edges: Edge[];
 
+  color?: string;
+  fx?: number | null;
+  fy?: number | null;
+
   constructor(id: string, value: number, x: number = 0, y: number = 0) {
     this.id = id;
     this.value = value;

@@ -23,11 +23,7 @@ export class PhysicsEngine {
   }
 
   onTick(callback: () => void): void {
-    const current = this.simulation.on('tick');
-    this.simulation.on('tick', () => {
-      if (typeof current === 'function') current();
-      callback();
-    });
+    this.simulation.on('tick.custom', callback);
   }
 
   restart(): void {

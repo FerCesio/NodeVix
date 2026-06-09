@@ -31,11 +31,8 @@ public class ProjectService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
         // 2. Creamos el proyecto
-        Project project = new Project(cp.getProjectName());
-
-        // 3. LA CLAVE: Establecemos la relación directamente en las entidades
-        // Al añadir el proyecto a la lista del usuario, JPA sabe que debe insertar en
-        // la tabla 'has'
+        Project project = new Project(cp.getProjectName(), cp.getContent());
+        
         user.getProjects().add(project);
 
         // 4. Guardamos el proyecto (esto genera el ID y los timestamps)
@@ -151,6 +148,25 @@ public class ProjectService {
                 project.getModifiedOn().toString(), // Convertimos fecha a String
                 project.getCreatedOn().toString() // Convertimos fecha a String
         );
+    }
+
+    @Transactional(readOnly = true)
+    public UsableGetResponse getContent(Long projectID, Long userID) {
+        // 1. Buscar entidad
+        Project project = projectRepo.findById(projectID)
+                .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado"));
+
+        // 2. Validar propiedad
+        if (!userRepo.hasProject(userID, projectID)) {
+            throw new RuntimeException("Acceso denegado");
+        }
+
+        return new UsableGetResponse(
+                project.getId(),
+                project.getName(),
+                project.getContent()
+        );
+
     }
 
 }

@@ -1,52 +1,62 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "../services/api";
-import LoginForm from "../components/user/LoginForm"; // Tu formulario existente
-import RegisterForm from "../components/user/RegisterForm"; // Tu formulario existente
+import LoginForm from "../components/user/LoginForm";
+import RegisterForm from "../components/user/RegisterForm";
 import "../styles/general.css";
 import type { CreateProject, UpdateProject } from "../types/project";
 import toast, { Toaster } from "react-hot-toast";
 import ReturnButton from "../components/general/ReturnButton";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { SimulationCanvas } from "../components/sandbox/SimulationCanvas";
+import { SimulationCanvas, type SimulationCanvasRef } from "../components/sandbox/SimulationCanvas";
 
 export default function ProjectPage() {
-    // 1. Capturamos el ID de la URL
     const { id } = useParams<{ id: string }>();
-    
-    useEffect(() => {
-      // Si NO hay id, significa que estamos en /project/new
-      if (!id) {
-          console.log("Modo: Crear nuevo proyecto");
-          setProjectName(""); // Empezamos limpio
-          return;
-      }
+    const canvasRef = useRef<SimulationCanvasRef>(null);
 
-      // Si HAY id, significa que estamos en /project/:id
-      const loadProject = async () => {
-          try {
-              const res = await api.get(`/manage/${id}`);
-              
-              // We get the info from the response
-              setProjectName(res.data.name);
-              setProjectDesc(res.data.description);
-              setProjectContent(res.data.content);
-            } catch (err) {
-              toast.error("Project not found.");
-              navigate("/home");
-            }
-      };
-      
-      loadProject();
-    }, [id]); // Se dispara si el ID cambia
-    
     const [projectName, setProjectName] = useState("");
     const [projectDesc, setProjectDesc] = useState("");
     const [projectContent, setProjectContent] = useState("");
+    const [loading, setLoading] = useState(true); 
+
     const [view, setView] = useState<'none' | 'auth'>('none');
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!localStorage.getItem("token"));
     const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
     const navigate = useNavigate();
+
+    // Bloqueamos el scroll de la página mientras el usuario está en el canvas
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, []);
+
+    useEffect(() => {
+      if (!id || id === "new") {
+          console.log("Modo: Crear nuevo proyecto");
+          setProjectName("");
+          setProjectContent("");
+          setLoading(false);
+          return;
+      }
+
+      const loadProject = async () => {
+          try {
+              const res = await api.get(`/manage/${id}/content`);
+              setProjectName(res.data.name);
+              setProjectDesc(res.data.description);
+              setProjectContent(res.data.content);
+          } catch (err) {
+              toast.error("Project not found.");
+              navigate("/home");
+          } finally {
+              setLoading(false);
+          }
+      };
+      
+      loadProject();
+    }, [id]);
 
     const handleSaveTrigger = async () => {
         const token = localStorage.getItem("token");
@@ -58,37 +68,25 @@ export default function ProjectPage() {
         const loadingToast = toast.loading(id ? "Updating..." : "Creating...");
 
         try {
+            const canvasContent = canvasRef.current
+                ? canvasRef.current.getCanvasState()
+                : { nodes: [], links: [] };
+
+            const payload = {
+                name: projectName,
+                description: projectDesc,
+                content: JSON.stringify(canvasContent) 
+            };
+            
+
             if (!id || id === "new") {
-                // --- CASO: CREACIÓN ---
-                // 1. Hacemos el POST y guardamos la respuesta
-                const response = await api.post("/manage/create", { 
-                    projectName: projectName 
-                });
-
-                // 2. Extraemos el ID que el Backend generó
-                // (Asegúrate de que tu Backend devuelva el objeto creado o su ID)
+                const response = await api.post("/manage/create", payload);
                 const newId = response.data.id; 
-
                 toast.success("Project successfully created!", { id: loadingToast });
-
-                // 3. CAMBIO DE RUTA SILENCIOSO:
-                // En lugar de ir a /home, navegamos a la ruta de edición de este nuevo ID
-                // El replace: true evita que el usuario pueda volver atrás a "/new"
                 navigate(`/project/${newId}`, { replace: true });
-
             } else {
-              
-                // --- CASO: ACTUALIZACIÓN ---
-                const updateProj: UpdateProject = {
-                    name: projectName,
-                    description: projectDesc,
-                    content: projectContent // Mantenemos el contenido existente
-                };
-                
-                await api.put(`/manage/${id}`, updateProj);
-                
+                await api.put(`/manage/${id}`, payload);
                 toast.success("Changes saved", { id: loadingToast });
-                 
             }
         } catch (error: any) {
             console.error(error);
@@ -134,14 +132,10 @@ export default function ProjectPage() {
       }
     };
 
-
-    
     return (
-        <div className="main-container" style={{ flexDirection: 'column', gap: '20px', position: 'relative', padding: 0 }}>
+        <div className="main-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', padding: 0, height: '100vh', width: '100vw', overflow: 'hidden' }}>
             <Toaster/>
-            {/* Sección de Input de Proyecto */}
             <div className="top-left-nav">
-             
               <div className="nav-save-group">
                   <button className="btn btn-return" onClick={() => window.location.assign("/home")}>
                     <span>Home</span>
@@ -165,7 +159,6 @@ export default function ProjectPage() {
               </div>
             </div>
 
-            {/* Modal de Autenticación (Solo si view === 'auth') */}
             {view === 'auth' && (
               <div className="auth-overlay" style={overlayStyle}>
                 <div className="basic-card" style={{ position: 'relative' }}>
@@ -181,10 +174,7 @@ export default function ProjectPage() {
                       <div className="footer-links" style={{ marginTop: '15px' }}>
                         <span style={{ fontSize: '14px', color: '#666' }}>
                           Don't have an account?{" "}
-                          <button 
-                            onClick={() => setAuthMode('register')} 
-                            style={linkButtonStyle}
-                          >
+                          <button onClick={() => setAuthMode('register')} style={linkButtonStyle}>
                             Register
                           </button>
                         </span>
@@ -198,10 +188,7 @@ export default function ProjectPage() {
                       <div className="footer-links" style={{ marginTop: '15px' }}>
                         <span style={{ fontSize: '14px', color: '#666' }}>
                           Already have an account?{" "}
-                          <button 
-                            onClick={() => setAuthMode('login')} 
-                            style={linkButtonStyle}
-                          >
+                          <button onClick={() => setAuthMode('login')} style={linkButtonStyle}>
                             Login
                           </button>
                         </span>
@@ -212,43 +199,17 @@ export default function ProjectPage() {
               </div>
             )}
             
-            <SimulationCanvas/>
-            
+            {loading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#fff' }}>
+                    <span>Loading project...</span>
+                </div>
+            ) : (
+                <SimulationCanvas ref={canvasRef} initialData={projectContent} />
+            )}
         </div>
     );
 }
 
-// Estilos rápidos para el overlay del formulario
-const overlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100vw',
-    height: '100vh',
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000
-};
-
-const closeButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '10px',
-    right: '15px',
-    background: 'none',
-    border: 'none',
-    fontSize: '20px',
-    cursor: 'pointer'
-};
-
-const linkButtonStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: '#000', // O el color de énfasis de tu página
-  textDecoration: 'underline',
-  cursor: 'pointer',
-  fontWeight: 'bold',
-  padding: 0,
-  fontSize: '14px'
-};
+const overlayStyle: React.CSSProperties = { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 };
+const closeButtonStyle: React.CSSProperties = { position: 'absolute', top: '10px', right: '15px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' };
+const linkButtonStyle: React.CSSProperties = { background: 'none', border: 'none', color: '#000', textDecoration: 'underline', cursor: 'pointer', fontWeight: 'bold', padding: 0, fontSize: '14px' };

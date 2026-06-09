@@ -39,8 +39,9 @@ public class Project {
     public Project() {
     }
 
-    public Project(String name) {
+    public Project(String name, String content) {
         this.name = name;
+        this.content = content;
     }
 
     public void setName(String name) {
