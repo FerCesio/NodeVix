@@ -284,6 +284,13 @@ export class InteractionManager {
       }
     } else if (btn.classList.contains('btn-reset')) {
       this.stopAutoPlay(algoNode.id);
+      // Rewind to step 0 to restore original state
+      if (algoNode.state.snapshots.length > 0) {
+        while (algoNode.state.currentStep > 0) executor.stepBack();
+        // Also restore links from initial snapshot
+        const initial = algoNode.state.snapshots[0];
+        if (initial.edges) this.syncLinksFromEdges(initial.edges);
+      }
       this.executors.delete(algoNode.id);
       algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
       this.renderer.setHighlights(undefined);
