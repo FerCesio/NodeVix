@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import type { INode } from '../../../sandbox/interfaces';
+import type { INode, CanvasNode } from '../../../sandbox/interfaces';
 import type { ToolMode } from '../../../types/tools';
 import { DefaultNode } from '../../../sandbox/DefaultNode';
 import { PRESETS } from '../../../sandbox/presets';
@@ -211,7 +211,7 @@ export class InteractionManager {
     const physics = this.physics;
     const modeRef = this.refs.modeRef;
 
-    const drag = d3.drag<SVGGElement, INode>()
+    const drag = d3.drag<SVGGElement, CanvasNode>()
       .filter(() => modeRef.current === 'SELECT')
       .on('start', (event, d) => {
         if (!event.active) physics.getSimulation().alphaTarget(0.3).restart();
@@ -229,7 +229,7 @@ export class InteractionManager {
       });
 
     this.svg.select<SVGGElement>('.layer-nodes')
-      .selectAll<SVGGElement, INode>('g.node')
+      .selectAll<SVGGElement, CanvasNode>('g.node')
       .call(drag);
   }
 

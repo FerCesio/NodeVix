@@ -78,3 +78,19 @@ rect {
 .layer-ghost line.ghost-line {
     pointer-events: none;
 }
+
+/* Algorithm nodes */
+g.node-algo rect {
+    stroke: #2980b9;
+    stroke-width: 2px;
+    cursor: grab;
+}
+
+g.node-algo .algo-btn {
+    cursor: pointer;
+    user-select: none;
+}
+
+g.node-algo .algo-btn:hover {
+    opacity: 0.7;
+}
