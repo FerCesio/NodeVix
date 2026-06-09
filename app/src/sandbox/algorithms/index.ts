@@ -1,4 +1,5 @@
 import type { INode } from '../interfaces';
+import type { StructureFlag } from '../../types/structure';
 import { BubbleSort } from './BubbleSort';
 import { Inorder } from './Inorder';
 
@@ -6,6 +7,7 @@ export interface AlgorithmConfig {
   id: string;
   label: string;
   icon: string;
+  requiredFlags: StructureFlag[];
   run: (nodes: INode[]) => void;
 }
 
@@ -15,6 +17,7 @@ const inorder = new Inorder();
 export const AVAILABLE_ALGORITHMS: AlgorithmConfig[] = [
   {
     id: 'bubble-sort', label: 'Bubble Sort', icon: '🫧',
+    requiredFlags: ['LINKED_LIST'],
     run: (nodes) => {
       if (nodes.length === 0) return;
       const snapshots = bubbleSort.init(nodes[0]);
@@ -24,6 +27,7 @@ export const AVAILABLE_ALGORITHMS: AlgorithmConfig[] = [
   },
   {
     id: 'inorder', label: 'Inorder', icon: '🌳',
+    requiredFlags: ['BINARY_TREE'],
     run: (nodes) => {
       if (nodes.length === 0) return;
       inorder.init(nodes[0]);

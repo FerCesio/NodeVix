@@ -322,6 +322,18 @@ export class InteractionManager {
     const entryNode = this.refs.nodesRef.current.find(n => n.id === algoNode.connectedTo);
     if (!entryNode) return null;
 
+    // Validate required flags
+    const algConfig = AVAILABLE_ALGORITHMS.find(a => a.id === algoNode.algorithmId);
+    if (algConfig && algConfig.requiredFlags.length > 0) {
+      const structure = this.refs.structureManagerRef.current.getStructureForNode(algoNode.connectedTo);
+      if (!structure) return null;
+      const hasAll = algConfig.requiredFlags.every(f => structure.flags.has(f));
+      if (!hasAll) {
+        console.warn(`[Algorithm] ${algoNode.label} requires flags [${algConfig.requiredFlags}] but structure has [${[...structure.flags]}]`);
+        return null;
+      }
+    }
+
     const algorithm = this.resolveAlgorithm(algoNode.algorithmId);
     if (!algorithm) return null;
 
