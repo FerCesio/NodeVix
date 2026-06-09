@@ -4,6 +4,8 @@ import type { ToolMode } from '../../../types/tools';
 import { DefaultNode } from '../../../sandbox/DefaultNode';
 import { PRESETS } from '../../../sandbox/presets';
 import { AVAILABLE_ALGORITHMS } from '../../../sandbox/algorithms';
+import { AlgorithmExecutor } from '../../../sandbox/AlgorithmExecutor';
+import { BubbleSort } from '../../../sandbox/algorithms/BubbleSort';
 import type { StructureManager } from '../../../sandbox/StructureManager';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 import type { CanvasRenderer } from './CanvasRenderer';
@@ -27,6 +29,8 @@ export class InteractionManager {
   private refs!: InteractionRefs;
   private ghostLine: d3.Selection<SVGLineElement, unknown, null, undefined> | null = null;
   private ghostLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+  private executors: Map<string, AlgorithmExecutor> = new Map();
+  private autoPlayIntervals: Map<string, number> = new Map();
 
   constructor(
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -79,6 +83,17 @@ export class InteractionManager {
       const target = event.target as Element;
       const mode = this.refs.modeRef.current;
       console.log('[Interaction] click | mode:', mode, '| target:', target.tagName);
+
+      // Algorithm button clicks
+      const algoBtn = target.closest('.algo-btn');
+      if (algoBtn) {
+        const algoG = target.closest('g.node-algo');
+        if (algoG) {
+          const algoNode = d3.select<Element, IAlgorithmNode>(algoG).datum();
+          if (algoNode) this.handleAlgoButton(algoNode, algoBtn);
+        }
+        return;
+      }
 
       // Preset placement: si hay un preset pendiente, generarlo donde se hizo click
       if (this.refs.pendingPresetRef.current && !target.closest('g.node')) {
@@ -232,6 +247,65 @@ export class InteractionManager {
     this.svg.on('mousemove.ghost', null);
     d3.select('body').on('keydown.interaction', null);
     this.clearGhost();
+    for (const id of this.autoPlayIntervals.keys()) this.stopAutoPlay(id);
+  }
+
+  private handleAlgoButton(algoNode: IAlgorithmNode, btn: Element): void {
+    const executor = this.getOrCreateExecutor(algoNode);
+    if (!executor) return;
+
+    if (btn.classList.contains('btn-fwd')) {
+      this.stopAutoPlay(algoNode.id);
+      executor.stepForward();
+      this.renderer.update();
+    } else if (btn.classList.contains('btn-back')) {
+      this.stopAutoPlay(algoNode.id);
+      executor.stepBack();
+      this.renderer.update();
+    } else if (btn.classList.contains('btn-play')) {
+      if (this.autoPlayIntervals.has(algoNode.id)) {
+        this.stopAutoPlay(algoNode.id);
+      } else {
+        this.startAutoPlay(algoNode.id, executor);
+      }
+    }
+  }
+
+  private getOrCreateExecutor(algoNode: IAlgorithmNode): AlgorithmExecutor | null {
+    if (this.executors.has(algoNode.id)) return this.executors.get(algoNode.id)!;
+    if (!algoNode.connectedTo) return null;
+
+    // Find target structure nodes
+    const structure = this.refs.structureManagerRef.current.getStructureForNode(algoNode.connectedTo);
+    if (!structure) return null;
+
+    const algorithm = this.resolveAlgorithm(algoNode.algorithmId);
+    if (!algorithm) return null;
+
+    const executor = new AlgorithmExecutor(algoNode, algorithm);
+    executor.init(structure.nodes);
+    this.executors.set(algoNode.id, executor);
+    this.renderer.update();
+    return executor;
+  }
+
+  private resolveAlgorithm(algorithmId: string) {
+    if (algorithmId === 'bubble-sort') return new BubbleSort();
+    return null;
+  }
+
+  private startAutoPlay(id: string, executor: AlgorithmExecutor): void {
+    const interval = window.setInterval(() => {
+      const ok = executor.stepForward();
+      this.renderer.update();
+      if (!ok) this.stopAutoPlay(id);
+    }, 500);
+    this.autoPlayIntervals.set(id, interval);
+  }
+
+  private stopAutoPlay(id: string): void {
+    const interval = this.autoPlayIntervals.get(id);
+    if (interval != null) { clearInterval(interval); this.autoPlayIntervals.delete(id); }
   }
 
   private clearGhost(): void {
