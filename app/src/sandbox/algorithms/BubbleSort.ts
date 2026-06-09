@@ -1,16 +1,20 @@
-import type { Algorithm, INode } from '../interfaces';
+import type { Algorithm, INode, Snapshot } from '../interfaces';
 
 export class BubbleSort implements Algorithm {
-  execute(nodes: INode[]): void {
-    const n = nodes.length;
+  init(nodes: INode[]): Snapshot[] {
+    const values = nodes.map(n => n.value);
+    const ids = nodes.map(n => n.id);
+    const snapshots: Snapshot[] = [Object.fromEntries(ids.map((id, i) => [id, values[i]])) as unknown as Snapshot];
+
+    const n = values.length;
     for (let i = 0; i < n - 1; i++) {
       for (let j = 0; j < n - i - 1; j++) {
-        if (nodes[j].value > nodes[j + 1].value) {
-          const temp = nodes[j].value;
-          nodes[j].value = nodes[j + 1].value;
-          nodes[j + 1].value = temp;
+        if (values[j] > values[j + 1]) {
+          [values[j], values[j + 1]] = [values[j + 1], values[j]];
+          snapshots.push({ values: Object.fromEntries(ids.map((id, k) => [id, values[k]])) });
         }
       }
     }
+    return snapshots;
   }
 }
