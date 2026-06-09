@@ -113,6 +113,7 @@ export class InteractionManager {
           this.renderer.update();
           this.applyDrag();
           this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+          this.invalidateExecutors();
         }
         return;
       }
@@ -151,6 +152,7 @@ export class InteractionManager {
         this.renderer.update();
         this.applyDrag();
         this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        this.invalidateExecutors();
       }
 
       if (mode === 'LINK' || mode === 'ARROW') {
@@ -169,6 +171,14 @@ export class InteractionManager {
             if (isAlgoSource) {
               // Algorithm link: punteado azul, setea connectedTo
               const algoNode = source as unknown as IAlgorithmNode;
+              // Reset executor if reconnecting
+              this.executors.delete(algoNode.id);
+              this.stopAutoPlay(algoNode.id);
+              algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
+              // Remove old algorithm link from this node
+              this.refs.linksRef.current = this.refs.linksRef.current.filter(
+                l => !(l.type === 'algorithm' && (l.source as INode).id === algoNode.id)
+              );
               algoNode.connectedTo = clickedNode.id;
               const link: SimLink = { source, target: clickedNode, value: 1, directed: true, type: 'algorithm' };
               this.refs.linksRef.current.push(link);
@@ -187,6 +197,7 @@ export class InteractionManager {
               this.renderer.update();
               this.applyDrag();
               this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+              this.invalidateExecutors();
             }
           }
           this.refs.selectedNodeRef.current = null;
@@ -227,6 +238,7 @@ export class InteractionManager {
         this.renderer.update();
         this.applyDrag();
         this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        this.invalidateExecutors();
         return;
       }
 
@@ -270,6 +282,12 @@ export class InteractionManager {
       } else {
         this.startAutoPlay(algoNode.id, executor, algoNode);
       }
+    } else if (btn.classList.contains('btn-reset')) {
+      this.stopAutoPlay(algoNode.id);
+      this.executors.delete(algoNode.id);
+      algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
+      this.renderer.setHighlights(undefined);
+      this.renderer.update();
     }
   }
 
@@ -312,6 +330,19 @@ export class InteractionManager {
       }
     }
     this.physics.updateLinks(this.refs.linksRef.current);
+  }
+
+  private invalidateExecutors(): void {
+    const allNodes = this.physics.getSimulation().nodes() as CanvasNode[];
+    const algoNodes = allNodes.filter((n): n is IAlgorithmNode => n.kind === 'algorithm');
+    for (const algoNode of algoNodes) {
+      if (algoNode.connectedTo && this.executors.has(algoNode.id)) {
+        this.executors.delete(algoNode.id);
+        this.stopAutoPlay(algoNode.id);
+        algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
+      }
+    }
+    this.renderer.setHighlights(undefined);
   }
 
   private getOrCreateExecutor(algoNode: IAlgorithmNode): AlgorithmExecutor | null {

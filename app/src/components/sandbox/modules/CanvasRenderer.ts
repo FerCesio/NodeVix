@@ -43,6 +43,21 @@ export class CanvasRenderer {
     return d.color ?? '#2ecc71';
   }
 
+  private getAlgoColor(d: IAlgorithmNode): string {
+    if (!d.connectedTo) return '#7f8c8d';
+    switch (d.state.status) {
+      case 'done': return '#27ae60';
+      case 'running': case 'paused': return '#2980b9';
+      default: return '#3498db';
+    }
+  }
+
+  private getStepLabel(d: IAlgorithmNode): string {
+    const { snapshots, currentStep } = d.state;
+    if (snapshots.length === 0) return '';
+    return `${currentStep}/${snapshots.length - 1}`;
+  }
+
   private defineMarkers(): void {
     const svg = this.layers.links.select(function() { return this.ownerSVGElement!; });
     let defs = svg.select<SVGDefsElement>('defs');
@@ -114,25 +129,35 @@ export class CanvasRenderer {
         enter => {
           const g = enter.append('g').attr('class', 'node node-algo');
           g.append('rect')
-            .attr('x', -60).attr('y', -25)
-            .attr('width', 120).attr('height', 50)
+            .attr('x', -60).attr('y', -30)
+            .attr('width', 120).attr('height', 60)
             .attr('rx', 8).attr('ry', 8)
-            .attr('fill', '#3498db');
+            .attr('fill', d => this.getAlgoColor(d));
           g.append('text')
             .attr('class', 'algo-label')
             .attr('text-anchor', 'middle')
-            .attr('dy', '-0.4em')
+            .attr('dy', '-1em')
             .attr('fill', '#fff')
             .attr('font-size', '11px')
             .text(d => d.label);
-          const btns = g.append('g').attr('class', 'algo-buttons').attr('transform', 'translate(0, 12)');
-          btns.append('text').attr('class', 'algo-btn btn-back').attr('x', -25).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('⏪');
-          btns.append('text').attr('class', 'algo-btn btn-play').attr('x', 0).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('▶️');
-          btns.append('text').attr('class', 'algo-btn btn-fwd').attr('x', 25).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('⏩');
+          const btns = g.append('g').attr('class', 'algo-buttons').attr('transform', 'translate(0, 4)');
+          btns.append('text').attr('class', 'algo-btn btn-back').attr('x', -35).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('⏪');
+          btns.append('text').attr('class', 'algo-btn btn-play').attr('x', -10).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('▶️');
+          btns.append('text').attr('class', 'algo-btn btn-fwd').attr('x', 15).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('⏩');
+          btns.append('text').attr('class', 'algo-btn btn-reset').attr('x', 40).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('🔄');
+          g.append('text')
+            .attr('class', 'algo-step')
+            .attr('text-anchor', 'middle')
+            .attr('dy', '2.2em')
+            .attr('fill', '#aaa')
+            .attr('font-size', '9px')
+            .text(d => this.getStepLabel(d));
           return g;
         },
         update => {
           update.select('.algo-label').text(d => d.label);
+          update.select('rect').attr('fill', d => this.getAlgoColor(d));
+          update.select('.algo-step').text(d => this.getStepLabel(d));
           return update;
         }
       );

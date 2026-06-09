@@ -15,16 +15,26 @@ export class CameraSystem {
   }
 
   init(): void {
-    this.zoom
-      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
-        this.container.attr('transform', event.transform.toString());
-      });
+    this.zoom.on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+      this.container.attr('transform', event.transform.toString());
+    });
+
+    // Only allow zoom via Ctrl+wheel (pinch on trackpad sends ctrlKey=true)
+    this.zoom.filter((event: any) => {
+      if (event.type === 'wheel') return event.ctrlKey;
+      return false;
+    });
+
     this.svg.call(this.zoom);
-    // Desactivar pan por drag para no bloquear clicks
-    this.svg.on('mousedown.zoom', null)
-            .on('touchstart.zoom', null)
-            .on('touchmove.zoom', null)
-            .on('touchend.zoom', null);
+
+    // Pan via scroll (no modifier)
+    this.svg.on('wheel.pan', (event: WheelEvent) => {
+      if (event.ctrlKey) return; // Let zoom handle it
+      event.preventDefault();
+      const transform = d3.zoomTransform(this.svg.node()!);
+      const newTransform = transform.translate(-event.deltaX, -event.deltaY);
+      this.svg.call(this.zoom.transform, newTransform);
+    });
   }
 
   zoomTo(x: number, y: number, scale: number): void {

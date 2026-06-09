@@ -94,3 +94,12 @@ g.node-algo .algo-btn {
 g.node-algo .algo-btn:hover {
     opacity: 0.7;
 }
+
+/* Prevent text selection on node values */
+g.node-data text,
+g.node-algo .algo-label,
+g.node-algo .algo-step {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
