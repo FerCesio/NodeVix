@@ -147,17 +147,29 @@ export class InteractionManager {
         } else {
           const source = this.refs.selectedNodeRef.current;
           if (source.id !== clickedNode.id) {
-            const directed = mode === 'ARROW';
-            const link: SimLink = { source, target: clickedNode, value: 1, directed };
-            this.refs.linksRef.current.push(link);
-            source.edges.push({ end: clickedNode, weight: 1, directed });
-            if (!directed) {
-              clickedNode.edges.push({ end: source, weight: 1, directed: false });
+            const isAlgoSource = (source as any).kind === 'algorithm';
+            if (isAlgoSource) {
+              // Algorithm link: punteado azul, setea connectedTo
+              const algoNode = source as unknown as IAlgorithmNode;
+              algoNode.connectedTo = clickedNode.id;
+              const link: SimLink = { source, target: clickedNode, value: 1, directed: true, type: 'algorithm' };
+              this.refs.linksRef.current.push(link);
+              this.physics.updateLinks(this.refs.linksRef.current);
+              this.renderer.update();
+              this.applyDrag();
+            } else {
+              const directed = mode === 'ARROW';
+              const link: SimLink = { source, target: clickedNode, value: 1, directed };
+              this.refs.linksRef.current.push(link);
+              source.edges.push({ end: clickedNode, weight: 1, directed });
+              if (!directed) {
+                clickedNode.edges.push({ end: source, weight: 1, directed: false });
+              }
+              this.physics.updateLinks(this.refs.linksRef.current);
+              this.renderer.update();
+              this.applyDrag();
+              this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
             }
-            this.physics.updateLinks(this.refs.linksRef.current);
-            this.renderer.update();
-            this.applyDrag();
-            this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
           }
           this.refs.selectedNodeRef.current = null;
           this.clearGhost();

@@ -58,9 +58,10 @@ export class CanvasRenderer {
       .selectAll<SVGLineElement, SimLink>('line')
       .data(links)
       .join('line')
-      .attr('stroke', d => d.directed ? '#e74c3c' : '#555')
+      .attr('stroke', d => d.type === 'algorithm' ? '#3498db' : d.directed ? '#e74c3c' : '#555')
       .attr('stroke-width', 2)
-      .attr('marker-end', d => d.directed ? 'url(#arrowhead)' : null);
+      .attr('stroke-dasharray', d => d.type === 'algorithm' ? '6 4' : null)
+      .attr('marker-end', d => d.type === 'algorithm' ? null : d.directed ? 'url(#arrowhead)' : null);
 
     // Data nodes (circles)
     this.nodeSelection = this.layers.nodes
