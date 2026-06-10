@@ -71,3 +71,34 @@ rect {
     stroke-width: 4px;
     cursor: pointer;
 }
+
+
+/* Ghost line (preview de conexión en LINK/ARROW) */
+.layer-ghost line.ghost-line {
+    pointer-events: none;
+}
+
+/* Algorithm nodes */
+g.node-algo rect {
+    stroke: #2980b9;
+    stroke-width: 2px;
+    cursor: grab;
+}
+
+g.node-algo .algo-btn {
+    cursor: pointer;
+    user-select: none;
+}
+
+g.node-algo .algo-btn:hover {
+    opacity: 0.7;
+}
+
+/* Prevent text selection on node values */
+g.node-data text,
+g.node-algo .algo-label,
+g.node-algo .algo-step {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}

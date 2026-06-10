@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import type { INode } from '../../../sandbox/interfaces';
 
-export type SimLink = { source: INode; target: INode; value: number; directed: boolean };
+export type SimLink = { source: INode; target: INode; value: number; directed: boolean; type?: 'algorithm' };
 
 export class PhysicsEngine {
   private simulation: d3.Simulation<INode, SimLink>;

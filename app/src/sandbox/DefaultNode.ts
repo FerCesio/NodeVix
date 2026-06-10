@@ -1,6 +1,7 @@
 import type { INode, Edge } from './interfaces';
 
 export class DefaultNode implements INode {
+  kind: 'data' = 'data';
   id: string;
   x?: number;
   y?: number;

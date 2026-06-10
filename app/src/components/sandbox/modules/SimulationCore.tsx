@@ -6,6 +6,7 @@ export class SimulationCore {
     private container: d3.Selection<SVGGElement, unknown, null, undefined>;
     private layers: {
       links: d3.Selection<SVGGElement, unknown, null, undefined>;
+      ghost: d3.Selection<SVGGElement, unknown, null, undefined>;
       nodes: d3.Selection<SVGGElement, unknown, null, undefined>;
     };
 
@@ -20,6 +21,7 @@ export class SimulationCore {
 
       this.layers = {
         links: this.container.append('g').attr('class', 'layer-links'),
+        ghost: this.container.append('g').attr('class', 'layer-ghost'),
         nodes: this.container.append('g').attr('class', 'layer-nodes'),
       };
     }

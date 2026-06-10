@@ -44,16 +44,17 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
   const eventsRef = useRef<InteractionManager | null>(null);
   const pendingPresetRef = useRef<string | null>(null);
 
+  const pendingAlgorithmRef = useRef<string | null>(null);
+
   const handleGeneratePreset = useCallback((presetId: string) => {
     pendingPresetRef.current = presetId;
   }, []);
 
   const handleRunAlgorithm = useCallback((algorithmId: string) => {
-    const alg = AVAILABLE_ALGORITHMS.find(a => a.id === algorithmId);
-    if (!alg || nodesRef.current.length === 0) return;
-    alg.run(nodesRef.current);
-    rendererRef.current?.update();
+    pendingAlgorithmRef.current = algorithmId;
   }, []);
+
+  // Guardamos la instancia del renderer para forzar redibujados desde los inputs
 
   useEffect(() => { modeRef.current = mode; console.log('[Canvas] mode:', mode); }, [mode]);
 
@@ -143,7 +144,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
       setActiveNode(node); 
     };
 
-    const events = new InteractionManager(svg, simulation, renderer);
+    const events = new InteractionManager(svg, simulation, renderer, layers.ghost);
 
     physicsRef.current = simulation;
     rendererRef.current = renderer;
@@ -155,6 +156,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
         selectedNodeRef,
         structureManagerRef,
         pendingPresetRef,
+        pendingAlgorithmRef,
         onSelectNode: setSelectedNodeId,
         onNodeSelected
     });

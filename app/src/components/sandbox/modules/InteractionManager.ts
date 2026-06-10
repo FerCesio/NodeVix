@@ -1,8 +1,13 @@
 import * as d3 from 'd3';
-import type { INode } from '../../../sandbox/interfaces';
+import type { INode, CanvasNode, IAlgorithmNode } from '../../../sandbox/interfaces';
 import type { ToolMode } from '../../../types/tools';
 import { DefaultNode } from '../../../sandbox/DefaultNode';
 import { PRESETS } from '../../../sandbox/presets';
+import { AVAILABLE_ALGORITHMS } from '../../../sandbox/algorithms';
+import { AlgorithmExecutor } from '../../../sandbox/AlgorithmExecutor';
+import { BubbleSort } from '../../../sandbox/algorithms/BubbleSort';
+import { Inorder } from '../../../sandbox/algorithms/Inorder';
+import { diffSnapshots } from '../../../sandbox/utils/diffSnapshots';
 import type { StructureManager } from '../../../sandbox/StructureManager';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 import type { CanvasRenderer } from './CanvasRenderer';
@@ -14,6 +19,7 @@ export interface InteractionRefs {
   selectedNodeRef: React.MutableRefObject<INode | null>;
   structureManagerRef: React.MutableRefObject<StructureManager>;
   pendingPresetRef: React.MutableRefObject<string | null>;
+  pendingAlgorithmRef: React.MutableRefObject<string | null>;
   onSelectNode: (nodeId: string | null) => void;
   onNodeSelected: (node: INode | null) => void;
 }
@@ -23,15 +29,22 @@ export class InteractionManager {
   private physics: PhysicsEngine;
   private renderer: CanvasRenderer;
   private refs!: InteractionRefs;
+  private ghostLine: d3.Selection<SVGLineElement, unknown, null, undefined> | null = null;
+  private ghostLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+  private executors: Map<string, AlgorithmExecutor> = new Map();
+  private autoPlayIntervals: Map<string, number> = new Map();
+  private animating = false;
 
   constructor(
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
     physics: PhysicsEngine,
-    renderer: CanvasRenderer
+    renderer: CanvasRenderer,
+    ghostLayer: d3.Selection<SVGGElement, unknown, null, undefined>
   ) {
     this.svg = svg;
     this.physics = physics;
     this.renderer = renderer;
+    this.ghostLayer = ghostLayer;
   }
 
   bindContext(refs: InteractionRefs): void {
@@ -39,10 +52,51 @@ export class InteractionManager {
   }
 
   setupListeners(): void {
+    // Ghost line: mousemove
+    this.svg.on('mousemove.ghost', (event: MouseEvent) => {
+      const mode = this.refs.modeRef.current;
+      if ((mode === 'LINK' || mode === 'ARROW') && this.refs.selectedNodeRef.current) {
+        const [mx, my] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+        const src = this.refs.selectedNodeRef.current;
+        if (!this.ghostLine) {
+          this.ghostLine = this.ghostLayer.append('line').attr('class', 'ghost-line');
+        }
+        this.ghostLine
+          .attr('x1', src.x ?? 0)
+          .attr('y1', src.y ?? 0)
+          .attr('x2', mx)
+          .attr('y2', my)
+          .attr('stroke', mode === 'ARROW' ? '#e74c3c' : '#888')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '6 4')
+          .attr('opacity', 0.6);
+      } else {
+        this.clearGhost();
+      }
+    });
+
+    // ESC: cancelar operaciones en curso
+    d3.select('body').on('keydown.interaction', (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        this.cancelPending();
+      }
+    });
+
     this.svg.on('click.interaction', (event: MouseEvent) => {
       const target = event.target as Element;
       const mode = this.refs.modeRef.current;
       console.log('[Interaction] click | mode:', mode, '| target:', target.tagName);
+
+      // Algorithm button clicks
+      const algoBtn = target.closest('.algo-btn');
+      if (algoBtn) {
+        const algoG = target.closest('g.node-algo');
+        if (algoG) {
+          const algoNode = d3.select<Element, IAlgorithmNode>(algoG).datum();
+          if (algoNode) this.handleAlgoButton(algoNode, algoBtn);
+        }
+        return;
+      }
 
       // Preset placement: si hay un preset pendiente, generarlo donde se hizo click
       if (this.refs.pendingPresetRef.current && !target.closest('g.node')) {
@@ -59,6 +113,33 @@ export class InteractionManager {
           this.renderer.update();
           this.applyDrag();
           this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+          this.invalidateExecutors();
+        }
+        return;
+      }
+
+      // Algorithm placement: si hay un algoritmo pendiente, colocar nodo algoritmo
+      if (this.refs.pendingAlgorithmRef.current && !target.closest('g.node')) {
+        const algId = this.refs.pendingAlgorithmRef.current;
+        this.refs.pendingAlgorithmRef.current = null;
+        const alg = AVAILABLE_ALGORITHMS.find(a => a.id === algId);
+        if (alg) {
+          const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+          const algoNode: IAlgorithmNode = {
+            kind: 'algorithm',
+            id: crypto.randomUUID(),
+            algorithmId: algId,
+            label: alg.label,
+            pos: { x, y },
+            scale: 1,
+            x, y,
+            connectedTo: null,
+            state: { snapshots: [], currentStep: 0, status: 'idle' },
+          };
+          (this.refs.nodesRef.current as any[]).push(algoNode);
+          this.physics.updateNodes(this.refs.nodesRef.current);
+          this.renderer.update();
+          this.applyDrag();
         }
         return;
       }
@@ -71,12 +152,14 @@ export class InteractionManager {
         this.renderer.update();
         this.applyDrag();
         this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        this.invalidateExecutors();
       }
 
       if (mode === 'LINK' || mode === 'ARROW') {
         const clickedNode = this.getNodeFromTarget(target);
         if (!clickedNode) {
           this.refs.selectedNodeRef.current = null;
+          this.clearGhost();
           return;
         }
         if (!this.refs.selectedNodeRef.current) {
@@ -84,19 +167,41 @@ export class InteractionManager {
         } else {
           const source = this.refs.selectedNodeRef.current;
           if (source.id !== clickedNode.id) {
-            const directed = mode === 'ARROW';
-            const link: SimLink = { source, target: clickedNode, value: 1, directed };
-            this.refs.linksRef.current.push(link);
-            source.edges.push({ end: clickedNode, weight: 1, directed });
-            if (!directed) {
-              clickedNode.edges.push({ end: source, weight: 1, directed: false });
+            const isAlgoSource = (source as any).kind === 'algorithm';
+            if (isAlgoSource) {
+              // Algorithm link: punteado azul, setea connectedTo
+              const algoNode = source as unknown as IAlgorithmNode;
+              // Reset executor if reconnecting
+              this.executors.delete(algoNode.id);
+              this.stopAutoPlay(algoNode.id);
+              algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
+              // Remove old algorithm link from this node
+              this.refs.linksRef.current = this.refs.linksRef.current.filter(
+                l => !(l.type === 'algorithm' && (l.source as INode).id === algoNode.id)
+              );
+              algoNode.connectedTo = clickedNode.id;
+              const link: SimLink = { source, target: clickedNode, value: 1, directed: true, type: 'algorithm' };
+              this.refs.linksRef.current.push(link);
+              this.physics.updateLinks(this.refs.linksRef.current);
+              this.renderer.update();
+              this.applyDrag();
+            } else {
+              const directed = mode === 'ARROW';
+              const link: SimLink = { source, target: clickedNode, value: 1, directed };
+              this.refs.linksRef.current.push(link);
+              source.edges.push({ end: clickedNode, weight: 1, directed });
+              if (!directed) {
+                clickedNode.edges.push({ end: source, weight: 1, directed: false });
+              }
+              this.physics.updateLinks(this.refs.linksRef.current);
+              this.renderer.update();
+              this.applyDrag();
+              this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+              this.invalidateExecutors();
             }
-            this.physics.updateLinks(this.refs.linksRef.current);
-            this.renderer.update();
-            this.applyDrag();
-            this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
           }
           this.refs.selectedNodeRef.current = null;
+          this.clearGhost();
         }
       }
 
@@ -140,6 +245,7 @@ export class InteractionManager {
         this.renderer.update();
         this.applyDrag();
         this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        this.invalidateExecutors();
         return;
       }
 
@@ -160,13 +266,171 @@ export class InteractionManager {
 
   destroy(): void {
     this.svg.on('click.interaction', null);
+    this.svg.on('mousemove.ghost', null);
+    d3.select('body').on('keydown.interaction', null);
+    this.clearGhost();
+    for (const id of this.autoPlayIntervals.keys()) this.stopAutoPlay(id);
+  }
+
+  private handleAlgoButton(algoNode: IAlgorithmNode, btn: Element): void {
+    if (this.animating) return;
+    const executor = this.getOrCreateExecutor(algoNode);
+    if (!executor) return;
+
+    if (btn.classList.contains('btn-fwd')) {
+      this.stopAutoPlay(algoNode.id);
+      this.animatedStep(algoNode, executor, 'forward');
+    } else if (btn.classList.contains('btn-back')) {
+      this.stopAutoPlay(algoNode.id);
+      this.animatedStep(algoNode, executor, 'back');
+    } else if (btn.classList.contains('btn-play')) {
+      if (this.autoPlayIntervals.has(algoNode.id)) {
+        this.stopAutoPlay(algoNode.id);
+      } else {
+        this.startAutoPlay(algoNode.id, executor, algoNode);
+      }
+    } else if (btn.classList.contains('btn-reset')) {
+      this.stopAutoPlay(algoNode.id);
+      // Rewind to step 0 to restore original state
+      if (algoNode.state.snapshots.length > 0) {
+        while (algoNode.state.currentStep > 0) executor.stepBack();
+        // Also restore links from initial snapshot
+        const initial = algoNode.state.snapshots[0];
+        if (initial.edges) this.syncLinksFromEdges(initial.edges);
+      }
+      this.executors.delete(algoNode.id);
+      algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
+      this.renderer.setHighlights(undefined);
+      this.renderer.update();
+    }
+  }
+
+  private animatedStep(algoNode: IAlgorithmNode, executor: AlgorithmExecutor, direction: 'forward' | 'back', onDone?: () => void): void {
+    const { state } = algoNode;
+    const prevStep = state.currentStep;
+    const ok = direction === 'forward' ? executor.stepForward() : executor.stepBack();
+    if (!ok) { onDone?.(); return; }
+
+    const prev = state.snapshots[prevStep];
+    const next = state.snapshots[state.currentStep];
+    const swaps = diffSnapshots(prev, next);
+
+    // Apply highlights from the new snapshot
+    this.renderer.setHighlights(next.highlights);
+
+    // Sync links BEFORE animation so they animate together with nodes
+    if (next.edges) this.syncLinksFromEdges(next.edges);
+
+    this.animating = true;
+    this.renderer.animateStep(swaps, () => {
+      this.animating = false;
+      this.renderer.update();
+      onDone?.();
+    });
+  }
+
+  private syncLinksFromEdges(edges: { source: string; target: string }[]): void {
+    const nodeMap = new Map(this.refs.nodesRef.current.map(n => [n.id, n]));
+    // Remove old directed links between structure nodes (keep algorithm links and undirected)
+    this.refs.linksRef.current = this.refs.linksRef.current.filter(
+      l => l.type === 'algorithm' || !l.directed
+    );
+    // Add new directed links from snapshot edges
+    for (const edge of edges) {
+      const src = nodeMap.get(edge.source);
+      const tgt = nodeMap.get(edge.target);
+      if (src && tgt) {
+        this.refs.linksRef.current.push({ source: src, target: tgt, value: 1, directed: true });
+      }
+    }
+    this.physics.updateLinks(this.refs.linksRef.current);
+  }
+
+  private invalidateExecutors(): void {
+    const allNodes = this.physics.getSimulation().nodes() as CanvasNode[];
+    const algoNodes = allNodes.filter((n): n is IAlgorithmNode => n.kind === 'algorithm');
+    for (const algoNode of algoNodes) {
+      if (algoNode.connectedTo && this.executors.has(algoNode.id)) {
+        this.executors.delete(algoNode.id);
+        this.stopAutoPlay(algoNode.id);
+        algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
+      }
+    }
+    this.renderer.setHighlights(undefined);
+  }
+
+  private getOrCreateExecutor(algoNode: IAlgorithmNode): AlgorithmExecutor | null {
+    if (this.executors.has(algoNode.id)) return this.executors.get(algoNode.id)!;
+    if (!algoNode.connectedTo) return null;
+
+    // Find the entry node directly
+    const entryNode = this.refs.nodesRef.current.find(n => n.id === algoNode.connectedTo);
+    if (!entryNode) return null;
+
+    // Validate required flags
+    const algConfig = AVAILABLE_ALGORITHMS.find(a => a.id === algoNode.algorithmId);
+    if (algConfig && algConfig.requiredFlags.length > 0) {
+      const structure = this.refs.structureManagerRef.current.getStructureForNode(algoNode.connectedTo);
+      if (!structure) return null;
+      const hasAll = algConfig.requiredFlags.every(f => structure.flags.has(f));
+      if (!hasAll) {
+        console.warn(`[Algorithm] ${algoNode.label} requires flags [${algConfig.requiredFlags}] but structure has [${[...structure.flags]}]`);
+        return null;
+      }
+    }
+
+    const algorithm = this.resolveAlgorithm(algoNode.algorithmId);
+    if (!algorithm) return null;
+
+    const executor = new AlgorithmExecutor(algoNode, algorithm);
+    executor.init(entryNode);
+    this.executors.set(algoNode.id, executor);
+    this.renderer.update();
+    return executor;
+  }
+
+  private resolveAlgorithm(algorithmId: string) {
+    if (algorithmId === 'bubble-sort') return new BubbleSort();
+    if (algorithmId === 'inorder') return new Inorder();
+    return null;
+  }
+
+  private startAutoPlay(id: string, executor: AlgorithmExecutor, algoNode: IAlgorithmNode): void {
+    const step = () => {
+      if (!this.autoPlayIntervals.has(id)) return;
+      this.animatedStep(algoNode, executor, 'forward', () => {
+        if (algoNode.state.status === 'done') { this.stopAutoPlay(id); return; }
+        const timeout = window.setTimeout(step, 200);
+        this.autoPlayIntervals.set(id, timeout);
+      });
+    };
+    this.autoPlayIntervals.set(id, window.setTimeout(step, 0));
+  }
+
+  private stopAutoPlay(id: string): void {
+    const timeout = this.autoPlayIntervals.get(id);
+    if (timeout != null) { clearTimeout(timeout); this.autoPlayIntervals.delete(id); }
+  }
+
+  private clearGhost(): void {
+    if (this.ghostLine) {
+      this.ghostLine.remove();
+      this.ghostLine = null;
+    }
+  }
+
+  private cancelPending(): void {
+    this.refs.selectedNodeRef.current = null;
+    this.refs.pendingPresetRef.current = null;
+    this.refs.pendingAlgorithmRef.current = null;
+    this.clearGhost();
   }
 
   applyDrag(): void {
     const physics = this.physics;
     const modeRef = this.refs.modeRef;
 
-    const drag = d3.drag<SVGGElement, INode>()
+    const drag = d3.drag<SVGGElement, CanvasNode>()
       .filter(() => modeRef.current === 'SELECT')
       .on('start', (event, d) => {
         if (!event.active) physics.getSimulation().alphaTarget(0.3).restart();
@@ -184,7 +448,7 @@ export class InteractionManager {
       });
 
     this.svg.select<SVGGElement>('.layer-nodes')
-      .selectAll<SVGGElement, INode>('g.node')
+      .selectAll<SVGGElement, CanvasNode>('g.node')
       .call(drag);
   }
 
