@@ -188,7 +188,8 @@ public class PostService {
                     p.getViews(),
                     p.getProject().getName(),
                     p.getProject().getDescription(),
-                    owner
+                    owner,
+                    p.getProject().getContent()
             );
         });
     }
@@ -212,7 +213,8 @@ public class PostService {
                     p.getViews(),
                     p.getProject().getName(),
                     p.getProject().getDescription(),
-                    user.getName()
+                    user.getName(),
+                    p.getProject().getContent()
             );
 
         }).collect(Collectors.toList());
@@ -232,7 +234,8 @@ public class PostService {
                 post.getViews(),
                 post.getProject().getName(),
                 post.getProject().getDescription(),
-                user.getName()
+                user.getName(),
+                post.getProject().getContent()
         );
     }
 

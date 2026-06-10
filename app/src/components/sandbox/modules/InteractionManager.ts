@@ -51,9 +51,10 @@ export class InteractionManager {
     this.refs = refs;
   }
 
-  setupListeners(): void {
-    // Ghost line: mousemove
+  setupListeners(readOnly: boolean = false): void {
+    // Ghost line: mousemove (Solo si NO es readOnly)
     this.svg.on('mousemove.ghost', (event: MouseEvent) => {
+      if (readOnly) return; 
       const mode = this.refs.modeRef.current;
       if ((mode === 'LINK' || mode === 'ARROW') && this.refs.selectedNodeRef.current) {
         const [mx, my] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
@@ -84,10 +85,10 @@ export class InteractionManager {
 
     this.svg.on('click.interaction', (event: MouseEvent) => {
       const target = event.target as Element;
-      const mode = this.refs.modeRef.current;
+      const mode = readOnly ? 'SELECT' : this.refs.modeRef.current;
       console.log('[Interaction] click | mode:', mode, '| target:', target.tagName);
 
-      // Algorithm button clicks
+      // --- ALGORITHM BUTTONS (Habilitado siempre, incluso en readOnly) ---
       const algoBtn = target.closest('.algo-btn');
       if (algoBtn) {
         const algoG = target.closest('g.node-algo');
@@ -98,7 +99,32 @@ export class InteractionManager {
         return;
       }
 
-      // Preset placement: si hay un preset pendiente, generarlo donde se hizo click
+      // --- ESCUDO ANTIVANDALISMO PARA MODO LECTURA ---
+      if (readOnly) {
+        if (mode === 'SELECT') {
+          const clickedNode = this.getNodeFromTarget(target);
+          this.refs.selectedNodeRef.current = clickedNode;
+          this.refs.onSelectNode(clickedNode?.id ?? null);
+          this.highlightStructure(clickedNode?.id ?? null);
+          if (this.refs.onNodeSelected) {
+            this.refs.onNodeSelected(clickedNode);
+          }
+        }
+        return; 
+      }
+
+      // --- DE ACÁ PARA ABAJO SÓLO ENTRARÁ SI NO ES READONLY (MODO EDITOR) ---
+      if (mode === 'SELECT') {
+        const clickedNode = this.getNodeFromTarget(target);
+        this.refs.selectedNodeRef.current = clickedNode;
+        this.refs.onSelectNode(clickedNode?.id ?? null);
+        this.highlightStructure(clickedNode?.id ?? null);
+        if (this.refs.onNodeSelected) {
+          this.refs.onNodeSelected(clickedNode); 
+        }
+      }
+
+      // Preset placement
       if (this.refs.pendingPresetRef.current && !target.closest('g.node')) {
         const presetId = this.refs.pendingPresetRef.current;
         this.refs.pendingPresetRef.current = null;
@@ -111,14 +137,14 @@ export class InteractionManager {
           this.physics.updateNodes(this.refs.nodesRef.current);
           this.physics.updateLinks(this.refs.linksRef.current);
           this.renderer.update();
-          this.applyDrag();
+          this.applyDrag(readOnly);
           this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
           this.invalidateExecutors();
         }
         return;
       }
 
-      // Algorithm placement: si hay un algoritmo pendiente, colocar nodo algoritmo
+      // Algorithm placement
       if (this.refs.pendingAlgorithmRef.current && !target.closest('g.node')) {
         const algId = this.refs.pendingAlgorithmRef.current;
         this.refs.pendingAlgorithmRef.current = null;
@@ -139,29 +165,27 @@ export class InteractionManager {
           (this.refs.nodesRef.current as any[]).push(algoNode);
           this.physics.updateNodes(this.refs.nodesRef.current);
           this.renderer.update();
-          this.applyDrag();
+          this.applyDrag(readOnly);
         }
         return;
       }
 
+      // Add common node
       if (mode === 'ADD_NODE' && !target.closest('g.node')) {
         const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
         const node = new DefaultNode(crypto.randomUUID(), Math.floor(Math.random() * 99) + 1, x, y);
         this.refs.nodesRef.current.push(node);
         this.physics.updateNodes(this.refs.nodesRef.current);
         this.renderer.update();
-        this.applyDrag();
+        this.applyDrag(readOnly);
         this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
         this.invalidateExecutors();
       }
 
+      // Link creation (Link / Arrow)
       if (mode === 'LINK' || mode === 'ARROW') {
         const clickedNode = this.getNodeFromTarget(target);
-        if (!clickedNode) {
-          this.refs.selectedNodeRef.current = null;
-          this.clearGhost();
-          return;
-        }
+        if (!clickedNode) { this.refs.selectedNodeRef.current = null; this.clearGhost(); return; }
         if (!this.refs.selectedNodeRef.current) {
           this.refs.selectedNodeRef.current = clickedNode;
         } else {
@@ -169,33 +193,25 @@ export class InteractionManager {
           if (source.id !== clickedNode.id) {
             const isAlgoSource = (source as any).kind === 'algorithm';
             if (isAlgoSource) {
-              // Algorithm link: punteado azul, setea connectedTo
               const algoNode = source as unknown as IAlgorithmNode;
-              // Reset executor if reconnecting
               this.executors.delete(algoNode.id);
               this.stopAutoPlay(algoNode.id);
               algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
-              // Remove old algorithm link from this node
-              this.refs.linksRef.current = this.refs.linksRef.current.filter(
-                l => !(l.type === 'algorithm' && (l.source as INode).id === algoNode.id)
-              );
+              this.refs.linksRef.current = this.refs.linksRef.current.filter(l => !(l.type === 'algorithm' && (l.source as INode).id === algoNode.id));
               algoNode.connectedTo = clickedNode.id;
-              const link: SimLink = { source, target: clickedNode, value: 1, directed: true, type: 'algorithm' };
-              this.refs.linksRef.current.push(link);
+              this.refs.linksRef.current.push({ source, target: clickedNode, value: 1, directed: true, type: 'algorithm' });
               this.physics.updateLinks(this.refs.linksRef.current);
               this.renderer.update();
-              this.applyDrag();
+              this.applyDrag(readOnly);
             } else {
               const directed = mode === 'ARROW';
               const link: SimLink = { source, target: clickedNode, value: 1, directed };
               this.refs.linksRef.current.push(link);
               source.edges.push({ end: clickedNode, weight: 1, directed });
-              if (!directed) {
-                clickedNode.edges.push({ end: source, weight: 1, directed: false });
-              }
+              if (!directed) clickedNode.edges.push({ end: source, weight: 1, directed: false });
               this.physics.updateLinks(this.refs.linksRef.current);
               this.renderer.update();
-              this.applyDrag();
+              this.applyDrag(readOnly);
               this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
               this.invalidateExecutors();
             }
@@ -205,63 +221,36 @@ export class InteractionManager {
         }
       }
 
+      // Deletion (Delete elements)
       if (mode === 'DELETE_ANY') {
         const clickedNode = this.getNodeFromTarget(target);
         if (clickedNode) {
-          if (this.refs.selectedNodeRef.current?.id === clickedNode.id) {
-            this.refs.selectedNodeRef.current = null;
-            if (this.refs.onNodeSelected) {
-              this.refs.onNodeSelected(null); // Le avisa a React que cierre el panel
-            }
-          }
-
-          // Remove node and its edges
+          if (this.refs.selectedNodeRef.current?.id === clickedNode.id) this.refs.selectedNodeRef.current = null;
           this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => n.id !== clickedNode.id);
-          this.refs.linksRef.current = this.refs.linksRef.current.filter(
-            l => (l.source as INode).id !== clickedNode.id && (l.target as INode).id !== clickedNode.id
-          );
-          // Clean edges from other nodes
-          for (const n of this.refs.nodesRef.current) {
-            n.edges = n.edges.filter(e => e.end.id !== clickedNode.id);
-          }
+          this.refs.linksRef.current = this.refs.linksRef.current.filter(l => (l.source as INode).id !== clickedNode.id && (l.target as INode).id !== clickedNode.id);
+          for (const n of this.refs.nodesRef.current) n.edges = n.edges.filter(e => e.end.id !== clickedNode.id);
         } else if (target.tagName === 'line') {
-          // Remove clicked link
           const datum = d3.select<Element, SimLink>(target).datum();
           if (datum) {
             const srcId = (datum.source as INode).id;
             const tgtId = (datum.target as INode).id;
             this.refs.linksRef.current = this.refs.linksRef.current.filter(l => l !== datum);
-            // Clean edges from nodes
             const srcNode = this.refs.nodesRef.current.find(n => n.id === srcId);
             const tgtNode = this.refs.nodesRef.current.find(n => n.id === tgtId);
             if (srcNode) srcNode.edges = srcNode.edges.filter(e => e.end.id !== tgtId);
             if (tgtNode && !datum.directed) tgtNode.edges = tgtNode.edges.filter(e => e.end.id !== srcId);
           }
-        } else {
-          return;
         }
         this.physics.updateNodes(this.refs.nodesRef.current);
         this.physics.updateLinks(this.refs.linksRef.current);
         this.renderer.update();
-        this.applyDrag();
+        this.applyDrag(readOnly);
         this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
         this.invalidateExecutors();
-        return;
-      }
-
-      if (mode === 'SELECT') {
-        const clickedNode = this.getNodeFromTarget(target);
-        this.refs.selectedNodeRef.current = clickedNode;
-        this.refs.onSelectNode(clickedNode?.id ?? null);
-        this.highlightStructure(clickedNode?.id ?? null);
-        if (this.refs.onNodeSelected) {
-          this.refs.onNodeSelected(clickedNode);
-        }
-        
       }
     });
 
-    this.applyDrag();
+    this.applyDrag(readOnly);
   }
 
   destroy(): void {
@@ -291,10 +280,8 @@ export class InteractionManager {
       }
     } else if (btn.classList.contains('btn-reset')) {
       this.stopAutoPlay(algoNode.id);
-      // Rewind to step 0 to restore original state
       if (algoNode.state.snapshots.length > 0) {
         while (algoNode.state.currentStep > 0) executor.stepBack();
-        // Also restore links from initial snapshot
         const initial = algoNode.state.snapshots[0];
         if (initial.edges) this.syncLinksFromEdges(initial.edges);
       }
@@ -315,10 +302,7 @@ export class InteractionManager {
     const next = state.snapshots[state.currentStep];
     const swaps = diffSnapshots(prev, next);
 
-    // Apply highlights from the new snapshot
     this.renderer.setHighlights(next.highlights);
-
-    // Sync links BEFORE animation so they animate together with nodes
     if (next.edges) this.syncLinksFromEdges(next.edges);
 
     this.animating = true;
@@ -331,19 +315,61 @@ export class InteractionManager {
 
   private syncLinksFromEdges(edges: { source: string; target: string }[]): void {
     const nodeMap = new Map(this.refs.nodesRef.current.map(n => [n.id, n]));
-    // Remove old directed links between structure nodes (keep algorithm links and undirected)
-    this.refs.linksRef.current = this.refs.linksRef.current.filter(
-      l => l.type === 'algorithm' || !l.directed
-    );
-    // Add new directed links from snapshot edges
+    
+    // 1. FILTRADO QUIRÚRGICO: Dejamos únicamente el cable azul de control del algoritmo
+    const algoControlLinks = this.refs.linksRef.current.filter(l => l.type === 'algorithm');
+    
+    // Armamos el nuevo array base insertando el control
+    const newLinks: SimLink[] = [...algoControlLinks];
+
+    // 2. RECONSTRUCCIÓN DEL ÁRBOL DESDE LA FUENTE DE LA VERDAD
+    // Recorremos los nodos reales y volvemos a inyectar sus aristas estructurales (las del árbol/grafo)
+    for (const node of this.refs.nodesRef.current) {
+      if (node.edges) {
+        for (const edge of node.edges) {
+          newLinks.push({
+            source: node,
+            target: edge.end,
+            value: edge.weight ?? 1,
+            directed: edge.directed
+          });
+        }
+      }
+    }
+
+    // Usamos un Set para evitar que el algoritmo duplique flechas en el mismo paso
+    const insertedAlgoKeys = new Set<string>();
+
+    // 3. INYECCIÓN DE LAS ARISTAS TEMPORALES DEL BUBBLE SORT
     for (const edge of edges) {
       const src = nodeMap.get(edge.source);
       const tgt = nodeMap.get(edge.target);
+      
       if (src && tgt) {
-        this.refs.linksRef.current.push({ source: src, target: tgt, value: 1, directed: true });
+        const edgeKey = `${src.id}->${tgt.id}`;
+        
+        if (!insertedAlgoKeys.has(edgeKey)) {
+          insertedAlgoKeys.add(edgeKey);
+          
+          newLinks.push({ 
+            source: src, 
+            target: tgt, 
+            value: 1, 
+            directed: true,
+            type: 'algo-snapshot' as any // Mantenemos el tag por consistencia con el key function
+          });
+        }
       }
     }
+
+    // 4. Asignamos el array reconstruido e impecable a la referencia global
+    this.refs.linksRef.current = newLinks;
+
+    // 5. Sincronizamos el motor físico de D3 con la nueva estructura limpia
     this.physics.updateLinks(this.refs.linksRef.current);
+    
+    // 6. Forzamos al renderizador a procesar las Claves Únicas (Key Function) que pusimos en CanvasRenderer
+    this.renderer.update();
   }
 
   private invalidateExecutors(): void {
@@ -363,18 +389,16 @@ export class InteractionManager {
     if (this.executors.has(algoNode.id)) return this.executors.get(algoNode.id)!;
     if (!algoNode.connectedTo) return null;
 
-    // Find the entry node directly
     const entryNode = this.refs.nodesRef.current.find(n => n.id === algoNode.connectedTo);
     if (!entryNode) return null;
 
-    // Validate required flags
     const algConfig = AVAILABLE_ALGORITHMS.find(a => a.id === algoNode.algorithmId);
     if (algConfig && algConfig.requiredFlags.length > 0) {
       const structure = this.refs.structureManagerRef.current.getStructureForNode(algoNode.connectedTo);
       if (!structure) return null;
       const hasAll = algConfig.requiredFlags.every(f => structure.flags.has(f));
       if (!hasAll) {
-        console.warn(`[Algorithm] ${algoNode.label} requires flags [${algConfig.requiredFlags}] but structure has [${[...structure.flags]}]`);
+        console.warn(`[Algorithm] ${algoNode.label} requires flags [${algConfig.requiredFlags}]`);
         return null;
       }
     }
@@ -413,10 +437,7 @@ export class InteractionManager {
   }
 
   private clearGhost(): void {
-    if (this.ghostLine) {
-      this.ghostLine.remove();
-      this.ghostLine = null;
-    }
+    if (this.ghostLine) { this.ghostLine.remove(); this.ghostLine = null; }
   }
 
   private cancelPending(): void {
@@ -426,25 +447,62 @@ export class InteractionManager {
     this.clearGhost();
   }
 
-  applyDrag(): void {
+  applyDrag(readOnly: boolean = false): void {
     const physics = this.physics;
     const modeRef = this.refs.modeRef;
+    const sim = physics.getSimulation();
 
     const drag = d3.drag<SVGGElement, CanvasNode>()
-      .filter(() => modeRef.current === 'SELECT')
+      .filter(() => readOnly || modeRef.current === 'SELECT')
       .on('start', (event, d) => {
-        if (!event.active) physics.getSimulation().alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
+        // Quitamos cualquier callback de enfriamiento previo para que no interfiera
+        sim.on('end', null);
+
+        // Despertamos la simulación con fuerza
+        if (!event.active) sim.alphaTarget(0.3).restart();
+        
+        // Si es el feed, liberamos a TODOS los nodos temporalmente para que reaccionen al impacto
+        if (readOnly) {
+          this.refs.nodesRef.current.forEach(n => {
+            n.fx = null;
+            n.fy = null;
+          });
+        }
+
+        d.fx = event.x;
+        d.fy = event.y;
       })
       .on('drag', (event, d) => {
         d.fx = event.x;
         d.fy = event.y;
       })
       .on('end', (event, d) => {
-        if (!event.active) physics.getSimulation().alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
+        // Le bajamos el target de energía para que empiece a desacelerar naturalmente
+        if (!event.active) sim.alphaTarget(0);
+        
+        if (!readOnly) {
+          // MODO EDITOR: El comportamiento nativo de siempre
+          d.fx = null;
+          d.fy = null;
+        } else {
+          // MODO LECTURA (FEED) CON INERCIA:
+          // Liberamos el nodo que veníamos arrastrando para que la inercia se lo lleve...
+          d.fx = null;
+          d.fy = null;
+
+          // ...pero escuchamos cuándo la simulación se queda sin fuerza ("se enfría")
+          sim.on('end', () => {
+            // Una vez que el grafo se acomodó por completo y se frenó solo, 
+            // clavamos las posiciones finales para que no consuma CPU en background
+            this.refs.nodesRef.current.forEach(n => {
+              n.fx = n.x;
+              n.fy = n.y;
+            });
+            // Apagamos el escuchador de fin para que no vuelva a dispararse accidentalmente
+            sim.on('end', null);
+            console.log('[D3] Grafo enfriado y congelado dinámicamente en su nueva forma.');
+          });
+        }
       });
 
     this.svg.select<SVGGElement>('.layer-nodes')
@@ -460,14 +518,10 @@ export class InteractionManager {
   }
 
   private highlightStructure(nodeId: string | null): void {
-    // Remove all highlights
     this.svg.select('.layer-nodes').selectAll<SVGGElement, INode>('g.node')
-      .select('circle')
-      .style('stroke', null)
-      .style('stroke-width', null);
+      .select('circle').style('stroke', null).style('stroke-width', null);
 
     if (!nodeId) return;
-
     const structure = this.refs.structureManagerRef.current.getStructureForNode(nodeId);
     if (!structure) return;
 

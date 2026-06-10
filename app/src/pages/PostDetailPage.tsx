@@ -3,9 +3,10 @@ import { useParams } from "react-router-dom";
 import { api } from "../services/api";
 import toast, { Toaster } from "react-hot-toast";
 import "../styles/postDetail.css";
-import type {CommentResponse, MessageRequest} from "../types/comment";
+import type { CommentResponse, MessageRequest } from "../types/comment";
 import type { PostListResponse, InteractionResponse } from "../types/post";
-
+// IMPORTAMOS EL CANVAS
+import { SimulationCanvas } from "../components/sandbox/SimulationCanvas";
 
 export default function PostDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -28,7 +29,7 @@ export default function PostDetailPage() {
                     setInteraction(interactionRes.data);
                 }
             } catch {
-                toast.error("Could't load post.");
+                toast.error("Couldn't load post.");
             }
         };
         fetchPost();
@@ -122,8 +123,9 @@ export default function PostDetailPage() {
             </div>
 
             <div className="post-main">
-                <div className="post-canvas">
-                    <p style={{ color: "#555" }}>Simulation canvas</p>
+                {/* REEMPLAZAMOS ESTE CONTENEDOR */}
+                <div className="post-canvas" style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                    <SimulationCanvas initialData={post.content} readOnly={true} />
                 </div>
 
                 {showComments && (

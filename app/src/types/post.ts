@@ -14,4 +14,5 @@ export type PostListResponse = {
     projectName: string;
     projectDescription: string;
     author: string
+    content: string
 }

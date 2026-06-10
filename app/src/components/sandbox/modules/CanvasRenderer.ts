@@ -83,10 +83,21 @@ export class CanvasRenderer {
     const algoNodes = allNodes.filter((n): n is IAlgorithmNode => n.kind === 'algorithm');
     const links = (sim.force('link') as d3.ForceLink<INode, SimLink>).links() as SimLink[];
 
+    
     this.linkSelection = this.layers.links
       .selectAll<SVGLineElement, SimLink>('line')
-      .data(links)
-      .join('line')
+      .data(links, d => {
+        // Generamos un string identificador único para cada enlace en base a los IDs de sus extremos
+        const sourceId = typeof d.source === 'object' ? (d.source as INode).id : d.source;
+        const targetId = typeof d.target === 'object' ? (d.target as INode).id : d.target;
+        const linkType = d.type ?? 'normal';
+        return `${sourceId}-${targetId}-${linkType}`;
+      })
+      .join(
+        enter => enter.append('line'),
+        update => update,
+        exit => exit.remove() // <-- Ahora sí D3 sabe exactamente cuáles remover al avanzar el paso
+      )
       .attr('stroke', d => d.type === 'algorithm' ? '#3498db' : d.directed ? '#e74c3c' : '#555')
       .attr('stroke-width', 2)
       .attr('stroke-dasharray', d => d.type === 'algorithm' ? '6 4' : null)
