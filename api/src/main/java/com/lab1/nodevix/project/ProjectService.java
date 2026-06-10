@@ -32,7 +32,7 @@ public class ProjectService {
 
         // 2. Creamos el proyecto
         Project project = new Project(cp.getProjectName(), cp.getContent());
-        
+
         user.getProjects().add(project);
 
         // 4. Guardamos el proyecto (esto genera el ID y los timestamps)
