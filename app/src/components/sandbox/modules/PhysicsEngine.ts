@@ -9,7 +9,7 @@ export class PhysicsEngine {
   constructor(nodes: INode[], links: SimLink[]) {
     this.simulation = d3.forceSimulation<INode>(nodes)
       .force('link', d3.forceLink<INode, SimLink>(links).distance(120).strength(0.4))
-      .force('charge', d3.forceManyBody().strength(-80))
+      .force('charge', d3.forceManyBody().strength(-80).distanceMax(200))
       .force('collide', d3.forceCollide(35))
       .alphaDecay(0.02)
       .velocityDecay(0.4);
