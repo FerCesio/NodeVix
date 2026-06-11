@@ -46,10 +46,12 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
   const pendingAlgorithmRef = useRef<string | null>(null);
 
   const handleGeneratePreset = useCallback((presetId: string) => {
+    if (presetId === '__cancel__') { pendingPresetRef.current = null; return; }
     pendingPresetRef.current = presetId;
   }, []);
 
   const handleRunAlgorithm = useCallback((algorithmId: string) => {
+    if (algorithmId === '__cancel__') { pendingAlgorithmRef.current = null; return; }
     pendingAlgorithmRef.current = algorithmId;
   }, []);
 

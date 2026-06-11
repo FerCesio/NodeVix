@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import '../../styles/property-panel.css'; 
 import type { INode } from '../../sandbox/interfaces';
+import { ColorWheel } from './ColorWheel';
 
 interface PropertyPanelProps {
   node: INode | null;
@@ -29,14 +30,10 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
       
       <div className="property-panel-content">
         <div className="property-group">
-          <label>Node ID</label>
-          <input type="text" value={node.id} disabled className="disabled-input" />
-        </div>
-
-        <div className="property-group">
           <label>Value</label>
           <input
             type="number"
+            className="no-spinners"
             value={node.value ?? 0} 
             onChange={(e) => onUpdate({ value: Number(e.target.value) })}
           />
@@ -44,18 +41,15 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
 
         <div className="property-group">
           <label>Color</label>
-          <div className="color-picker-wrapper">
-            <input
-              type="color"
-              value={node.color ?? '#2ecc71'}
-              onChange={(e) => onUpdate({ color: e.target.value })}
-            />
-            <span>{node.color ?? '#2ecc71'}</span>
-          </div>
+          <ColorWheel
+            value={node.color ?? '#2ecc71'}
+            onChange={(color) => onUpdate({ color })}
+            size={175}
+          />
         </div>
 
         <div className="property-group">
-          <label>Scale (Size)</label>
+          <label>Scale</label>
           <div className="range-wrapper">
             <input
               type="range"

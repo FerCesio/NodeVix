@@ -264,9 +264,10 @@ export default function ProjectPage() {
                 display: 'flex', 
                 justifyContent: 'space-between', 
                 alignItems: 'center',
-                zIndex: 10 
+                zIndex: 10,
+                pointerEvents: 'none'
             }}>
-                <div className="nav-save-group" style={{ margin: 0 }}>
+                <div className="nav-save-group" style={{ margin: 0, pointerEvents: 'auto' }}>
                     <button className="btn btn-return" onClick={() => window.location.assign("/home")}>
                         <span>Home</span>
                     </button>
@@ -289,7 +290,7 @@ export default function ProjectPage() {
                 </div>
 
                 {/* BOTÓN SHARE A LA DERECHA */}
-                <div className="nav-share-group">
+                <div className="nav-share-group" style={{ pointerEvents: 'auto' }}>
                     <button className="btn btn-return" onClick={handleShare} style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: '130px' }}>
                         <span>Share ↗</span>
                     </button>

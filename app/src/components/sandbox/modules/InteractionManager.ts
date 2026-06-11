@@ -85,6 +85,113 @@ export class InteractionManager {
       }
     });
 
+    // LINK/ARROW: mousedown on source node starts connection
+    this.svg.on('mousedown.link', (event: MouseEvent) => {
+      if (readOnly) return;
+      const mode = this.refs.modeRef.current;
+      if (mode !== 'LINK' && mode !== 'ARROW') return;
+      const target = event.target as Element;
+      const clickedNode = this.getNodeFromTarget(target);
+      if (clickedNode) {
+        this.refs.selectedNodeRef.current = clickedNode;
+      }
+    });
+
+    // LINK/ARROW: mouseup on target node completes connection
+    this.svg.on('mouseup.link', (event: MouseEvent) => {
+      if (readOnly) return;
+      const mode = this.refs.modeRef.current;
+      if (mode !== 'LINK' && mode !== 'ARROW') return;
+      const source = this.refs.selectedNodeRef.current;
+      if (!source) return;
+
+      const target = event.target as Element;
+      const targetNode = this.getNodeFromTarget(target);
+
+      if (targetNode && source.id !== targetNode.id) {
+        const isAlgoSource = (source as any).kind === 'algorithm';
+        const isAlgoTarget = (targetNode as any).kind === 'algorithm';
+
+        if (isAlgoSource || isAlgoTarget) {
+          // Algorithm connection: either direction
+          const algoNode = (isAlgoSource ? source : targetNode) as unknown as IAlgorithmNode;
+          const structureNode = isAlgoSource ? targetNode : source;
+          this.executors.delete(algoNode.id);
+          this.stopAutoPlay(algoNode.id);
+          algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
+          this.refs.linksRef.current = this.refs.linksRef.current.filter(l => !(l.type === 'algorithm' && ((l.source as INode).id === algoNode.id || (l.target as INode).id === algoNode.id)));
+          algoNode.connectedTo = structureNode.id;
+          this.refs.linksRef.current.push({ source: algoNode as any, target: structureNode, value: 1, directed: true, type: 'algorithm' });
+          this.physics.updateLinks(this.refs.linksRef.current);
+          this.renderer.update();
+          this.applyDrag(readOnly);
+        } else {
+          const directed = mode === 'ARROW';
+          const link: SimLink = { source, target: targetNode, value: 1, directed };
+          this.refs.linksRef.current.push(link);
+          source.edges.push({ end: targetNode, weight: 1, directed });
+          if (!directed) targetNode.edges.push({ end: source, weight: 1, directed: false });
+          this.physics.updateLinks(this.refs.linksRef.current);
+          this.renderer.update();
+          this.applyDrag(readOnly);
+          this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+          this.invalidateExecutors();
+        }
+      }
+
+      this.refs.selectedNodeRef.current = null;
+      this.clearGhost();
+    });
+
+    // Drag-and-drop placement from panel (presets/algorithms)
+    this.svg.on('mouseup.placement', (event: MouseEvent) => {
+      if (readOnly) return;
+      const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+
+      if (this.refs.pendingPresetRef.current) {
+        const presetId = this.refs.pendingPresetRef.current;
+        this.refs.pendingPresetRef.current = null;
+        const preset = PRESETS.find(p => p.id === presetId);
+        if (preset) {
+          const { nodes, links } = preset.generate(x, y);
+          this.refs.nodesRef.current.push(...nodes);
+          this.refs.linksRef.current.push(...links);
+          this.physics.updateNodes(this.refs.nodesRef.current);
+          this.physics.updateLinks(this.refs.linksRef.current);
+          this.renderer.update();
+          this.applyDrag(readOnly);
+          this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+          this.invalidateExecutors();
+        }
+        return;
+      }
+
+      if (this.refs.pendingAlgorithmRef.current) {
+        const algId = this.refs.pendingAlgorithmRef.current;
+        this.refs.pendingAlgorithmRef.current = null;
+        const alg = AVAILABLE_ALGORITHMS.find(a => a.id === algId);
+        if (alg) {
+          const algoNode: any = {
+            kind: 'algorithm',
+            id: crypto.randomUUID(),
+            algorithmId: algId,
+            label: alg.label,
+            pos: { x, y },
+            scale: 1,
+            x, y,
+            connectedTo: null,
+            state: { snapshots: [], currentStep: 0, status: 'idle' },
+            edges: []
+          };
+          (this.refs.nodesRef.current as any[]).push(algoNode);
+          this.physics.updateNodes(this.refs.nodesRef.current);
+          this.renderer.update();
+          this.applyDrag(readOnly);
+        }
+        return;
+      }
+    });
+
     this.svg.on('click.interaction', (event: MouseEvent) => {
       const target = event.target as Element;
       const mode = readOnly ? 'SELECT' : this.refs.modeRef.current;
@@ -116,6 +223,10 @@ export class InteractionManager {
       }
 
       // --- DE ACÁ PARA ABAJO SÓLO ENTRARÁ SI NO ES READONLY (MODO EDITOR) ---
+
+      // Skip click handling for LINK/ARROW since it's now drag-based
+      if (mode === 'LINK' || mode === 'ARROW') return;
+
       if (mode === 'SELECT') {
         const clickedNode = this.getNodeFromTarget(target);
         this.refs.selectedNodeRef.current = clickedNode;
@@ -163,7 +274,7 @@ export class InteractionManager {
             x, y,
             connectedTo: null,
             state: { snapshots: [], currentStep: 0, status: 'idle' },
-            edges: [] // <-- INICIALIZADO EL ARRAY VACÍO ACÁ
+            edges: []
           };
           (this.refs.nodesRef.current as any[]).push(algoNode);
           this.physics.updateNodes(this.refs.nodesRef.current);
@@ -185,45 +296,6 @@ export class InteractionManager {
         this.invalidateExecutors();
       }
 
-      // Link creation (Link / Arrow)
-      if (mode === 'LINK' || mode === 'ARROW') {
-        const clickedNode = this.getNodeFromTarget(target);
-        if (!clickedNode) { this.refs.selectedNodeRef.current = null; this.clearGhost(); return; }
-        if (!this.refs.selectedNodeRef.current) {
-          this.refs.selectedNodeRef.current = clickedNode;
-        } else {
-          const source = this.refs.selectedNodeRef.current;
-          if (source.id !== clickedNode.id) {
-            const isAlgoSource = (source as any).kind === 'algorithm';
-            if (isAlgoSource) {
-              const algoNode = source as unknown as IAlgorithmNode;
-              this.executors.delete(algoNode.id);
-              this.stopAutoPlay(algoNode.id);
-              algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
-              this.refs.linksRef.current = this.refs.linksRef.current.filter(l => !(l.type === 'algorithm' && (l.source as INode).id === algoNode.id));
-              algoNode.connectedTo = clickedNode.id;
-              this.refs.linksRef.current.push({ source, target: clickedNode, value: 1, directed: true, type: 'algorithm' });
-              this.physics.updateLinks(this.refs.linksRef.current);
-              this.renderer.update();
-              this.applyDrag(readOnly);
-            } else {
-              const directed = mode === 'ARROW';
-              const link: SimLink = { source, target: clickedNode, value: 1, directed };
-              this.refs.linksRef.current.push(link);
-              source.edges.push({ end: clickedNode, weight: 1, directed });
-              if (!directed) clickedNode.edges.push({ end: source, weight: 1, directed: false });
-              this.physics.updateLinks(this.refs.linksRef.current);
-              this.renderer.update();
-              this.applyDrag(readOnly);
-              this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
-              this.invalidateExecutors();
-            }
-          }
-          this.refs.selectedNodeRef.current = null;
-          this.clearGhost();
-        }
-      }
-
       // Deletion (Delete elements)
       if (mode === 'DELETE_ANY') {
         const clickedNode = this.getNodeFromTarget(target);
@@ -232,7 +304,6 @@ export class InteractionManager {
           this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => n.id !== clickedNode.id);
           this.refs.linksRef.current = this.refs.linksRef.current.filter(l => (l.source as INode).id !== clickedNode.id && (l.target as INode).id !== clickedNode.id);
           
-          // PROTECCIÓN: Validar que n.edges exista
           for (const n of this.refs.nodesRef.current) {
             if (n.edges) n.edges = n.edges.filter(e => e.end.id !== clickedNode.id);
           }
@@ -246,7 +317,6 @@ export class InteractionManager {
             const srcNode = this.refs.nodesRef.current.find(n => n.id === srcId);
             const tgtNode = this.refs.nodesRef.current.find(n => n.id === tgtId);
             
-            // PROTECCIÓN: Validar que srcNode.edges y tgtNode.edges existan
             if (srcNode && srcNode.edges) srcNode.edges = srcNode.edges.filter(e => e.end.id !== tgtId);
             if (tgtNode && tgtNode.edges && !datum.directed) tgtNode.edges = tgtNode.edges.filter(e => e.end.id !== srcId);
           }
@@ -266,6 +336,9 @@ export class InteractionManager {
   destroy(): void {
     this.svg.on('click.interaction', null);
     this.svg.on('mousemove.ghost', null);
+    this.svg.on('mousedown.link', null);
+    this.svg.on('mouseup.link', null);
+    this.svg.on('mouseup.placement', null);
     d3.select('body').on('keydown.interaction', null);
     this.clearGhost();
     for (const id of this.autoPlayIntervals.keys()) this.stopAutoPlay(id);
