@@ -7,6 +7,8 @@ import { AVAILABLE_ALGORITHMS } from '../../../sandbox/algorithms';
 import { AlgorithmExecutor } from '../../../sandbox/AlgorithmExecutor';
 import { BubbleSort } from '../../../sandbox/algorithms/BubbleSort';
 import { Inorder } from '../../../sandbox/algorithms/Inorder';
+import { BogoSort } from '../../../sandbox/algorithms/BogoSort';
+import { MergeSort } from '../../../sandbox/algorithms/MergeSort';
 import { diffSnapshots } from '../../../sandbox/utils/diffSnapshots';
 import type { StructureManager } from '../../../sandbox/StructureManager';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
@@ -151,7 +153,7 @@ export class InteractionManager {
         const alg = AVAILABLE_ALGORITHMS.find(a => a.id === algId);
         if (alg) {
           const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
-          const algoNode: IAlgorithmNode = {
+          const algoNode: any = {
             kind: 'algorithm',
             id: crypto.randomUUID(),
             algorithmId: algId,
@@ -161,6 +163,7 @@ export class InteractionManager {
             x, y,
             connectedTo: null,
             state: { snapshots: [], currentStep: 0, status: 'idle' },
+            edges: [] // <-- INICIALIZADO EL ARRAY VACÍO ACÁ
           };
           (this.refs.nodesRef.current as any[]).push(algoNode);
           this.physics.updateNodes(this.refs.nodesRef.current);
@@ -228,7 +231,12 @@ export class InteractionManager {
           if (this.refs.selectedNodeRef.current?.id === clickedNode.id) this.refs.selectedNodeRef.current = null;
           this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => n.id !== clickedNode.id);
           this.refs.linksRef.current = this.refs.linksRef.current.filter(l => (l.source as INode).id !== clickedNode.id && (l.target as INode).id !== clickedNode.id);
-          for (const n of this.refs.nodesRef.current) n.edges = n.edges.filter(e => e.end.id !== clickedNode.id);
+          
+          // PROTECCIÓN: Validar que n.edges exista
+          for (const n of this.refs.nodesRef.current) {
+            if (n.edges) n.edges = n.edges.filter(e => e.end.id !== clickedNode.id);
+          }
+          
         } else if (target.tagName === 'line') {
           const datum = d3.select<Element, SimLink>(target).datum();
           if (datum) {
@@ -237,8 +245,10 @@ export class InteractionManager {
             this.refs.linksRef.current = this.refs.linksRef.current.filter(l => l !== datum);
             const srcNode = this.refs.nodesRef.current.find(n => n.id === srcId);
             const tgtNode = this.refs.nodesRef.current.find(n => n.id === tgtId);
-            if (srcNode) srcNode.edges = srcNode.edges.filter(e => e.end.id !== tgtId);
-            if (tgtNode && !datum.directed) tgtNode.edges = tgtNode.edges.filter(e => e.end.id !== srcId);
+            
+            // PROTECCIÓN: Validar que srcNode.edges y tgtNode.edges existan
+            if (srcNode && srcNode.edges) srcNode.edges = srcNode.edges.filter(e => e.end.id !== tgtId);
+            if (tgtNode && tgtNode.edges && !datum.directed) tgtNode.edges = tgtNode.edges.filter(e => e.end.id !== srcId);
           }
         }
         this.physics.updateNodes(this.refs.nodesRef.current);
@@ -416,6 +426,8 @@ export class InteractionManager {
   private resolveAlgorithm(algorithmId: string) {
     if (algorithmId === 'bubble-sort') return new BubbleSort();
     if (algorithmId === 'inorder') return new Inorder();
+    if (algorithmId === 'bogo-sort') return new BogoSort(); // <-- AGREGADO BOGO
+    if (algorithmId === 'merge-sort') return new MergeSort(); // <-- AGREGADO MERGE
     return null;
   }
 
