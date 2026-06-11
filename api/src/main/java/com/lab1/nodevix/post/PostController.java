@@ -1,5 +1,7 @@
 package com.lab1.nodevix.post;
 
+import com.lab1.nodevix.post.dtos.CloneRequest;
+import com.lab1.nodevix.post.dtos.CloneResponse;
 import com.lab1.nodevix.post.dtos.InteractionResponse;
 import com.lab1.nodevix.post.dtos.PostListResponse;
 import com.lab1.nodevix.security.JWTService;
@@ -87,4 +89,11 @@ public class PostController {
         return ResponseEntity.ok(postService.getInteraction(id, userId));
     }
 
+    @PostMapping("/clone")
+    public ResponseEntity<CloneResponse> cloneProject(@RequestHeader(value = "Authorization") String authHeader, @RequestBody CloneRequest request){
+
+        String token = authHeader.substring(7);
+        Long userID = jwtService.extractUserId(token);
+        return ResponseEntity.ok(postService.cloneProject(userID, request));
+    }
 }

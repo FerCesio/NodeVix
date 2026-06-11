@@ -30,15 +30,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Vincula el CORS que definimos abajo
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+                // Al ser STATELESS, dependemos 100% de que el Bearer Token viaje en el header de Axios
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/posts/**").permitAll()
+
+                        // CORRECCIÓN CLAVE: Solo permitimos ver posts públicamente (GET)
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+
+                        // Cualquier otra acción en posts (POST para crear/clonar, DELETE, etc.) EXIGE TOKEN
+                        .requestMatchers(HttpMethod.POST, "/api/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
+
                         .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated()
+                )
+                // Evita que Spring tire redirects 302 si el token falla en la API, mandando un 401 limpio a React
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new org.springframework.security.web.authentication.HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED))
+                )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth -> oauth
                         .successHandler(oAuth2LoginSuccessHandler)
