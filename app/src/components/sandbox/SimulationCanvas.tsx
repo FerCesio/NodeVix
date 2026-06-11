@@ -233,24 +233,34 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
 
   return (
     <div className={`canvas-wrapper${mode === 'DELETE_ANY' ? ' mode-delete' : ''}`}>
+      
+      {/* 1. ENVUELVO EL PANEL DE HERRAMIENTAS */}
       {!readOnly && (
-        <SandboxPanel activeMode={mode} onModeChange={setMode} onGeneratePreset={handleGeneratePreset} onRunAlgorithm={handleRunAlgorithm} />
+        <div data-html2canvas-ignore="true">
+          <SandboxPanel activeMode={mode} onModeChange={setMode} onGeneratePreset={handleGeneratePreset} onRunAlgorithm={handleRunAlgorithm} />
+        </div>
       )}
       
+      {/* (Opcional) Si también querés ocultar el cartel de Flags, envolvelo igual */}
       <FlagsPanel structures={structures} selectedNodeId={selectedNodeId} />
+      
       <svg ref={svgRef} style={{ width: '100%', height: '100%', minHeight: '800px', display: 'block' }}></svg>
       
+      {/* 2. ENVUELVO EL PANEL DE PROPIEDADES (El que sale al clickear un nodo) */}
       {!readOnly && (
-        <PropertyPanel 
-          node={activeNode} 
-          onUpdate={handleUpdateNode}
-          onClose={() => {
-            selectedNodeRef.current = null;
-            setActiveNode(null);
-            if (rendererRef.current) rendererRef.current.update();
-          }}
-        />
+        <div data-html2canvas-ignore="true">
+          <PropertyPanel 
+            node={activeNode} 
+            onUpdate={handleUpdateNode}
+            onClose={() => {
+              selectedNodeRef.current = null;
+              setActiveNode(null);
+              if (rendererRef.current) rendererRef.current.update();
+            }}
+          />
+        </div>
       )}
+      
     </div>
   );
 });

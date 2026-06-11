@@ -3,12 +3,14 @@ import { api } from "../services/api";
 import LoginForm from "../components/user/LoginForm";
 import RegisterForm from "../components/user/RegisterForm";
 import "../styles/general.css";
-import type { CreateProject, UpdateProject } from "../types/project";
 import toast, { Toaster } from "react-hot-toast";
 import ReturnButton from "../components/general/ReturnButton";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { SimulationCanvas, type SimulationCanvasRef } from "../components/sandbox/SimulationCanvas";
+
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function ProjectPage() {
     const { id } = useParams<{ id: string }>();
@@ -77,7 +79,6 @@ export default function ProjectPage() {
                 description: projectDesc,
                 content: JSON.stringify(canvasContent) 
             };
-            
 
             if (!id || id === "new") {
                 const response = await api.post("/manage/create", payload);
@@ -132,31 +133,167 @@ export default function ProjectPage() {
       }
     };
 
+    // --- LÓGICA DE EXPORTACIÓN Y SHARE ---
+    const handleShare = async () => {
+        // Modal de menú para compartir (preparando el terreno para las redes sociales)
+        const result = await Swal.fire({
+            title: "Share Project",
+            text: "Choose how you want to export or share your structure:",
+            icon: "info",
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonColor: "#2ecc71", // Verde para PDF
+            denyButtonColor: "#3498db",    // Azul para redes
+            cancelButtonColor: "#888",
+            confirmButtonText: "📄 Export as PDF",
+            denyButtonText: "🌐 Share to Socials",
+            cancelButtonText: "Close",
+            background: "#1a1a1a",
+            color: "#fff",
+        });
+
+        if (result.isConfirmed) {
+            exportToPDF();
+        } else if (result.isDenied) {
+            toast("Social sharing is coming soon!", { icon: "🚀" });
+        }
+    };
+
+    const exportToPDF = async () => {
+        // Buscamos el div contenedor del canvas
+        const element = document.getElementById("canvas-export-container");
+        if (!element) return;
+
+        const loadingToast = toast.loading("Generando documento PDF de alta calidad...");
+
+        try {
+            // Capturamos el DOM con mayor escala para que los nodos no salgan pixelados
+            const canvasImage = await html2canvas(element, {
+                scale: 3, // Aumentamos la calidad
+                useCORS: true,
+                backgroundColor: "#1a1a1a" // Fondo de la captura
+            });
+
+            const imgData = canvasImage.toDataURL("image/png");
+            
+            // Creamos el PDF en A4 apaisado usando milímetros (más fácil para calcular márgenes de diseño)
+            const pdf = new jsPDF({
+                orientation: "landscape",
+                unit: "mm",
+                format: "a4"
+            });
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();   // 297 mm
+            const pdfHeight = pdf.internal.pageSize.getHeight(); // 210 mm
+
+            // 1. PINTAR EL FONDO DEL PDF COMPLETAMENTE OSCURO
+            pdf.setFillColor(26, 26, 26); // RGB para #1a1a1a
+            pdf.rect(0, 0, pdfWidth, pdfHeight, "F");
+
+            // 2. ENCABEZADO ELEGANTE
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(18);
+            pdf.setTextColor(255, 255, 255); // Texto blanco
+            const title = projectName || "NodeVix Simulation";
+            pdf.text(title, 15, 20);
+
+            // Línea separadora bajo el título
+            pdf.setDrawColor(60, 60, 60); // Línea gris oscura
+            pdf.setLineWidth(0.5);
+            pdf.line(15, 25, pdfWidth - 15, 25);
+
+            // 3. CÁLCULO DE ÁREA PARA LA IMAGEN (Con márgenes)
+            const marginX = 15;
+            const marginTop = 35; // Espacio libre para el título
+            const marginBottom = 20; // Espacio libre para el pie de página
+            
+            const maxImgWidth = pdfWidth - (marginX * 2);
+            const maxImgHeight = pdfHeight - marginTop - marginBottom;
+
+            // Mantener la relación de aspecto sin deformar
+            const imgWidth = canvasImage.width;
+            const imgHeight = canvasImage.height;
+            const ratio = Math.min(maxImgWidth / imgWidth, maxImgHeight / imgHeight);
+            
+            const renderWidth = imgWidth * ratio;
+            const renderHeight = imgHeight * ratio;
+            
+            // Centrar la imagen en su caja contenedora
+            const imgX = marginX + (maxImgWidth - renderWidth) / 2;
+            const imgY = marginTop + (maxImgHeight - renderHeight) / 2;
+
+            // 4. INSERTAR LA IMAGEN Y PONERLE UN MARCO SUTIL
+            pdf.addImage(imgData, "PNG", imgX, imgY, renderWidth, renderHeight);
+            
+            pdf.setDrawColor(100, 100, 100); // Marco gris medio
+            pdf.setLineWidth(0.3);
+            pdf.rect(imgX, imgY, renderWidth, renderHeight);
+
+            // 5. PIE DE PÁGINA (FOOTER)
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(10);
+            pdf.setTextColor(150, 150, 150); // Texto gris claro
+            const dateStr = new Date().toLocaleDateString();
+            pdf.text(`Exported from NodeVix platform on ${dateStr}`, 15, pdfHeight - 10);
+            
+            // Branding a la derecha
+            pdf.setFont("helvetica", "italic");
+            pdf.text("www.nodevix.app", pdfWidth - 15, pdfHeight - 10, { align: "right" });
+
+            // Descargamos el archivo
+            const fileName = projectName ? `${projectName.replace(/\s+/g, "_")}_NodeVix.pdf` : "NodeVix_Export.pdf";
+            pdf.save(fileName);
+            
+            toast.success("PDF exportado con éxito!", { id: loadingToast });
+        } catch (error) {
+            console.error("PDF Export error:", error);
+            toast.error("Error al generar el PDF.", { id: loadingToast });
+        }
+    };
+
     return (
         <div className="main-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', padding: 0, height: '100vh', width: '100vw', overflow: 'hidden' }}>
             <Toaster/>
-            <div className="top-left-nav">
-              <div className="nav-save-group">
-                  <button className="btn btn-return" onClick={() => window.location.assign("/home")}>
-                    <span>Home</span>
-                  </button>
-
-                  <input 
-                    className="nav-input" 
-                    type="text" 
-                    placeholder="Project Name..." 
-                    value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
-                  />
-                  <button className="btn btn-nav-save btn-return" onClick={handleSaveTrigger}>
-                      <span>Save</span>
-                  </button>
-                  {isLoggedIn && (
-                    <button className="btn btn-return" onClick={handlePublish}>
-                      <span>Publish</span>
+            
+            {/* NUEVA ESTRUCTURA DEL TOPBAR: Ahora usa Flexbox para tener elementos a izq y derecha */}
+            <div style={{ 
+                position: 'absolute', 
+                top: '20px', 
+                left: '20px', 
+                right: '20px', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                zIndex: 10 
+            }}>
+                <div className="nav-save-group" style={{ margin: 0 }}>
+                    <button className="btn btn-return" onClick={() => window.location.assign("/home")}>
+                        <span>Home</span>
                     </button>
-                  )}
-              </div>
+
+                    <input 
+                        className="nav-input" 
+                        type="text" 
+                        placeholder="Project Name..." 
+                        value={projectName}
+                        onChange={(e) => setProjectName(e.target.value)}
+                    />
+                    <button className="btn btn-nav-save btn-return" onClick={handleSaveTrigger}>
+                        <span>Save</span>
+                    </button>
+                    {isLoggedIn && (
+                        <button className="btn btn-return" onClick={handlePublish}>
+                            <span>Publish</span>
+                        </button>
+                    )}
+                </div>
+
+                {/* BOTÓN SHARE A LA DERECHA */}
+                <div className="nav-share-group">
+                    <button className="btn btn-return" onClick={handleShare} style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: '130px' }}>
+                        <span>Share ↗</span>
+                    </button>
+                </div>
             </div>
 
             {view === 'auth' && (
@@ -204,7 +341,10 @@ export default function ProjectPage() {
                     <span>Loading project...</span>
                 </div>
             ) : (
-                <SimulationCanvas ref={canvasRef} initialData={projectContent} />
+                // Envolvemos el canvas en este DIV con ID explícito para que html2canvas sepa qué parte capturar
+                <div id="canvas-export-container" style={{ flex: 1, width: '100%', height: '100%', overflow: 'hidden' }}>
+                    <SimulationCanvas ref={canvasRef} initialData={projectContent} />
+                </div>
             )}
         </div>
     );

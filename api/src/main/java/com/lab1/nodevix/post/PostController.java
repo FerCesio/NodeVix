@@ -91,7 +91,6 @@ public class PostController {
 
     @PostMapping("/clone")
     public ResponseEntity<CloneResponse> cloneProject(@RequestHeader(value = "Authorization") String authHeader, @RequestBody CloneRequest request){
-
         String token = authHeader.substring(7);
         Long userID = jwtService.extractUserId(token);
         return ResponseEntity.ok(postService.cloneProject(userID, request));
