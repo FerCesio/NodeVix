@@ -94,7 +94,10 @@ export class CanvasRenderer {
         return `${sourceId}-${targetId}-${linkType}`;
       })
       .join(
-        enter => enter.append('line'),
+        enter => enter.append('line').attr('class', 'entering').each(function() {
+          const el = this as SVGLineElement;
+          setTimeout(() => el.classList.remove('entering'), 200);
+        }),
         update => update,
         exit => exit.remove() // <-- Ahora sí D3 sabe exactamente cuáles remover al avanzar el paso
       )
@@ -108,12 +111,18 @@ export class CanvasRenderer {
       .data(dataNodes, d => d.id)
       .join(
         enter => {
-          const g = enter.append('g').attr('class', 'node node-data');
-          g.append('circle')
-            .attr('r', d => 20 * (d.scale ?? 1))
+          const g = enter.append('g').attr('class', 'node node-data node-entering')
+            .attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);
+          const circle = g.append('circle')
+            .attr('r', 0)
             .attr('fill', d => this.getNodeColor(d))
             .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
             .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');
+          circle.transition().duration(250).ease(d3.easeBackOut)
+            .attr('r', (d: INode) => 20 * (d.scale ?? 1))
+            .on('end', function() {
+              (this.parentNode as Element)?.classList.remove('node-entering');
+            });
           g.append('text')
             .attr('text-anchor', 'middle')
             .attr('dy', '0.35em')
@@ -123,8 +132,9 @@ export class CanvasRenderer {
           return g;
         },
         update => {
+          update.filter(':not(.node-entering)').select('circle')
+            .attr('r', d => 20 * (d.scale ?? 1));
           update.select('circle')
-            .attr('r', d => 20 * (d.scale ?? 1))
             .attr('fill', d => this.getNodeColor(d))
             .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
             .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');

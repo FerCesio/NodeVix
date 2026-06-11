@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AVAILABLE_TOOLS, type PanelSection, type ToolMode } from '../../types/tools';
 import { StructuresSection } from './StructuresSection';
 import { AlgorithmsSection } from './AlgorithmsSection';
@@ -11,54 +11,64 @@ interface SandboxPanelProps {
   onRunAlgorithm: (algorithmId: string) => void;
 }
 
-const SECTIONS: { id: PanelSection; label: string; icon: string }[] = [
-  { id: 'TOOLS', label: 'Tools', icon: '🔧' },
-  { id: 'STRUCTURES', label: 'Structures', icon: '📐' },
-  { id: 'ALGORITHMS', label: 'Algorithms', icon: '⚡' },
+const SECTIONS: { id: PanelSection; icon: string }[] = [
+  { id: 'TOOLS', icon: '🔧' },
+  { id: 'STRUCTURES', icon: '📐' },
+  { id: 'ALGORITHMS', icon: '⚡' },
 ];
 
 export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeChange, onGeneratePreset, onRunAlgorithm }) => {
-  const [activeSection, setActiveSection] = useState<PanelSection>('TOOLS');
+  const [activeSection, setActiveSection] = useState<PanelSection | null>('TOOLS');
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      const tool = AVAILABLE_TOOLS.find(t => t.shortcut.toLowerCase() === e.key.toLowerCase());
+      if (tool) onModeChange(tool.mode);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onModeChange]);
 
   const toggleSection = (section: PanelSection) => {
-    setActiveSection(prev => prev === section ? section : section);
+    setActiveSection(prev => prev === section ? null : section);
   };
 
   return (
     <div className="sandbox-panel">
-      {SECTIONS.map(section => (
-        <div key={section.id} className="panel-section">
+      <div className="panel-tabs">
+        {SECTIONS.map(section => (
           <button
-            className={`section-tab ${activeSection === section.id ? 'active' : ''}`}
+            key={section.id}
+            className={`panel-tab-btn ${activeSection === section.id ? 'active' : ''}`}
             onClick={() => toggleSection(section.id)}
+            title={section.id}
           >
-            <span>{section.icon} {section.label}</span>
-            <span className="tab-indicator">{activeSection === section.id ? '▼' : '▶'}</span>
+            {section.icon}
           </button>
+        ))}
+      </div>
 
-          {activeSection === section.id && (
-            <div className="section-content">
-              {section.id === 'TOOLS' && AVAILABLE_TOOLS.map(tool => (
-                <button
-                  key={tool.mode}
-                  className={`tool-button ${activeMode === tool.mode ? 'active' : ''}`}
-                  onClick={() => onModeChange(tool.mode)}
-                  title={tool.label}
-                >
-                  <span className="tool-icon">{tool.icon}</span>
-                  <span className="tool-label">{tool.label}</span>
-                </button>
-              ))}
-              {section.id === 'STRUCTURES' && (
-                <StructuresSection onGenerate={onGeneratePreset} />
-              )}
-              {section.id === 'ALGORITHMS' && (
-                <AlgorithmsSection onRun={onRunAlgorithm} />
-              )}
-            </div>
-          )}
-        </div>
-      ))}
+      <div className={`panel-content ${activeSection ? 'open' : ''}`}>
+        {activeSection === 'TOOLS' && AVAILABLE_TOOLS.map(tool => (
+          <button
+            key={tool.mode}
+            className={`tool-button ${activeMode === tool.mode ? 'active' : ''}`}
+            onClick={() => onModeChange(tool.mode)}
+            title={`${tool.label} (${tool.shortcut})`}
+          >
+            <span className="tool-icon">{tool.icon}</span>
+            <span className="tool-label">{tool.label}</span>
+            <kbd className="tool-shortcut">{tool.shortcut}</kbd>
+          </button>
+        ))}
+        {activeSection === 'STRUCTURES' && (
+          <StructuresSection onGenerate={onGeneratePreset} />
+        )}
+        {activeSection === 'ALGORITHMS' && (
+          <AlgorithmsSection onRun={onRunAlgorithm} />
+        )}
+      </div>
     </div>
   );
 };

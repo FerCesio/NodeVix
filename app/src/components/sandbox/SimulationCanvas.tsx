@@ -232,7 +232,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
   };
 
   return (
-    <div className={`canvas-wrapper${mode === 'DELETE_ANY' ? ' mode-delete' : ''}`}>
+    <div className={`canvas-wrapper mode-${mode === 'SELECT' ? 'select' : mode === 'ADD_NODE' ? 'add-node' : mode === 'LINK' ? 'link' : mode === 'ARROW' ? 'arrow' : 'delete'}`}>
       
       {/* 1. ENVUELVO EL PANEL DE HERRAMIENTAS */}
       {!readOnly && (

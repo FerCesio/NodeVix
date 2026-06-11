@@ -55,10 +55,12 @@ rect {
     stroke-width: 1.5px;
 }
 
-/* DELETE mode feedback */
-.canvas-wrapper.mode-delete svg {
-    cursor: crosshair;
-}
+/* Contextual cursors per mode */
+.canvas-wrapper.mode-select svg { cursor: default; }
+.canvas-wrapper.mode-add-node svg { cursor: cell; }
+.canvas-wrapper.mode-link svg { cursor: pointer; }
+.canvas-wrapper.mode-arrow svg { cursor: pointer; }
+.canvas-wrapper.mode-delete svg { cursor: crosshair; }
 
 .canvas-wrapper.mode-delete g.node:hover circle {
     stroke: #e74c3c;
@@ -101,4 +103,14 @@ g.node-algo .algo-step {
     pointer-events: none;
     user-select: none;
     -webkit-user-select: none;
+}
+
+/* Micro-flash on link creation */
+@keyframes linkFlash {
+    0% { stroke-opacity: 0; stroke-width: 4px; }
+    100% { stroke-opacity: 1; stroke-width: 2px; }
+}
+
+line.entering {
+    animation: linkFlash 0.2s ease-out forwards;
 }

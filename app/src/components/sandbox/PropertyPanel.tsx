@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import '../../styles/property-panel.css'; 
 import type { INode } from '../../sandbox/interfaces';
 
@@ -9,6 +9,15 @@ interface PropertyPanelProps {
 }
 
 export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, onClose }) => {
+  useEffect(() => {
+    if (!node) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [node, onClose]);
+
   if (!node) return null;
 
   return (
@@ -19,13 +28,11 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
       </div>
       
       <div className="property-panel-content">
-        {/* ID / Nombre del Nodo (Deshabilitado para no romper las edges) */}
         <div className="property-group">
           <label>Node ID</label>
           <input type="text" value={node.id} disabled className="disabled-input" />
         </div>
 
-        {/* Valor numérico interno de la simulación */}
         <div className="property-group">
           <label>Value</label>
           <input
@@ -47,7 +54,6 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
           </div>
         </div>
 
-        {/* Escala / Tamaño del nodo en el canvas */}
         <div className="property-group">
           <label>Scale (Size)</label>
           <div className="range-wrapper">

@@ -22,63 +22,91 @@
     transform: translateY(-50%);
     z-index: 100;
     display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.panel-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    position: relative;
+}
+
+.panel-tab-btn {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.panel-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.panel-tab-btn.active {
+    background: #2ecc71;
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);
+}
+
+.panel-content {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: -4px;
+    display: flex;
     flex-direction: column;
     gap: 4px;
     background: rgba(15, 15, 15, 0.85);
     backdrop-filter: blur(8px);
-    padding: 12px;
-    border-radius: 16px;
+    padding: 10px;
+    border-radius: 0 14px 14px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: none;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    min-width: 180px;
+    width: 180px;
+    max-height: 230px;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.panel-section {
-    display: flex;
-    flex-direction: column;
+.panel-content.open {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
 }
 
-.section-tab {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.panel-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.panel-content::-webkit-scrollbar-track {
     background: transparent;
-    border: none;
-    color: #aaa;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.15s ease;
 }
 
-.section-tab:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #e0e0e0;
+.panel-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
 }
 
-.section-tab.active {
-    color: #2ecc71;
-}
-
-.tab-indicator {
-    font-size: 0.65rem;
-}
-
-.section-content {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 6px 0 6px 8px;
-}
-
-.section-placeholder {
-    font-size: 0.75rem;
-    color: #666;
-    padding: 4px 12px;
-    font-style: italic;
-}
+/* Legacy section styles removed — now using panel-tabs + panel-content layout */
 
 .tool-button {
     display: flex;
@@ -112,6 +140,21 @@
 .tool-label {
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+.tool-shortcut {
+    margin-left: auto;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #888;
+    font-family: monospace;
+}
+
+.tool-button.active .tool-shortcut {
+    background: rgba(0, 0, 0, 0.2);
+    color: #000;
 }
 
 .flags-panel {
