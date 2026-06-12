@@ -17,6 +17,7 @@ export class CanvasRenderer {
   private linkSelection: d3.Selection<SVGLineElement, SimLink, SVGGElement, unknown> | null = null;
   private selectedNodeId: string | null = null;
   private currentHighlights: Snapshot['highlights'] = undefined;
+  private pulsedNodes: Set<string> = new Set();
 
   constructor(layers: Layers, physics: PhysicsEngine) {
     this.layers = layers;
@@ -31,6 +32,7 @@ export class CanvasRenderer {
   }
 
   setHighlights(highlights: Snapshot['highlights']): void {
+    if (!highlights) this.pulsedNodes.clear();
     this.currentHighlights = highlights;
     this.update();
   }
@@ -139,6 +141,27 @@ export class CanvasRenderer {
             .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
             .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');
           update.select('text').text(d => d.value);
+
+          // Pulse highlighted nodes (only once per highlight change)
+          if (this.currentHighlights) {
+            const highlighted = new Set([
+              ...(this.currentHighlights.swapping ?? []),
+              ...(this.currentHighlights.comparing ?? []),
+              ...(this.currentHighlights.sorted ?? [])
+            ]);
+            const toPulse = [...highlighted].filter(id => !this.pulsedNodes.has(id));
+            if (toPulse.length > 0) {
+              const pulseSet = new Set(toPulse);
+              toPulse.forEach(id => this.pulsedNodes.add(id));
+              update.filter(d => pulseSet.has(d.id))
+                .select('circle')
+                .transition().duration(150)
+                .attr('r', d => 24 * (d.scale ?? 1))
+                .transition().duration(150)
+                .attr('r', d => 20 * (d.scale ?? 1));
+            }
+          }
+
           return update;
         }
       );
