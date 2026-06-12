@@ -290,6 +290,11 @@ export class InteractionManager {
       this.executors.delete(algoNode.id);
       algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
       this.renderer.setHighlights(undefined);
+
+      this.refs.linksRef.current = this.refs.linksRef.current.filter(l => (l as any).type !== 'algo-snapshot');
+      this.physics.updateLinks(this.refs.linksRef.current);
+      this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+
       this.renderer.update();
     }
   }
@@ -385,6 +390,9 @@ export class InteractionManager {
       }
     }
     this.renderer.setHighlights(undefined);
+    this.refs.linksRef.current = this.refs.linksRef.current.filter(l => (l as any).type !== 'algo-snapshot');
+    this.physics.updateLinks(this.refs.linksRef.current);
+    this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
   }
 
   private getOrCreateExecutor(algoNode: IAlgorithmNode): AlgorithmExecutor | null {
