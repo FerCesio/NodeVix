@@ -29,7 +29,7 @@ export type Snapshot = {
   highlights?: {
     comparing?: string[];
     sorted?: string[];
-    swapping?: [string, string];
+    swapping?: string[];
   };
 };
 
