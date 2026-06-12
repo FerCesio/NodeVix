@@ -12,13 +12,12 @@ interface SandboxPanelProps {
 }
 
 const SECTIONS: { id: PanelSection; icon: string }[] = [
-  { id: 'TOOLS', icon: '🔧' },
   { id: 'STRUCTURES', icon: '📐' },
   { id: 'ALGORITHMS', icon: '⚡' },
 ];
 
 export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeChange, onGeneratePreset, onRunAlgorithm }) => {
-  const [activeSection, setActiveSection] = useState<PanelSection | null>('TOOLS');
+  const [activeSection, setActiveSection] = useState<PanelSection | null>(null);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -35,40 +34,46 @@ export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeCh
   };
 
   return (
-    <div className="sandbox-panel">
-      <div className="panel-tabs">
-        {SECTIONS.map(section => (
+    <>
+      {/* Tools toolbar - bottom left */}
+      <div className="tools-bar">
+        {AVAILABLE_TOOLS.map(tool => (
           <button
-            key={section.id}
-            className={`panel-tab-btn ${activeSection === section.id ? 'active' : ''}`}
-            onClick={() => toggleSection(section.id)}
-            title={section.id}
+            key={tool.mode}
+            className={`tools-bar-btn ${activeMode === tool.mode ? 'active' : ''}`}
+            onClick={() => onModeChange(tool.mode)}
+            title={`${tool.label} (${tool.shortcut})`}
           >
-            {section.icon}
+            <span className="tools-bar-icon">{tool.icon}</span>
+            <kbd className="tools-bar-kbd">{tool.shortcut}</kbd>
           </button>
         ))}
       </div>
 
-      <div className={`panel-content ${activeSection ? 'open' : ''}`}>
-        {activeSection === 'TOOLS' && AVAILABLE_TOOLS.map(tool => (
-          <button
-            key={tool.mode}
-            className={`tool-button ${activeMode === tool.mode ? 'active' : ''}`}
-            onClick={() => onModeChange(tool.mode)}
-            title={`${tool.label} (${tool.shortcut})`}
-          >
-            <span className="tool-icon">{tool.icon}</span>
-            <span className="tool-label">{tool.label}</span>
-            <kbd className="tool-shortcut">{tool.shortcut}</kbd>
-          </button>
-        ))}
-        {activeSection === 'STRUCTURES' && (
-          <StructuresSection onGenerate={onGeneratePreset} />
-        )}
-        {activeSection === 'ALGORITHMS' && (
-          <AlgorithmsSection onRun={onRunAlgorithm} />
-        )}
+      {/* Structures/Algorithms panel - left center */}
+      <div className="sandbox-panel">
+        <div className="panel-tabs">
+          {SECTIONS.map(section => (
+            <button
+              key={section.id}
+              className={`panel-tab-btn ${activeSection === section.id ? 'active' : ''}`}
+              onClick={() => toggleSection(section.id)}
+              title={section.id}
+            >
+              {section.icon}
+            </button>
+          ))}
+        </div>
+
+        <div className={`panel-content ${activeSection ? 'open' : ''}`}>
+          {activeSection === 'STRUCTURES' && (
+            <StructuresSection onGenerate={onGeneratePreset} />
+          )}
+          {activeSection === 'ALGORITHMS' && (
+            <AlgorithmsSection onRun={onRunAlgorithm} />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };

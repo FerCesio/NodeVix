@@ -15,6 +15,63 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+/* Tools bar - bottom left horizontal */
+.tools-bar {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100;
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.tools-bar-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tools-bar-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tools-bar-btn.active {
+    background: #2ecc71;
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);
+}
+
+.tools-bar-icon {
+    font-size: 1.3rem;
+}
+
+.tools-bar-kbd {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #888;
+    font-family: monospace;
+}
+
+.tools-bar-btn.active .tools-bar-kbd {
+    background: rgba(0, 0, 0, 0.2);
+    color: #000;
+}
+
 .sandbox-panel {
     position: absolute;
     top: 50%;
