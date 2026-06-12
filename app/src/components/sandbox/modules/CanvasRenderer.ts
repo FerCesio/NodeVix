@@ -34,7 +34,18 @@ export class CanvasRenderer {
   setHighlights(highlights: Snapshot['highlights']): void {
     if (!highlights) this.pulsedNodes.clear();
     this.currentHighlights = highlights;
-    this.update();
+  }
+
+  transitionHighlights(onComplete?: () => void): void {
+    const duration = 200;
+    this.layers.nodes
+      .selectAll<SVGGElement, INode>('g.node-data')
+      .select('circle')
+      .transition().duration(duration)
+      .attr('fill', d => this.getNodeColor(d))
+      .on('end', () => { onComplete?.(); onComplete = undefined; });
+    // Fallback if no nodes to transition
+    if (this.layers.nodes.selectAll('g.node-data').empty() && onComplete) onComplete();
   }
 
   private getNodeColor(d: INode): string {
@@ -101,7 +112,14 @@ export class CanvasRenderer {
           setTimeout(() => el.classList.remove('entering'), 200);
         }),
         update => update,
-        exit => exit.remove() // <-- Ahora sí D3 sabe exactamente cuáles remover al avanzar el paso
+        exit => {
+          exit.filter(d => d.type === 'algo-snapshot' || d.type === 'algorithm').remove();
+          exit.filter(d => d.type !== 'algo-snapshot' && d.type !== 'algorithm')
+            .transition().duration(200)
+            .attr('stroke-opacity', 0)
+            .remove();
+          return exit;
+        }
       )
       .attr('stroke', d => d.type === 'algorithm' ? '#3498db' : d.directed ? '#e74c3c' : '#555')
       .attr('stroke-width', 2)
@@ -163,6 +181,16 @@ export class CanvasRenderer {
           }
 
           return update;
+        },
+        exit => {
+          exit.select('circle')
+            .transition().duration(200).ease(d3.easeBackIn)
+            .attr('r', 0);
+          exit.select('text')
+            .transition().duration(150)
+            .attr('opacity', 0);
+          exit.transition().duration(200).remove();
+          return exit;
         }
       );
 
@@ -171,7 +199,13 @@ export class CanvasRenderer {
       .data(algoNodes, d => d.id)
       .join(
         enter => {
-          const g = enter.append('g').attr('class', 'node node-algo');
+          const g = enter.append('g').attr('class', 'node node-algo node-entering')
+            .attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0}) scale(0)`)
+            .attr('opacity', 0);
+          g.transition().duration(250).ease(d3.easeBackOut)
+            .attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0}) scale(1)`)
+            .attr('opacity', 1)
+            .on('end', function() { (this as Element).classList.remove('node-entering'); });
           g.append('rect')
             .attr('x', -60).attr('y', -30)
             .attr('width', 120).attr('height', 60)
@@ -185,10 +219,10 @@ export class CanvasRenderer {
             .attr('font-size', '11px')
             .text(d => d.label);
           const btns = g.append('g').attr('class', 'algo-buttons').attr('transform', 'translate(0, 4)');
-          btns.append('text').attr('class', 'algo-btn btn-back').attr('x', -35).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('⏪');
-          btns.append('text').attr('class', 'algo-btn btn-play').attr('x', -10).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('▶️');
-          btns.append('text').attr('class', 'algo-btn btn-fwd').attr('x', 15).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('⏩');
-          btns.append('text').attr('class', 'algo-btn btn-reset').attr('x', 40).attr('text-anchor', 'middle').attr('fill', '#fff').attr('font-size', '14px').text('🔄');
+          btns.append('image').attr('class', 'algo-btn btn-back').attr('x', -47).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/back.png', import.meta.url).href);
+          btns.append('image').attr('class', 'algo-btn btn-play').attr('x', -22).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/play.png', import.meta.url).href);
+          btns.append('image').attr('class', 'algo-btn btn-fwd').attr('x', 3).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/forward.png', import.meta.url).href);
+          btns.append('image').attr('class', 'algo-btn btn-reset').attr('x', 28).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/reset.png', import.meta.url).href);
           g.append('text')
             .attr('class', 'algo-step')
             .attr('text-anchor', 'middle')
@@ -203,6 +237,13 @@ export class CanvasRenderer {
           update.select('rect').attr('fill', d => this.getAlgoColor(d));
           update.select('.algo-step').text(d => this.getStepLabel(d));
           return update;
+        },
+        exit => {
+          exit.transition().duration(200).ease(d3.easeBackIn)
+            .attr('transform', d => `translate(${(d as any).x ?? 0},${(d as any).y ?? 0}) scale(0)`)
+            .attr('opacity', 0)
+            .remove();
+          return exit;
         }
       );
   }
@@ -291,7 +332,7 @@ export class CanvasRenderer {
     this.nodeSelection
       ?.attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);
 
-    this.algoSelection
-      ?.attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);
+    this.algoSelection?.filter(':not(.node-entering)')
+      .attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);
   }
 }

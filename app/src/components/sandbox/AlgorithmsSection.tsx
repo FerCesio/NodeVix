@@ -8,18 +8,18 @@ interface AlgorithmsSectionProps {
 
 export const AlgorithmsSection: React.FC<AlgorithmsSectionProps> = ({ onRun }) => {
   const draggingRef = useRef<string | null>(null);
-  const ghostRef = useRef<HTMLDivElement | null>(null);
+  const ghostRef = useRef<HTMLElement | null>(null);
 
   const startDrag = (algId: string, icon: string, e: React.MouseEvent) => {
     e.preventDefault();
     draggingRef.current = algId;
-    onRun(algId); // Set pending ref immediately on drag start
+    onRun(algId);
     const btn = e.currentTarget as HTMLElement;
     btn.classList.add('dragging');
 
-    const ghost = document.createElement('div');
+    const ghost = document.createElement('img');
     ghost.className = 'drag-ghost';
-    ghost.textContent = icon;
+    ghost.src = icon;
     ghost.style.left = `${e.clientX}px`;
     ghost.style.top = `${e.clientY}px`;
     document.body.appendChild(ghost);
@@ -71,7 +71,7 @@ export const AlgorithmsSection: React.FC<AlgorithmsSectionProps> = ({ onRun }) =
           onMouseDown={(e) => startDrag(alg.id, alg.icon, e)}
           title={alg.label}
         >
-          <span className="tool-icon">{alg.icon}</span>
+          <img src={alg.icon} alt={alg.label} className="tool-icon-img" />
           <span className="tool-label">{alg.label}</span>
         </button>
       ))}

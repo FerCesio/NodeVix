@@ -4,6 +4,9 @@ import { StructuresSection } from './StructuresSection';
 import { AlgorithmsSection } from './AlgorithmsSection';
 import '../../styles/sandbox.css';
 
+import structuresIcon from '../../assets/icons/structures.png';
+import algorithmsIcon from '../../assets/icons/algorithms.png';
+
 interface SandboxPanelProps {
   activeMode: ToolMode;
   onModeChange: (mode: ToolMode) => void;
@@ -12,8 +15,8 @@ interface SandboxPanelProps {
 }
 
 const SECTIONS: { id: PanelSection; icon: string }[] = [
-  { id: 'STRUCTURES', icon: '📐' },
-  { id: 'ALGORITHMS', icon: '⚡' },
+  { id: 'STRUCTURES', icon: structuresIcon },
+  { id: 'ALGORITHMS', icon: algorithmsIcon },
 ];
 
 export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeChange, onGeneratePreset, onRunAlgorithm }) => {
@@ -44,7 +47,7 @@ export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeCh
             onClick={() => onModeChange(tool.mode)}
             title={`${tool.label} (${tool.shortcut})`}
           >
-            <span className="tools-bar-icon">{tool.icon}</span>
+            <img src={tool.icon} alt={tool.label} className="tools-bar-icon" />
             <kbd className="tools-bar-kbd">{tool.shortcut}</kbd>
           </button>
         ))}
@@ -60,7 +63,7 @@ export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeCh
               onClick={() => toggleSection(section.id)}
               title={section.id}
             >
-              {section.icon}
+              <img src={section.icon} alt={section.id} width={20} height={20} />
             </button>
           ))}
         </div>

@@ -76,9 +76,14 @@ function cycle(cx: number, cy: number): { nodes: INode[]; links: SimLink[] } {
   return { nodes, links };
 }
 
+import linkedListIcon from '../../assets/icons/linked-list.png';
+import binaryTreeIcon from '../../assets/icons/binary-tree.png';
+import completeIcon from '../../assets/icons/complete.png';
+import cycleIcon from '../../assets/icons/cycle.png';
+
 export const PRESETS: PresetStructure[] = [
-  { id: 'linked-list', label: 'Linked List', icon: '→', generate: linkedList },
-  { id: 'binary-tree', label: 'Binary Tree', icon: '🌳', generate: binaryTree },
-  { id: 'complete', label: 'Complete K5', icon: '⬡', generate: completeGraph },
-  { id: 'cycle', label: 'Cycle', icon: '🔄', generate: cycle },
+  { id: 'linked-list', label: 'Linked List', icon: linkedListIcon, generate: linkedList },
+  { id: 'binary-tree', label: 'Binary Tree', icon: binaryTreeIcon, generate: binaryTree },
+  { id: 'complete', label: 'Complete K5', icon: completeIcon, generate: completeGraph },
+  { id: 'cycle', label: 'Cycle', icon: cycleIcon, generate: cycle },
 ];

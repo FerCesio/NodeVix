@@ -55,7 +55,13 @@
 }
 
 .tools-bar-icon {
-    font-size: 1.3rem;
+    width: 22px;
+    height: 22px;
+}
+
+.tool-icon-img {
+    width: 18px;
+    height: 18px;
 }
 
 .tools-bar-kbd {
@@ -224,11 +230,11 @@
     position: fixed;
     pointer-events: none;
     z-index: 9999;
-    font-size: 2rem;
+    width: 32px;
+    height: 32px;
     transform: translate(-50%, -50%);
     opacity: 0.85;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-    transition: transform 0.1s ease;
 }
 
 .flags-panel {

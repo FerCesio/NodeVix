@@ -8,18 +8,18 @@ interface StructuresSectionProps {
 
 export const StructuresSection: React.FC<StructuresSectionProps> = ({ onGenerate }) => {
   const draggingRef = useRef<string | null>(null);
-  const ghostRef = useRef<HTMLDivElement | null>(null);
+  const ghostRef = useRef<HTMLElement | null>(null);
 
   const startDrag = (presetId: string, icon: string, e: React.MouseEvent) => {
     e.preventDefault();
     draggingRef.current = presetId;
-    onGenerate(presetId); // Set pending ref immediately on drag start
+    onGenerate(presetId);
     const btn = e.currentTarget as HTMLElement;
     btn.classList.add('dragging');
 
-    const ghost = document.createElement('div');
+    const ghost = document.createElement('img');
     ghost.className = 'drag-ghost';
-    ghost.textContent = icon;
+    ghost.src = icon;
     ghost.style.left = `${e.clientX}px`;
     ghost.style.top = `${e.clientY}px`;
     document.body.appendChild(ghost);
@@ -71,7 +71,7 @@ export const StructuresSection: React.FC<StructuresSectionProps> = ({ onGenerate
           onMouseDown={(e) => startDrag(preset.id, preset.icon, e)}
           title={preset.label}
         >
-          <span className="tool-icon">{preset.icon}</span>
+          <img src={preset.icon} alt={preset.label} className="tool-icon-img" />
           <span className="tool-label">{preset.label}</span>
         </button>
       ))}

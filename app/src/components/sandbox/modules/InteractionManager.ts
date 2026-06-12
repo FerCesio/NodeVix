@@ -385,14 +385,16 @@ export class InteractionManager {
     const next = state.snapshots[state.currentStep];
     const swaps = diffSnapshots(prev, next);
 
-    this.renderer.setHighlights(next.highlights);
     if (next.edges) this.syncLinksFromEdges(next.edges);
 
     this.animating = true;
-    this.renderer.animateStep(swaps, () => {
-      this.animating = false;
-      this.renderer.update();
-      onDone?.();
+    this.renderer.setHighlights(next.highlights);
+    this.renderer.transitionHighlights(() => {
+      this.renderer.animateStep(swaps, () => {
+        this.animating = false;
+        this.renderer.update();
+        onDone?.();
+      });
     });
   }
 
@@ -405,17 +407,23 @@ export class InteractionManager {
     // Armamos el nuevo array base insertando el control
     const newLinks: SimLink[] = [...algoControlLinks];
 
-    // 2. RECONSTRUCCIÓN DEL ÁRBOL DESDE LA FUENTE DE LA VERDAD
-    // Recorremos los nodos reales y volvemos a inyectar sus aristas estructurales (las del árbol/grafo)
+    // 2. RECONSTRUCCIÓN DEL ÁRBOL DESDE LA FUENTE DE LA VERDAD (deduplicado)
+    const structuralKeys = new Set<string>();
     for (const node of this.refs.nodesRef.current) {
       if (node.edges) {
         for (const edge of node.edges) {
-          newLinks.push({
-            source: node,
-            target: edge.end,
-            value: edge.weight ?? 1,
-            directed: edge.directed
-          });
+          const key = edge.directed
+            ? `${node.id}->${edge.end.id}`
+            : [node.id, edge.end.id].sort().join('--');
+          if (!structuralKeys.has(key)) {
+            structuralKeys.add(key);
+            newLinks.push({
+              source: node,
+              target: edge.end,
+              value: edge.weight ?? 1,
+              directed: edge.directed
+            });
+          }
         }
       }
     }
@@ -423,7 +431,7 @@ export class InteractionManager {
     // Usamos un Set para evitar que el algoritmo duplique flechas en el mismo paso
     const insertedAlgoKeys = new Set<string>();
 
-    // 3. INYECCIÓN DE LAS ARISTAS TEMPORALES DEL BUBBLE SORT
+    // 3. INYECCIÓN DE LAS ARISTAS TEMPORALES DEL ALGORITMO
     for (const edge of edges) {
       const src = nodeMap.get(edge.source);
       const tgt = nodeMap.get(edge.target);
@@ -439,7 +447,7 @@ export class InteractionManager {
             target: tgt, 
             value: 1, 
             directed: true,
-            type: 'algo-snapshot' as any // Mantenemos el tag por consistencia con el key function
+            type: 'algo-snapshot' as any
           });
         }
       }
