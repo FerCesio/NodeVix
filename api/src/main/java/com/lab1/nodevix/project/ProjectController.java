@@ -62,6 +62,16 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}/content")
+    public ResponseEntity<UsableGetResponse> getProjectContentById(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        Long userID = jwtService.extractUserId(token);
+
+        UsableGetResponse response = projectService.getContent(id, userID);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping()
     public ResponseEntity<List<GetProjectResponse>> readProjects(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);

@@ -1,6 +1,7 @@
 import type { INode, Edge } from './interfaces';
 
 export class DefaultNode implements INode {
+  kind: 'data' = 'data';
   id: string;
   x?: number;
   y?: number;
@@ -10,6 +11,10 @@ export class DefaultNode implements INode {
   scale: number;
   value: number;
   edges: Edge[];
+
+  color?: string;
+  fx?: number | null;
+  fy?: number | null;
 
   constructor(id: string, value: number, x: number = 0, y: number = 0) {
     this.id = id;

@@ -8,8 +8,9 @@ public class PostListResponse {
     private String projectName;
     private String projectDescription;
     private String author;
+    private String content;
 
-    public PostListResponse(Long id, int likes, int dislikes, int views, String  projectName, String projectDescription, String author) {
+    public PostListResponse(Long id, int likes, int dislikes, int views, String  projectName, String projectDescription, String author, String content) {
         this.id = id;
         this.likes = likes;
         this.dislikes = dislikes;
@@ -17,6 +18,7 @@ public class PostListResponse {
         this.projectName = projectName;
         this.projectDescription = projectDescription;
         this.author = author;
+        this.content = content;
     }
 
     public Long getId(){
@@ -46,4 +48,6 @@ public class PostListResponse {
     public String getAuthor() {
         return author;
     }
+
+    public String getContent() { return content; }
 }

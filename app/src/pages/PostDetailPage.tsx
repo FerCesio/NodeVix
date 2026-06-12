@@ -1,19 +1,26 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react"; // <-- Importamos useRef
+import { useParams, useNavigate } from "react-router-dom"; // <-- Importamos useNavigate para redirigir
 import { api } from "../services/api";
 import toast, { Toaster } from "react-hot-toast";
 import "../styles/postDetail.css";
-import type {CommentResponse, MessageRequest} from "../types/comment";
+import type { CommentResponse, MessageRequest } from "../types/comment";
 import type { PostListResponse, InteractionResponse } from "../types/post";
-
+// IMPORTAMOS EL CANVAS Y SU INTERFAZ DE REFERENCIA
+import { SimulationCanvas, type SimulationCanvasRef } from "../components/sandbox/SimulationCanvas";
 
 export default function PostDetailPage() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate(); // <-- Instanciamos el router
+    
+    // 1. Creamos la referencia para conectarnos con las entrañas del canvas
+    const canvasRef = useRef<SimulationCanvasRef>(null);
+
     const [post, setPost] = useState<PostListResponse | null>(null);
     const [comments, setComments] = useState<CommentResponse[]>([]);
     const [showComments, setShowComments] = useState(false);
     const [newComment, setNewComment] = useState("");
     const [interaction, setInteraction] = useState<InteractionResponse | null>(null);
+    const [isCloning, setIsCloning] = useState(false); // <-- Estado para deshabilitar el botón mientras clona
 
     const isLoggedIn = !!localStorage.getItem("token");
 
@@ -28,7 +35,7 @@ export default function PostDetailPage() {
                     setInteraction(interactionRes.data);
                 }
             } catch {
-                toast.error("Could't load post.");
+                toast.error("Couldn't load post.");
             }
         };
         fetchPost();
@@ -43,6 +50,46 @@ export default function PostDetailPage() {
             }
         } catch {
             toast.error("Couldn't load comments.");
+        }
+    };
+
+    // --- FUNCIÓN ADELANTADA PARA CLONAR EL PROYECTO ---
+    const handleCloneProject = async () => {
+        if (!canvasRef.current || !post) return;
+
+        setIsCloning(true);
+        const loadingToast = toast.loading("Saving copy to your projects...");
+
+        try {
+            // Extraemos el estado actual del lienzo (limpio de snapshots temporales de algoritmos)
+            const currentCanvasState = canvasRef.current.getCanvasState();
+
+            const token = localStorage.getItem("token");
+
+            // Enviamos el ID del post a tu endpoint de Java. 
+            // Pasamos el JSON actual por el body por si modificó la posición de los nodos en vivo.
+            const response = await api.post(`/posts/clone`, {
+                name: `Copy of: ${post.projectName}`,
+                content: JSON.stringify(currentCanvasState)
+            },{
+                headers: {
+                    // El prefijo "Bearer " es crucial para que tu JWTAuthFilter lo reconozca
+                    Authorization: `Bearer ${token}` 
+                }
+            });
+                
+
+            toast.success("Project cloned successfully!", { id: loadingToast });
+
+            // Redirigimos al usuario directamente a la mesa de edición de su nuevo proyecto clonado
+            const newProjectId = response.data.id;
+            navigate(`/project/${newProjectId}`);
+
+        } catch (error) {
+            console.error("Error cloning project:", error);
+            toast.error("Failed to clone project. Make sure you are logged in.", { id: loadingToast });
+        } finally {
+            setIsCloning(false);
         }
     };
 
@@ -103,15 +150,31 @@ export default function PostDetailPage() {
             <Toaster />
             <div className="post-topbar">
                 <div className="post-topbar-left">
-                    <button className="btn" onClick={() => window.location.href = "/posts"}>
+                    <button className="btn" onClick={() => navigate("/posts")}>
                         <span>← Back</span>
                     </button>
                     <span className="post-project-title">{post.projectName}</span>
                 </div>
-                <div className="post-topbar-right">
+                <div className="post-topbar-right" style={{ gap: '10px' }}>
                     <span className="post-stat">👁 {post.views}</span>
                     <button className={`post-action-btn ${interaction?.userLiked ? "active" : ""}`} onClick={handleLike} disabled={!isLoggedIn}>👍 {interaction !== null ? interaction.likes : post.likes}</button>
                     <button className={`post-action-btn ${interaction?.userDisliked ? "active" : ""}`} onClick={handleDislike} disabled={!isLoggedIn}>👎 {interaction !== null ? interaction.dislikes : post.dislikes}</button>
+                    
+                    {/* --- NUEVO BOTÓN DE CLONACIÓN ADENTRO DE LA TOPBAR --- */}
+                    <button 
+                        className="post-action-btn clone-btn" 
+                        onClick={handleCloneProject} 
+                        disabled={!isLoggedIn || isCloning}
+                        style={{
+                            backgroundColor: '#2ecc71',
+                            color: '#fff',
+                            fontWeight: '600'
+                        }}
+                        title="Clone this structure to your personal projects"
+                    >
+                        💾 Save a copy
+                    </button>
+
                     <button
                         className={`post-action-btn ${showComments ? "active" : ""}`}
                         onClick={handleToggleComments}
@@ -122,8 +185,8 @@ export default function PostDetailPage() {
             </div>
 
             <div className="post-main">
-                <div className="post-canvas">
-                    <p style={{ color: "#555" }}>Simulation canvas</p>
+                <div className="post-canvas" style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                    <SimulationCanvas ref={canvasRef} initialData={post.content} readOnly={true} />
                 </div>
 
                 {showComments && (

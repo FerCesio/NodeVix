@@ -4,6 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.lab1.nodevix.EmailService;
 import com.lab1.nodevix.comments.CommentRepository;
+import com.lab1.nodevix.post.dtos.CloneRequest;
+import com.lab1.nodevix.post.dtos.CloneResponse;
 import com.lab1.nodevix.post.dtos.InteractionResponse;
 import com.lab1.nodevix.post.dtos.PostListResponse;
 import com.lab1.nodevix.postInteraction.PostInteraction;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -188,7 +191,8 @@ public class PostService {
                     p.getViews(),
                     p.getProject().getName(),
                     p.getProject().getDescription(),
-                    owner
+                    owner,
+                    p.getProject().getContent()
             );
         });
     }
@@ -212,7 +216,8 @@ public class PostService {
                     p.getViews(),
                     p.getProject().getName(),
                     p.getProject().getDescription(),
-                    user.getName()
+                    user.getName(),
+                    p.getProject().getContent()
             );
 
         }).collect(Collectors.toList());
@@ -232,7 +237,8 @@ public class PostService {
                 post.getViews(),
                 post.getProject().getName(),
                 post.getProject().getDescription(),
-                user.getName()
+                user.getName(),
+                post.getProject().getContent()
         );
     }
 
@@ -271,5 +277,13 @@ public class PostService {
                 pi.isLike(),
                 !pi.isLike()
         );
+    }
+
+    public CloneResponse cloneProject(Long userID, CloneRequest request){
+        User user = userRepo.findById(userID).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        Project project = new Project(request.getName(), request.getContent());
+        user.getProjects().add(project);
+        Project saved = projectRepo.save(project);
+        return new CloneResponse(saved.getId(), saved.getName());
     }
 }
