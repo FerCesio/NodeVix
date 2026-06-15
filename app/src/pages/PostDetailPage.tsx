@@ -27,9 +27,18 @@ export default function PostDetailPage() {
     useEffect(() => {
         const fetchPost = async () => {
             try {
-                await api.patch(`/posts/${id}/view`);
+                const viewedPosts = JSON.parse(localStorage.getItem("viewed_posts") || "[]");
+                
+                if (!viewedPosts.includes(id)) {
+                    await api.patch(`/posts/${id}/view`);
+                    
+                    viewedPosts.push(id);
+                    localStorage.setItem("viewed_posts", JSON.stringify(viewedPosts));
+                }
+
                 const res = await api.get<PostListResponse>(`/posts/${id}`);
                 setPost(res.data);
+                
                 if (isLoggedIn) {
                     const interactionRes = await api.get<InteractionResponse>(`/posts/${id}/interaction`);
                     setInteraction(interactionRes.data);
@@ -39,7 +48,7 @@ export default function PostDetailPage() {
             }
         };
         fetchPost();
-    }, [id]);
+    }, [id, isLoggedIn]);
 
     const fetchComments = async () => {
         try {
@@ -160,7 +169,7 @@ export default function PostDetailPage() {
                     <button className={`post-action-btn ${interaction?.userLiked ? "active" : ""}`} onClick={handleLike} disabled={!isLoggedIn}>👍 {interaction !== null ? interaction.likes : post.likes}</button>
                     <button className={`post-action-btn ${interaction?.userDisliked ? "active" : ""}`} onClick={handleDislike} disabled={!isLoggedIn}>👎 {interaction !== null ? interaction.dislikes : post.dislikes}</button>
                     
-                    {/* --- NUEVO BOTÓN DE CLONACIÓN ADENTRO DE LA TOPBAR --- */}
+                    {/* --- BOTÓN DE CLONACIÓN --- */}
                     <button 
                         className="post-action-btn clone-btn" 
                         onClick={handleCloneProject} 
@@ -207,17 +216,35 @@ export default function PostDetailPage() {
                                 <div key={c.id} className="post-comment">
                                     <div className="post-comment-header">
                                         <strong>@{c.user}</strong>
-                                        {c.isOwner && (
+                                        
+                                        {c.owner && (
                                             <button
                                                 className="delete-comment-btn"
                                                 onClick={() => handleDeleteComment(c.id)}
+                                                title="Delete comment"
                                             >
-                                                ✕
+                                                <svg 
+                                                    xmlns="http://www.w3.org/2000/svg" 
+                                                    width="14" 
+                                                    height="14" 
+                                                    viewBox="0 0 24 24" 
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    strokeWidth="2" 
+                                                    strokeLinecap="round" 
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M3 6h18"></path>
+                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                </svg>
                                             </button>
                                         )}
                                     </div>
                                     <p>{c.message}</p>
-                                    <p>{c.modifiedOn}</p>
+                                    <p className="comment-date">{c.modifiedOn}</p>
                                 </div>
                             ))}
                         </div>

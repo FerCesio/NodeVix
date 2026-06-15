@@ -3,7 +3,7 @@ export type CommentResponse = {
     user: string;
     message: string;
     modifiedOn: string;
-    isOwner: boolean;
+    owner: boolean;
 }
 
 export type MessageRequest = {
