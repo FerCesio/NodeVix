@@ -507,8 +507,8 @@ export class InteractionManager {
   private resolveAlgorithm(algorithmId: string) {
     if (algorithmId === 'bubble-sort') return new BubbleSort();
     if (algorithmId === 'inorder') return new Inorder();
-    if (algorithmId === 'bogo-sort') return new BogoSort(); // <-- AGREGADO BOGO
-    if (algorithmId === 'merge-sort') return new MergeSort(); // <-- AGREGADO MERGE
+    if (algorithmId === 'bogo-sort') return new BogoSort();
+    if (algorithmId === 'merge-sort') return new MergeSort();
     return null;
   }
 
@@ -548,20 +548,11 @@ export class InteractionManager {
     const drag = d3.drag<SVGGElement, CanvasNode>()
       .filter(() => readOnly || modeRef.current === 'SELECT')
       .on('start', (event, d) => {
-        // Quitamos cualquier callback de enfriamiento previo para que no interfiera
         sim.on('end', null);
-
-        // Despertamos la simulación con fuerza
         if (!event.active) sim.alphaTarget(0.3).restart();
-        
-        // Si es el feed, liberamos a TODOS los nodos temporalmente para que reaccionen al impacto
         if (readOnly) {
-          this.refs.nodesRef.current.forEach(n => {
-            n.fx = null;
-            n.fy = null;
-          });
+          this.refs.nodesRef.current.forEach(n => { n.fx = null; n.fy = null; });
         }
-
         d.fx = event.x;
         d.fy = event.y;
       })
@@ -570,28 +561,15 @@ export class InteractionManager {
         d.fy = event.y;
       })
       .on('end', (event, d) => {
-        // Le bajamos el target de energía para que empiece a desacelerar naturalmente
         if (!event.active) sim.alphaTarget(0);
-        
         if (!readOnly) {
-          // MODO EDITOR: El comportamiento nativo de siempre
           d.fx = null;
           d.fy = null;
         } else {
-          // MODO LECTURA (FEED) CON INERCIA:
-          // Liberamos el nodo que veníamos arrastrando para que la inercia se lo lleve...
           d.fx = null;
           d.fy = null;
-
-          // ...pero escuchamos cuándo la simulación se queda sin fuerza ("se enfría")
           sim.on('end', () => {
-            // Una vez que el grafo se acomodó por completo y se frenó solo, 
-            // clavamos las posiciones finales para que no consuma CPU en background
-            this.refs.nodesRef.current.forEach(n => {
-              n.fx = n.x;
-              n.fy = n.y;
-            });
-            // Apagamos el escuchador de fin para que no vuelva a dispararse accidentalmente
+            this.refs.nodesRef.current.forEach(n => { n.fx = n.x; n.fy = n.y; });
             sim.on('end', null);
             console.log('[D3] Grafo enfriado y congelado dinámicamente en su nueva forma.');
           });

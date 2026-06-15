@@ -135,7 +135,15 @@ export default function ProjectPage() {
 
     // --- LÓGICA DE EXPORTACIÓN Y SHARE ---
     const handleShare = async () => {
-        // Modal de menú para compartir (preparando el terreno para las redes sociales)
+        
+        if (!id || id === "new") {
+            toast.error("Please save the project before sharing!", { 
+                icon: "💾",
+                style: { borderRadius: '10px', background: '#333', color: '#fff' }
+            });
+            return;
+        }
+
         const result = await Swal.fire({
             title: "Share Project",
             text: "Choose how you want to export or share your structure:",
@@ -155,7 +163,7 @@ export default function ProjectPage() {
         if (result.isConfirmed) {
             exportToPDF();
         } else if (result.isDenied) {
-            toast("Social sharing is coming soon!", { icon: "🚀" });
+            shareToSocials();
         }
     };
 
@@ -249,6 +257,67 @@ export default function ProjectPage() {
             console.error("PDF Export error:", error);
             toast.error("Error al generar el PDF.", { id: loadingToast });
         }
+    };
+
+    const shareToSocials = async () => {
+        const projectUrl = window.location.href;
+        const shareText = `Check out my simulation "${projectName || 'Structure'}" on NodeVix! 🚀`;
+
+        // 1. Intentamos usar la Web Share API nativa (Magia pura en celulares y SO modernos)
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'NodeVix Project',
+                    text: shareText,
+                    url: projectUrl
+                });
+                // Si funcionó y el usuario compartió, terminamos acá.
+                return; 
+            } catch (err: any) {
+                // Si el usuario cerró el menú nativo sin compartir, lo ignoramos.
+                if (err.name === 'AbortError') return;
+                console.log("Error con el share nativo:", err);
+            }
+        }
+
+        // 2. FALLBACK: Si no hay soporte nativo, abrimos un menú de SweetAlert hermoso
+        const encodedText = encodeURIComponent(shareText);
+        const encodedUrl = encodeURIComponent(projectUrl);
+
+        Swal.fire({
+            title: 'Share Project',
+            html: `
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                    <a href="https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}" target="_blank" rel="noopener noreferrer" style="background: #000; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px; border: 1px solid #333;">
+                        𝕏 Share on X
+                    </a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}" target="_blank" rel="noopener noreferrer" style="background: #0A66C2; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                        💼 Share on LinkedIn
+                    </a>
+                    <a href="https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}" target="_blank" rel="noopener noreferrer" style="background: #25D366; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                        💬 Share on WhatsApp
+                    </a>
+                    <button id="copy-link-btn" style="background: #333; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 16px;">
+                        🔗 Copy Link
+                    </button>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            background: "#1a1a1a",
+            color: "#fff",
+            // Le inyectamos la lógica al botón de "Copiar Link" usando el ciclo de vida de SweetAlert
+            didOpen: () => {
+                const copyBtn = document.getElementById('copy-link-btn');
+                if (copyBtn) {
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(projectUrl);
+                        toast.success("Link copied to clipboard!", { icon: "📋" });
+                        Swal.close();
+                    };
+                }
+            }
+        });
     };
 
     return (
