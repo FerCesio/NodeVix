@@ -13,6 +13,7 @@ import { diffSnapshots } from '../../../sandbox/utils/diffSnapshots';
 import type { StructureManager } from '../../../sandbox/StructureManager';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 import type { CanvasRenderer } from './CanvasRenderer';
+import { Dijkstra } from '../../../sandbox/algorithms/Dijkstra';
 
 export interface InteractionRefs {
   modeRef: React.MutableRefObject<ToolMode>;
@@ -509,6 +510,7 @@ export class InteractionManager {
     if (algorithmId === 'inorder') return new Inorder();
     if (algorithmId === 'bogo-sort') return new BogoSort();
     if (algorithmId === 'merge-sort') return new MergeSort();
+    if (algorithmId === 'dijkstra') return new Dijkstra();
     return null;
   }
 

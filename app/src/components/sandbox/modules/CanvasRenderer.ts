@@ -18,6 +18,7 @@ export class CanvasRenderer {
   private selectedNodeId: string | null = null;
   private currentHighlights: Snapshot['highlights'] = undefined;
   private pulsedNodes: Set<string> = new Set();
+  private linkLabelSelection: d3.Selection<SVGTextElement, SimLink, SVGGElement, unknown> | null = null;
 
   constructor(layers: Layers, physics: PhysicsEngine) {
     this.layers = layers;
@@ -76,17 +77,35 @@ export class CanvasRenderer {
     let defs = svg.select<SVGDefsElement>('defs');
     if (defs.empty()) defs = svg.append('defs') as any;
 
-    defs.append('marker')
-      .attr('id', 'arrowhead')
-      .attr('viewBox', '0 0 10 10')
-      .attr('refX', 28)
-      .attr('refY', 5)
-      .attr('markerWidth', 6)
-      .attr('markerHeight', 6)
-      .attr('orient', 'auto')
-      .append('path')
-      .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
-      .attr('fill', '#e74c3c');
+    // Punta de flecha normal (Ahora es Gris #fa0808 en vez de Roja)
+    if (defs.select('#arrowhead').empty()) {
+      defs.append('marker')
+        .attr('id', 'arrowhead')
+        .attr('viewBox', '0 0 10 10')
+        .attr('refX', 28)
+        .attr('refY', 5)
+        .attr('markerWidth', 6)
+        .attr('markerHeight', 6)
+        .attr('orient', 'auto')
+        .append('path')
+        .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
+        .attr('fill', '#f00d0d'); 
+    }
+
+    // Punta de flecha iluminada para Dijkstra (Cyan)
+    if (defs.select('#arrowhead-active').empty()) {
+      defs.append('marker')
+        .attr('id', 'arrowhead-active')
+        .attr('viewBox', '0 0 10 10')
+        .attr('refX', 28)
+        .attr('refY', 5)
+        .attr('markerWidth', 6)
+        .attr('markerHeight', 6)
+        .attr('orient', 'auto')
+        .append('path')
+        .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
+        .attr('fill', '#00e5ff'); 
+    }
   }
 
   update(): void {
@@ -96,11 +115,38 @@ export class CanvasRenderer {
     const algoNodes = allNodes.filter((n): n is IAlgorithmNode => n.kind === 'algorithm');
     const links = (sim.force('link') as d3.ForceLink<INode, SimLink>).links() as SimLink[];
 
+    // --- NUEVA LÓGICA: Encontrar qué nodos pertenecen al grafo de Dijkstra ---
+    const dijkstraConnectedNodes = new Set<string>();
+    const dijkstraNodes = algoNodes.filter(a => a.algorithmId === 'dijkstra' && a.connectedTo);
     
+    // Agregamos los nodos de entrada
+    dijkstraNodes.forEach(d => dijkstraConnectedNodes.add(d.connectedTo!));
+
+    // Expandimos la red para encontrar todos los nodos conectados a ese grafo
+    if (dijkstraConnectedNodes.size > 0) {
+      let added = true;
+      while (added) {
+        added = false;
+        for (const l of links) {
+          if (l.type === 'algorithm') continue;
+          const sId = typeof l.source === 'object' ? (l.source as INode).id : l.source as string;
+          const tId = typeof l.target === 'object' ? (l.target as INode).id : l.target as string;
+          
+          if (dijkstraConnectedNodes.has(sId) && !dijkstraConnectedNodes.has(tId)) {
+            dijkstraConnectedNodes.add(tId);
+            added = true;
+          } else if (dijkstraConnectedNodes.has(tId) && !dijkstraConnectedNodes.has(sId)) {
+            dijkstraConnectedNodes.add(sId);
+            added = true;
+          }
+        }
+      }
+    }
+
+    // 1. PRIMERO dibujamos las flechas (líneas)
     this.linkSelection = this.layers.links
       .selectAll<SVGLineElement, SimLink>('line')
       .data(links, d => {
-        // Generamos un string identificador único para cada enlace en base a los IDs de sus extremos
         const sourceId = typeof d.source === 'object' ? (d.source as INode).id : d.source;
         const targetId = typeof d.target === 'object' ? (d.target as INode).id : d.target;
         const linkType = d.type ?? 'normal';
@@ -121,11 +167,74 @@ export class CanvasRenderer {
           return exit;
         }
       )
-      .attr('stroke', d => d.type === 'algorithm' ? '#3498db' : d.directed ? '#e74c3c' : '#555')
-      .attr('stroke-width', 2)
+      .style('stroke', d => {
+        const h = this.currentHighlights;
+        const sId = typeof d.source === 'object' ? (d.source as INode).id : d.source;
+        const tId = typeof d.target === 'object' ? (d.target as INode).id : d.target;
+        
+        if (h?.activeEdges && (h.activeEdges.includes(`${sId}-${tId}`) || h.activeEdges.includes(`${tId}-${sId}`))) {
+          return '#00e5ff'; 
+        }
+        // Flechas ahora son todas grises (#555) por defecto
+        return d.type === 'algorithm' ? '#3498db' : '#555';
+      })
+      .style('stroke-width', '2px') 
       .attr('stroke-dasharray', d => d.type === 'algorithm' ? '6 4' : null)
-      .attr('marker-end', d => d.type === 'algorithm' ? null : d.directed ? 'url(#arrowhead)' : null);
+      .attr('marker-end', d => {
+        if (d.type === 'algorithm') return null;
+        if (!d.directed) return null;
+        
+        const h = this.currentHighlights;
+        const sId = typeof d.source === 'object' ? (d.source as INode).id : d.source;
+        const tId = typeof d.target === 'object' ? (d.target as INode).id : d.target;
+        
+        if (h?.activeEdges && (h.activeEdges.includes(`${sId}-${tId}`) || h.activeEdges.includes(`${tId}-${sId}`))) {
+          return 'url(#arrowhead-active)';
+        }
+        return 'url(#arrowhead)';
+      });
 
+    // 2. DESPUÉS dibujamos los textos de los pesos flotando
+    this.linkLabelSelection = this.layers.links
+      .selectAll<SVGTextElement, SimLink>('text.link-label')
+      .data(links, d => {
+        const sourceId = typeof d.source === 'object' ? (d.source as INode).id : d.source;
+        const targetId = typeof d.target === 'object' ? (d.target as INode).id : d.target;
+        const linkType = d.type ?? 'normal';
+        return `${sourceId}-${targetId}-${linkType}`;
+      })
+      .join(
+        enter => enter.append('text')
+          .attr('class', 'link-label')
+          .attr('text-anchor', 'middle')
+          .attr('dy', '-6px') 
+          .attr('fill', '#bdc3c7') 
+          .attr('font-size', '12px')
+          .attr('font-weight', 'bold'),
+        update => update,
+        exit => exit.remove()
+      )
+      .text(d => {
+        if (d.type === 'algorithm') return '';
+
+        const sId = typeof d.source === 'object' ? (d.source as INode).id : (d.source as string);
+        
+        // Si el origen de esta flecha NO está en la red de Dijkstra, ocultamos el número
+        if (!dijkstraConnectedNodes.has(sId)) return '';
+
+        const tId = typeof d.target === 'object' ? (d.target as INode).id : (d.target as string);
+
+        const realSrcNode = dataNodes.find(n => n.id === sId);
+        if (realSrcNode && realSrcNode.edges) {
+          const edge = realSrcNode.edges.find(e => e.end.id === tId);
+          if (edge && edge.weight !== undefined) {
+            return edge.weight; 
+          }
+        }
+        return d.value ?? 1;
+      });
+
+    // 3. NODOS
     this.nodeSelection = this.layers.nodes
       .selectAll<SVGGElement, INode>('g.node-data')
       .data(dataNodes, d => d.id)
@@ -194,6 +303,7 @@ export class CanvasRenderer {
         }
       );
 
+    // 4. Bloques de algoritmos
     this.algoSelection = this.layers.nodes
       .selectAll<SVGGElement, IAlgorithmNode>('g.node-algo')
       .data(algoNodes, d => d.id)
@@ -257,7 +367,6 @@ export class CanvasRenderer {
     const processed = new Set<string>();
     let pending = 0;
 
-    // Capture original positions before mutation
     const originalPos = new Map<string, { x: number; y: number }>();
     for (const swap of swaps) {
       for (const id of [swap.fromNodeId, swap.toNodeId]) {
@@ -268,7 +377,6 @@ export class CanvasRenderer {
       }
     }
 
-    // Mutate node positions immediately so links (tick) follow smoothly
     for (const swap of swaps) {
       const pairKey = [swap.fromNodeId, swap.toNodeId].sort().join('-');
       if (!processed.has(pairKey)) {
@@ -284,7 +392,6 @@ export class CanvasRenderer {
       }
     }
 
-    // Visually animate the <g> elements from old pos to new pos
     processed.clear();
     for (const swap of swaps) {
       const pairKey = [swap.fromNodeId, swap.toNodeId].sort().join('-');
@@ -295,7 +402,6 @@ export class CanvasRenderer {
       const posB = originalPos.get(swap.toNodeId)!;
       pending += 2;
 
-      // Node A: starts at posA visually, transitions to posB
       this.layers.nodes.selectAll<SVGGElement, INode>('g.node-data')
         .filter(d => d.id === swap.fromNodeId)
         .attr('transform', `translate(${posA.x},${posA.y})`)
@@ -303,7 +409,6 @@ export class CanvasRenderer {
         .attr('transform', `translate(${posB.x},${posB.y})`)
         .on('end', () => { pending--; if (pending === 0) onComplete(); });
 
-      // Node B: starts at posB visually, transitions to posA
       this.layers.nodes.selectAll<SVGGElement, INode>('g.node-data')
         .filter(d => d.id === swap.toNodeId)
         .attr('transform', `translate(${posB.x},${posB.y})`)
@@ -312,7 +417,6 @@ export class CanvasRenderer {
         .on('end', () => { pending--; if (pending === 0) onComplete(); });
     }
 
-    // Also transition links smoothly
     this.linkSelection?.transition().duration(300)
       .attr('x1', d => (d.source as INode).x ?? 0)
       .attr('y1', d => (d.source as INode).y ?? 0)
@@ -320,6 +424,10 @@ export class CanvasRenderer {
       .attr('y2', d => (d.target as INode).y ?? 0);
 
     if (pending === 0) onComplete();
+
+    this.linkLabelSelection?.transition().duration(300)
+      .attr('x', d => (((d.source as INode).x ?? 0) + ((d.target as INode).x ?? 0)) / 2)
+      .attr('y', d => (((d.source as INode).y ?? 0) + ((d.target as INode).y ?? 0)) / 2);
   }
 
   private tick(): void {
@@ -328,6 +436,10 @@ export class CanvasRenderer {
       .attr('y1', d => (d.source as INode).y ?? 0)
       .attr('x2', d => (d.target as INode).x ?? 0)
       .attr('y2', d => (d.target as INode).y ?? 0);
+
+    this.linkLabelSelection
+      ?.attr('x', d => (((d.source as INode).x ?? 0) + ((d.target as INode).x ?? 0)) / 2)
+      ?.attr('y', d => (((d.source as INode).y ?? 0) + ((d.target as INode).y ?? 0)) / 2);
 
     this.nodeSelection
       ?.attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);

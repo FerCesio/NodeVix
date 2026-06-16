@@ -30,6 +30,7 @@ export type Snapshot = {
     comparing?: string[];
     sorted?: string[];
     swapping?: string[];
+    activeEdges?: string[];
   };
 };
 

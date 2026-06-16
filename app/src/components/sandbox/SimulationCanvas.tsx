@@ -228,6 +228,19 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
   const handleUpdateNode = (updatedFields: Partial<INode>) => {
     if (!selectedNodeRef.current || !rendererRef.current) return;
 
+    if (updatedFields.edges) {
+      updatedFields.edges.forEach(edge => {
+        // Si la conexión es de doble mano (no tiene flecha)
+        if (!edge.directed) {
+          // Viajamos al nodo destino por referencia y actualizamos el peso de su ruta de vuelta
+          const reverseEdge = edge.end.edges.find(e => e.end.id === selectedNodeRef.current!.id);
+          if (reverseEdge) {
+            reverseEdge.weight = edge.weight;
+          }
+        }
+      });
+    }
+
     Object.assign(selectedNodeRef.current, updatedFields);
     setActiveNode({ ...selectedNodeRef.current });
     rendererRef.current.update();
