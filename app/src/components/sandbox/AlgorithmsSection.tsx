@@ -67,7 +67,7 @@ export const AlgorithmsSection: React.FC<AlgorithmsSectionProps> = ({ onRun }) =
       {AVAILABLE_ALGORITHMS.map(alg => (
         <button
           key={alg.id}
-          className="tool-button"
+          className="tool-button algo-button"
           onMouseDown={(e) => startDrag(alg.id, alg.icon, e)}
           title={alg.label}
         >

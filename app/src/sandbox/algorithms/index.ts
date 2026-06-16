@@ -24,6 +24,7 @@ import bubbleSortIcon from '../../assets/icons/bubble-sort.png';
 import inorderIcon from '../../assets/icons/inorder.png';
 import bogoSortIcon from '../../assets/icons/bogo-sort.png';
 import mergeSortIcon from '../../assets/icons/merge-sort.png';
+import dijkstraIcon from '../../assets/icons/dijkstra.png';
 
 export const AVAILABLE_ALGORITHMS: AlgorithmConfig[] = [
   {
@@ -69,7 +70,7 @@ export const AVAILABLE_ALGORITHMS: AlgorithmConfig[] = [
   {
     id: 'dijkstra', 
     label: 'Dijkstra', 
-    icon: '📍', // Ideal para búsqueda de caminos
+    icon: dijkstraIcon,
     requiredFlags: [], // Funciona sobre grafos libres, no exige lista ni árbol
     run: (nodes) => {
       if (nodes.length === 0) return;

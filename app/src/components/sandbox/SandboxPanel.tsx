@@ -22,19 +22,21 @@ const SECTIONS: { id: PanelSection; icon: string }[] = [
 export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeChange, onGeneratePreset, onRunAlgorithm }) => {
   const [activeSection, setActiveSection] = useState<PanelSection | null>(null);
 
+  const toggleSection = (section: PanelSection) => {
+    setActiveSection(prev => prev === section ? null : section);
+  };
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === 'INPUT') return;
       const tool = AVAILABLE_TOOLS.find(t => t.shortcut.toLowerCase() === e.key.toLowerCase());
       if (tool) onModeChange(tool.mode);
+      if (e.key === '1') toggleSection('STRUCTURES');
+      if (e.key === '2') toggleSection('ALGORITHMS');
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [onModeChange]);
-
-  const toggleSection = (section: PanelSection) => {
-    setActiveSection(prev => prev === section ? null : section);
-  };
 
   return (
     <>
@@ -63,7 +65,7 @@ export const SandboxPanel: React.FC<SandboxPanelProps> = ({ activeMode, onModeCh
               onClick={() => toggleSection(section.id)}
               title={section.id}
             >
-              <img src={section.icon} alt={section.id} width={20} height={20} />
+              <img src={section.icon} alt={section.id} width={28} height={28} />
             </button>
           ))}
         </div>

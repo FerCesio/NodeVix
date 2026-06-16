@@ -19,6 +19,7 @@ export class CanvasRenderer {
   private currentHighlights: Snapshot['highlights'] = undefined;
   private pulsedNodes: Set<string> = new Set();
   private linkLabelSelection: d3.Selection<SVGTextElement, SimLink, SVGGElement, unknown> | null = null;
+  private multiSelectedNodes: Set<string> = new Set();
 
   constructor(layers: Layers, physics: PhysicsEngine) {
     this.layers = layers;
@@ -29,6 +30,11 @@ export class CanvasRenderer {
 
   highlight(nodeId: string | null): void {
     this.selectedNodeId = nodeId;
+    this.update();
+  }
+
+  setSelectedNodes(ids: Set<string>): void {
+    this.multiSelectedNodes = ids;
     this.update();
   }
 
@@ -54,7 +60,7 @@ export class CanvasRenderer {
     if (h?.swapping && h.swapping.includes(d.id)) return '#f1c40f';
     if (h?.comparing && h.comparing.includes(d.id)) return '#e67e22';
     if (h?.sorted && h.sorted.includes(d.id)) return '#27ae60';
-    return d.color ?? '#2ecc71';
+    return d.color ?? '#ffffff';
   }
 
   private getAlgoColor(d: IAlgorithmNode): string {
@@ -82,7 +88,7 @@ export class CanvasRenderer {
       defs.append('marker')
         .attr('id', 'arrowhead')
         .attr('viewBox', '0 0 10 10')
-        .attr('refX', 28)
+        .attr('refX', 10)
         .attr('refY', 5)
         .attr('markerWidth', 6)
         .attr('markerHeight', 6)
@@ -97,7 +103,7 @@ export class CanvasRenderer {
       defs.append('marker')
         .attr('id', 'arrowhead-active')
         .attr('viewBox', '0 0 10 10')
-        .attr('refX', 28)
+        .attr('refX', 10)
         .attr('refY', 5)
         .attr('markerWidth', 6)
         .attr('markerHeight', 6)
@@ -245,8 +251,8 @@ export class CanvasRenderer {
           const circle = g.append('circle')
             .attr('r', 0)
             .attr('fill', d => this.getNodeColor(d))
-            .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
-            .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');
+            .style('stroke', d => this.multiSelectedNodes.has(d.id) ? '#f1c40f' : d.id === this.selectedNodeId ? '#f1c40f' : 'none')
+            .style('stroke-width', d => this.multiSelectedNodes.has(d.id) || d.id === this.selectedNodeId ? `${3 * (d.scale ?? 1)}px` : '0px');
           circle.transition().duration(250).ease(d3.easeBackOut)
             .attr('r', (d: INode) => 20 * (d.scale ?? 1))
             .on('end', function() {
@@ -255,7 +261,7 @@ export class CanvasRenderer {
           g.append('text')
             .attr('text-anchor', 'middle')
             .attr('dy', '0.35em')
-            .attr('fill', '#fff')
+            .attr('fill', '#000')
             .attr('font-size', '12px')
             .text(d => d.value);
           return g;
@@ -265,8 +271,8 @@ export class CanvasRenderer {
             .attr('r', d => 20 * (d.scale ?? 1));
           update.select('circle')
             .attr('fill', d => this.getNodeColor(d))
-            .style('stroke', d => d.id === this.selectedNodeId ? '#4A90E2' : 'none')
-            .style('stroke-width', d => d.id === this.selectedNodeId ? '4px' : '0px');
+            .style('stroke', d => this.multiSelectedNodes.has(d.id) ? '#f1c40f' : d.id === this.selectedNodeId ? '#f1c40f' : 'none')
+            .style('stroke-width', d => this.multiSelectedNodes.has(d.id) || d.id === this.selectedNodeId ? `${3 * (d.scale ?? 1)}px` : '0px');
           update.select('text').text(d => d.value);
 
           // Pulse highlighted nodes (only once per highlight change)
@@ -325,7 +331,7 @@ export class CanvasRenderer {
             .attr('class', 'algo-label')
             .attr('text-anchor', 'middle')
             .attr('dy', '-1em')
-            .attr('fill', '#fff')
+            .attr('fill', '#000')
             .attr('font-size', '11px')
             .text(d => d.label);
           const btns = g.append('g').attr('class', 'algo-buttons').attr('transform', 'translate(0, 4)');
@@ -434,8 +440,22 @@ export class CanvasRenderer {
     this.linkSelection
       ?.attr('x1', d => (d.source as INode).x ?? 0)
       .attr('y1', d => (d.source as INode).y ?? 0)
-      .attr('x2', d => (d.target as INode).x ?? 0)
-      .attr('y2', d => (d.target as INode).y ?? 0);
+      .attr('x2', d => {
+        if (!d.directed) return (d.target as INode).x ?? 0;
+        const s = d.source as INode, t = d.target as INode;
+        const dx = (t.x ?? 0) - (s.x ?? 0), dy = (t.y ?? 0) - (s.y ?? 0);
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const r = 20 * (t.scale ?? 1);
+        return (t.x ?? 0) - (dx / dist) * r;
+      })
+      .attr('y2', d => {
+        if (!d.directed) return (d.target as INode).y ?? 0;
+        const s = d.source as INode, t = d.target as INode;
+        const dx = (t.x ?? 0) - (s.x ?? 0), dy = (t.y ?? 0) - (s.y ?? 0);
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const r = 20 * (t.scale ?? 1);
+        return (t.y ?? 0) - (dy / dist) * r;
+      });
 
     this.linkLabelSelection
       ?.attr('x', d => (((d.source as INode).x ?? 0) + ((d.target as INode).x ?? 0)) / 2)

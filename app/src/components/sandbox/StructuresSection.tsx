@@ -67,7 +67,7 @@ export const StructuresSection: React.FC<StructuresSectionProps> = ({ onGenerate
       {PRESETS.map(preset => (
         <button
           key={preset.id}
-          className="tool-button"
+          className="tool-button algo-button"
           onMouseDown={(e) => startDrag(preset.id, preset.icon, e)}
           title={preset.label}
         >

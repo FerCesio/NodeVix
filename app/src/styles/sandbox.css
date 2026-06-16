@@ -104,8 +104,8 @@
 }
 
 .panel-tab-btn {
-    width: 42px;
-    height: 42px;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -129,7 +129,8 @@
 .panel-content {
     position: absolute;
     left: 100%;
-    top: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(-10px);
     margin-left: -4px;
     display: flex;
     flex-direction: column;
@@ -142,17 +143,16 @@
     border-left: none;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     width: 180px;
-    max-height: 230px;
+    max-height: 460px;
     overflow-y: auto;
     opacity: 0;
-    transform: translateX(-10px);
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .panel-content.open {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(-50%) translateX(0);
     pointer-events: auto;
 }
 
@@ -203,6 +203,16 @@
 .tool-label {
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+.algo-button {
+    padding: 12px 20px;
+    min-width: 180px;
+}
+
+.algo-button .tool-icon-img {
+    width: 24px;
+    height: 24px;
 }
 
 .tool-shortcut {

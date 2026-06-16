@@ -37,6 +37,7 @@ export class InteractionManager {
   private executors: Map<string, AlgorithmExecutor> = new Map();
   private autoPlayIntervals: Map<string, number> = new Map();
   private animating = false;
+  private selectedNodes: Set<string> = new Set();
 
   constructor(
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -85,6 +86,86 @@ export class InteractionManager {
         this.cancelPending();
       }
     });
+
+    // MARQUEE SELECTION (rubber band)
+    let marqueeRect: d3.Selection<SVGRectElement, unknown, null, undefined> | null = null;
+    let marqueeStart: [number, number] | null = null;
+
+    const cleanupMarquee = () => {
+      if (marqueeRect) { marqueeRect.remove(); marqueeRect = null; }
+      marqueeStart = null;
+    };
+
+    this.svg.on('mousedown.marquee', (event: MouseEvent) => {
+      if (readOnly) return;
+      const mode = this.refs.modeRef.current;
+      if (mode !== 'SELECT' && mode !== 'DELETE_ANY') return;
+      const target = event.target as Element;
+      if (target.closest('g.node') || target.tagName === 'line') return;
+      // Only start marquee from background
+      const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+      marqueeStart = [x, y];
+      marqueeRect = this.svg.select<SVGGElement>('.container').append('rect')
+        .attr('class', 'marquee')
+        .attr('x', x).attr('y', y)
+        .attr('width', 0).attr('height', 0)
+        .attr('fill', mode === 'DELETE_ANY' ? 'rgba(231,76,60,0.1)' : 'rgba(74,144,226,0.1)')
+        .attr('stroke', mode === 'DELETE_ANY' ? '#e74c3c' : '#4A90E2')
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '4 2');
+    });
+
+    this.svg.on('mousemove.marquee', (event: MouseEvent) => {
+      if (!marqueeStart || !marqueeRect) return;
+      const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+      const x0 = Math.min(marqueeStart[0], x);
+      const y0 = Math.min(marqueeStart[1], y);
+      const w = Math.abs(x - marqueeStart[0]);
+      const h = Math.abs(y - marqueeStart[1]);
+      marqueeRect.attr('x', x0).attr('y', y0).attr('width', w).attr('height', h);
+    });
+
+    window.addEventListener('mouseup', (event: MouseEvent) => {
+      if (!marqueeStart || !marqueeRect) return;
+      const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
+      const x0 = Math.min(marqueeStart[0], x);
+      const y0 = Math.min(marqueeStart[1], y);
+      const x1 = Math.max(marqueeStart[0], x);
+      const y1 = Math.max(marqueeStart[1], y);
+      cleanupMarquee();
+
+      // Only count as marquee if dragged at least 5px
+      if ((x1 - x0) < 5 && (y1 - y0) < 5) return;
+
+      const mode = this.refs.modeRef.current;
+      const enclosed = this.refs.nodesRef.current.filter(n => {
+        const nx = n.x ?? 0;
+        const ny = n.y ?? 0;
+        return nx >= x0 && nx <= x1 && ny >= y0 && ny <= y1;
+      });
+
+      if (mode === 'SELECT') {
+        this.selectedNodes.clear();
+        for (const n of enclosed) this.selectedNodes.add(n.id);
+        this.renderer.setSelectedNodes(this.selectedNodes);
+      } else if (mode === 'DELETE_ANY' && enclosed.length > 0) {
+        const toDelete = new Set(enclosed.map(n => n.id));
+        this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => !toDelete.has(n.id));
+        this.refs.linksRef.current = this.refs.linksRef.current.filter(l => !toDelete.has((l.source as INode).id) && !toDelete.has((l.target as INode).id));
+        for (const n of this.refs.nodesRef.current) {
+          if (n.edges) n.edges = n.edges.filter(e => !toDelete.has(e.end.id));
+        }
+        this.physics.updateNodes(this.refs.nodesRef.current);
+        this.physics.updateLinks(this.refs.linksRef.current);
+        this.renderer.update();
+        this.applyDrag(readOnly);
+        this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        this.invalidateExecutors();
+      }
+    });
+
+    window.addEventListener('blur', cleanupMarquee);
+    document.addEventListener('visibilitychange', cleanupMarquee);
 
     // LINK/ARROW: mousedown on source node starts connection
     this.svg.on('mousedown.link', (event: MouseEvent) => {
@@ -230,8 +311,14 @@ export class InteractionManager {
 
       if (mode === 'SELECT') {
         const clickedNode = this.getNodeFromTarget(target);
+        if (!clickedNode) this.selectedNodes.clear();
+        else if (!this.selectedNodes.has(clickedNode.id)) {
+          this.selectedNodes.clear();
+          this.selectedNodes.add(clickedNode.id);
+        }
         this.refs.selectedNodeRef.current = clickedNode;
         this.refs.onSelectNode(clickedNode?.id ?? null);
+        this.renderer.setSelectedNodes(this.selectedNodes);
         this.highlightStructure(clickedNode?.id ?? null);
         if (this.refs.onNodeSelected) {
           this.refs.onNodeSelected(clickedNode); 
@@ -299,6 +386,16 @@ export class InteractionManager {
 
       // Deletion (Delete elements)
       if (mode === 'DELETE_ANY') {
+        if (this.selectedNodes.size > 0) {
+          const toDelete = new Set(this.selectedNodes);
+          this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => !toDelete.has(n.id));
+          this.refs.linksRef.current = this.refs.linksRef.current.filter(l => !toDelete.has((l.source as INode).id) && !toDelete.has((l.target as INode).id));
+          for (const n of this.refs.nodesRef.current) {
+            if (n.edges) n.edges = n.edges.filter(e => !toDelete.has(e.end.id));
+          }
+          this.selectedNodes.clear();
+          this.renderer.setSelectedNodes(this.selectedNodes);
+        } else {
         const clickedNode = this.getNodeFromTarget(target);
         if (clickedNode) {
           if (this.refs.selectedNodeRef.current?.id === clickedNode.id) this.refs.selectedNodeRef.current = null;
@@ -321,6 +418,7 @@ export class InteractionManager {
             if (srcNode && srcNode.edges) srcNode.edges = srcNode.edges.filter(e => e.end.id !== tgtId);
             if (tgtNode && tgtNode.edges && !datum.directed) tgtNode.edges = tgtNode.edges.filter(e => e.end.id !== srcId);
           }
+        }
         }
         this.physics.updateNodes(this.refs.nodesRef.current);
         this.physics.updateLinks(this.refs.linksRef.current);
@@ -384,9 +482,19 @@ export class InteractionManager {
 
     const prev = state.snapshots[prevStep];
     const next = state.snapshots[state.currentStep];
-    const swaps = diffSnapshots(prev, next);
+    const hasSwapping = next.highlights?.swapping && next.highlights.swapping.length > 0;
+    const swaps = hasSwapping ? diffSnapshots(prev, next) : [];
 
     if (next.edges) this.syncLinksFromEdges(next.edges);
+
+    // Apply value updates directly (for algorithms like Dijkstra that don't swap)
+    if (!hasSwapping && next.values) {
+      for (const node of this.refs.nodesRef.current) {
+        if (node.id in next.values && next.values[node.id] !== Infinity) {
+          node.value = next.values[node.id];
+        }
+      }
+    }
 
     this.animating = true;
     this.renderer.setHighlights(next.highlights);
@@ -560,16 +668,41 @@ export class InteractionManager {
         }
         d.fx = event.x;
         d.fy = event.y;
+        // Pin all selected nodes if dragging one from the group
+        if (this.selectedNodes.has(d.id) && this.selectedNodes.size > 1) {
+          for (const n of this.refs.nodesRef.current) {
+            if (this.selectedNodes.has(n.id) && n.id !== d.id) {
+              n.fx = n.x;
+              n.fy = n.y;
+            }
+          }
+        }
       })
       .on('drag', (event, d) => {
+        const dx = event.x - (d.fx ?? event.x);
+        const dy = event.y - (d.fy ?? event.y);
         d.fx = event.x;
         d.fy = event.y;
+        // Move group together
+        if (this.selectedNodes.has(d.id) && this.selectedNodes.size > 1) {
+          for (const n of this.refs.nodesRef.current) {
+            if (this.selectedNodes.has(n.id) && n.id !== d.id) {
+              n.fx = (n.fx ?? n.x ?? 0) + dx;
+              n.fy = (n.fy ?? n.y ?? 0) + dy;
+            }
+          }
+        }
       })
       .on('end', (event, d) => {
         if (!event.active) sim.alphaTarget(0);
         if (!readOnly) {
           d.fx = null;
           d.fy = null;
+          if (this.selectedNodes.has(d.id)) {
+            for (const n of this.refs.nodesRef.current) {
+              if (this.selectedNodes.has(n.id)) { n.fx = null; n.fy = null; }
+            }
+          }
         } else {
           d.fx = null;
           d.fy = null;
@@ -595,17 +728,27 @@ export class InteractionManager {
 
   private highlightStructure(nodeId: string | null): void {
     this.svg.select('.layer-nodes').selectAll<SVGGElement, INode>('g.node')
-      .select('circle').style('stroke', null).style('stroke-width', null);
+      .select('circle').style('stroke', null).style('stroke-width', null).style('stroke-dasharray', null);
 
     if (!nodeId) return;
+
+    // Selected node: solid yellow
+    this.svg.select('.layer-nodes').selectAll<SVGGElement, INode>('g.node')
+      .filter(d => d.id === nodeId)
+      .select('circle')
+      .style('stroke', '#f1c40f')
+      .style('stroke-width', '4px')
+      .style('stroke-dasharray', null);
+
     const structure = this.refs.structureManagerRef.current.getStructureForNode(nodeId);
     if (!structure) return;
 
     const ids = new Set(structure.nodes.map(n => n.id));
     this.svg.select('.layer-nodes').selectAll<SVGGElement, INode>('g.node')
-      .filter(d => ids.has(d.id))
+      .filter(d => ids.has(d.id) && d.id !== nodeId)
       .select('circle')
       .style('stroke', '#f1c40f')
-      .style('stroke-width', '3px');
+      .style('stroke-width', '3px')
+      .style('stroke-dasharray', '4 2');
   }
 }

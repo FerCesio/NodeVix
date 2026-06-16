@@ -46,8 +46,8 @@ line {
 }
 
 circle {
-    stroke: #fff;
-    stroke-width: 1.5px;
+    stroke: none;
+    stroke-width: 0;
 }
 
 rect {
@@ -61,6 +61,11 @@ rect {
 .canvas-wrapper.mode-link svg { cursor: pointer; }
 .canvas-wrapper.mode-arrow svg { cursor: pointer; }
 .canvas-wrapper.mode-delete svg { cursor: crosshair; }
+
+.canvas-wrapper.mode-link g.node:hover circle,
+.canvas-wrapper.mode-arrow g.node:hover circle {
+    filter: drop-shadow(0 0 6px rgba(46, 204, 113, 0.7));
+}
 
 .canvas-wrapper.mode-delete g.node:hover circle {
     stroke: #e74c3c;
@@ -103,6 +108,10 @@ g.node-algo .algo-step {
     pointer-events: none;
     user-select: none;
     -webkit-user-select: none;
+}
+
+g.node-data circle {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 /* Micro-flash on link creation */
