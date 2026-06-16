@@ -22,7 +22,8 @@ export class Dijkstra implements Algorithm {
       const curr = queue.shift()!;
       if (!allNodes.has(curr.id)) {
         allNodes.set(curr.id, curr);
-        dist[curr.id] = 999; // 999 actuará como nuestro "Infinito" visual
+        // Usamos Infinito real para que la matemática no se rompa
+        dist[curr.id] = Infinity; 
         curr.edges.forEach(e => queue.push(e.end));
       }
     }
@@ -44,7 +45,8 @@ export class Dijkstra implements Algorithm {
         }
       }
 
-      if (!u || minDist === 999) break; // Si no hay más nodos alcanzables, terminamos
+      // Si no hay más nodos alcanzables (o son todos Infinity), terminamos
+      if (!u || minDist === Infinity) break; 
 
       visited.add(u.id);
       snap([u.id]); // Foto analizando el nodo actual
@@ -53,11 +55,12 @@ export class Dijkstra implements Algorithm {
       for (const edge of u.edges) {
         const v = edge.end;
         if (!visited.has(v.id)) {
-          // El peso por defecto es 1 si no se definió otro
-          const weight = edge.weight ?? 1; 
-          const alt = dist[u.id] + weight;
+          // --- ESCUDO MATEMÁTICO ---
+          // Obligamos a JS a sumar números reales, nada de textos
+          const weight = Number(edge.weight ?? 1); 
+          const alt = Number(dist[u.id]) + weight;
           
-          if (alt < dist[v.id]) {
+          if (alt < Number(dist[v.id])) {
             dist[v.id] = alt;
             prev[v.id] = u.id;
             

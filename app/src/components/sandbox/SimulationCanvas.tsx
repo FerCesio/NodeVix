@@ -132,29 +132,70 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
             });
 
           if (Array.isArray(parsedData.links)) {
-            linksRef.current = parsedData.links
+            const loadedLinks: any[] = [];
+            
+            // 1. MAPA DE RESCATE: Buscamos la verdad absoluta antes de borrar nada
+            const rescuedValues = new Map<string, number>();
+            parsedData.links.forEach((l: any) => {
+              if (!l || !l.source || !l.target || l.type === 'algorithm') return;
+              const srcId = typeof l.source === 'object' ? l.source.id : l.source;
+              const tgtId = typeof l.target === 'object' ? l.target.id : l.target;
+              
+              const linkKey = l.directed ? `${srcId}->${tgtId}` : [srcId, tgtId].sort().join('-');
+              const val = Number(l.value ?? 1);
+              
+              // Si encontramos un clon con un valor mayor, actualizamos el mapa
+              if (!rescuedValues.has(linkKey) || val > rescuedValues.get(linkKey)!) {
+                rescuedValues.set(linkKey, val);
+              }
+            });
+
+            const processedLinks = new Set<string>();
+
+            // 2. AHORA SÍ, armamos las aristas limpias inyectando el valor rescatado
+            parsedData.links
               .filter((l: any) => l && l.source && l.target)
-              .map((l: any) => {
+              .forEach((l: any) => {
                 const srcId = typeof l.source === 'object' ? l.source.id : l.source;
                 const tgtId = typeof l.target === 'object' ? l.target.id : l.target;
+
+                if (l.type !== 'algorithm') {
+                  const linkKey = l.directed ? `${srcId}->${tgtId}` : [srcId, tgtId].sort().join('-');
+                  
+                  // Si es de doble mano y ya la procesamos, la aniquilamos
+                  if (!l.directed) {
+                    if (processedLinks.has(linkKey)) return; 
+                    processedLinks.add(linkKey);
+                  }
+                  
+                  // ¡Le inyectamos el valor máximo que encontramos entre todos sus clones!
+                  l.value = rescuedValues.get(linkKey) ?? 1;
+                }
 
                 const sourceNode = nodesRef.current.find(n => n.id === srcId);
                 const targetNode = nodesRef.current.find(n => n.id === tgtId);
                 
-                if (sourceNode && targetNode && l.type !== 'algorithm') {
-                    sourceNode.edges.push({ end: targetNode, weight: l.value, directed: l.directed });
-                    if (!l.directed) {
-                        targetNode.edges.push({ end: sourceNode, weight: l.value, directed: false });
+                if (sourceNode && targetNode) {
+                  if (l.type !== 'algorithm') {
+                    const edgeExists = sourceNode.edges.some(e => e.end.id === targetNode.id);
+                    if (!edgeExists) {
+                      sourceNode.edges.push({ end: targetNode, weight: Number(l.value), directed: l.directed });
+                      if (!l.directed) {
+                        targetNode.edges.push({ end: sourceNode, weight: Number(l.value), directed: false });
+                      }
                     }
-                }
+                  }
 
-                return {
-                  ...l,
-                  source: sourceNode,
-                  target: targetNode,
-                  type: l.type 
-                };
-              }).filter((l: any) => l.source && l.target); 
+                  loadedLinks.push({
+                    ...l,
+                    source: sourceNode,
+                    target: targetNode,
+                    type: l.type 
+                  });
+                }
+              });
+              
+            linksRef.current = loadedLinks;
           }
         }
       } catch (e) {
@@ -222,21 +263,36 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
     return () => {
         simulation.stop();
         if (eventsRef.current) eventsRef.current.destroy();
+        if (svgRef.current) {
+          svgRef.current.innerHTML = '';
+        }
     };
-  }, [initialData]); 
+  }, [initialData]);
 
   const handleUpdateNode = (updatedFields: Partial<INode>) => {
     if (!selectedNodeRef.current || !rendererRef.current) return;
 
     if (updatedFields.edges) {
       updatedFields.edges.forEach(edge => {
-        // Si la conexión es de doble mano (no tiene flecha)
+        const parsedWeight = Number(edge.weight);
+        edge.weight = parsedWeight;
+
+        // 1. Lógica del nodo (Ida y vuelta)
         if (!edge.directed) {
-          // Viajamos al nodo destino por referencia y actualizamos el peso de su ruta de vuelta
           const reverseEdge = edge.end.edges.find(e => e.end.id === selectedNodeRef.current!.id);
           if (reverseEdge) {
-            reverseEdge.weight = edge.weight;
+            reverseEdge.weight = parsedWeight;
           }
+        }
+
+        // 2. EL FIX: Sincronizamos la lista maestra para que se exporte/guarde bien
+        const d3Link = linksRef.current.find(l => 
+          ((l.source as INode).id === selectedNodeRef.current!.id && (l.target as INode).id === edge.end.id) ||
+          (!edge.directed && (l.target as INode).id === selectedNodeRef.current!.id && (l.source as INode).id === edge.end.id)
+        );
+        
+        if (d3Link) {
+          d3Link.value = parsedWeight; // Actualizamos el valor real
         }
       });
     }
@@ -245,7 +301,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
     setActiveNode({ ...selectedNodeRef.current });
     rendererRef.current.update();
   };
-
+  
   return (
     <div className={`canvas-wrapper mode-${mode === 'SELECT' ? 'select' : mode === 'ADD_NODE' ? 'add-node' : mode === 'LINK' ? 'link' : mode === 'ARROW' ? 'arrow' : 'delete'}`}>
       

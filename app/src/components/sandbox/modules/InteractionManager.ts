@@ -402,34 +402,37 @@ export class InteractionManager {
   private syncLinksFromEdges(edges: { source: string; target: string }[]): void {
     const nodeMap = new Map(this.refs.nodesRef.current.map(n => [n.id, n]));
     
-    // 1. FILTRADO QUIRÚRGICO: Dejamos únicamente el cable azul de control del algoritmo
+    // 1. FILTRADO QUIRÚRGICO: Dejamos únicamente el cable azul de control
     const algoControlLinks = this.refs.linksRef.current.filter(l => l.type === 'algorithm');
-    
-    // Armamos el nuevo array base insertando el control
     const newLinks: SimLink[] = [...algoControlLinks];
 
-    // 2. RECONSTRUCCIÓN DEL ÁRBOL DESDE LA FUENTE DE LA VERDAD (deduplicado)
-    const structuralKeys = new Set<string>();
+    // --- FIX DEFINITIVO: Registro de rutas para evitar clones bidireccionales ---
+    const processedPairs = new Set<string>();
+
+    // 2. RECONSTRUCCIÓN DEL ÁRBOL DESDE LA FUENTE DE LA VERDAD
     for (const node of this.refs.nodesRef.current) {
       if (node.edges) {
         for (const edge of node.edges) {
-          const key = edge.directed
-            ? `${node.id}->${edge.end.id}`
-            : [node.id, edge.end.id].sort().join('--');
-          if (!structuralKeys.has(key)) {
-            structuralKeys.add(key);
-            newLinks.push({
-              source: node,
-              target: edge.end,
-              value: edge.weight ?? 1,
-              directed: edge.directed
-            });
+          const fwdKey = `${node.id}-${edge.end.id}`;
+          const revKey = `${edge.end.id}-${node.id}`;
+
+          // Si es de doble mano y ya dibujamos la vuelta, la saltamos para no clonar la línea
+          if (!edge.directed && processedPairs.has(revKey)) {
+            continue;
           }
+
+          processedPairs.add(fwdKey);
+
+          newLinks.push({
+            source: node,
+            target: edge.end,
+            value: edge.weight ?? 1,
+            directed: edge.directed
+          });
         }
       }
     }
 
-    // Usamos un Set para evitar que el algoritmo duplique flechas en el mismo paso
     const insertedAlgoKeys = new Set<string>();
 
     // 3. INYECCIÓN DE LAS ARISTAS TEMPORALES DEL ALGORITMO
@@ -454,13 +457,13 @@ export class InteractionManager {
       }
     }
 
-    // 4. Asignamos el array reconstruido e impecable a la referencia global
+    // 4. Asignamos el array reconstruido y sin duplicados
     this.refs.linksRef.current = newLinks;
 
-    // 5. Sincronizamos el motor físico de D3 con la nueva estructura limpia
+    // 5. Sincronizamos el motor físico de D3
     this.physics.updateLinks(this.refs.linksRef.current);
     
-    // 6. Forzamos al renderizador a procesar las Claves Únicas (Key Function) que pusimos en CanvasRenderer
+    // 6. Forzamos al renderizador
     this.renderer.update();
   }
 
