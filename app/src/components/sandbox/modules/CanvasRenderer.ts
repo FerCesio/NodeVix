@@ -335,10 +335,10 @@ export class CanvasRenderer {
             .attr('font-size', '11px')
             .text(d => d.label);
           const btns = g.append('g').attr('class', 'algo-buttons').attr('transform', 'translate(0, 4)');
-          btns.append('image').attr('class', 'algo-btn btn-back').attr('x', -47).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/back.png', import.meta.url).href);
-          btns.append('image').attr('class', 'algo-btn btn-play').attr('x', -22).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/play.png', import.meta.url).href);
-          btns.append('image').attr('class', 'algo-btn btn-fwd').attr('x', 3).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/forward.png', import.meta.url).href);
-          btns.append('image').attr('class', 'algo-btn btn-reset').attr('x', 28).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/reset.png', import.meta.url).href);
+          btns.append('image').attr('class', 'algo-btn btn-back').attr('x', -47).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/back.svg', import.meta.url).href);
+          btns.append('image').attr('class', 'algo-btn btn-play').attr('x', -22).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/play.svg', import.meta.url).href);
+          btns.append('image').attr('class', 'algo-btn btn-fwd').attr('x', 3).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/forward.svg', import.meta.url).href);
+          btns.append('image').attr('class', 'algo-btn btn-reset').attr('x', 28).attr('y', -8).attr('width', 16).attr('height', 16).attr('href', new URL('../../../assets/icons/reset.svg', import.meta.url).href);
           g.append('text')
             .attr('class', 'algo-step')
             .attr('text-anchor', 'middle')

@@ -4,8 +4,8 @@ import { StructuresSection } from './StructuresSection';
 import { AlgorithmsSection } from './AlgorithmsSection';
 import '../../styles/sandbox.css';
 
-import structuresIcon from '../../assets/icons/structures.png';
-import algorithmsIcon from '../../assets/icons/algorithms.png';
+import structuresIcon from '../../assets/icons/structures.svg';
+import algorithmsIcon from '../../assets/icons/algorithms.svg';
 
 interface SandboxPanelProps {
   activeMode: ToolMode;

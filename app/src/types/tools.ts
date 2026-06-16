@@ -1,8 +1,8 @@
-import selectIcon from '../assets/icons/select.png';
-import addNodeIcon from '../assets/icons/add-node.png';
-import linkIcon from '../assets/icons/link.png';
-import arrowIcon from '../assets/icons/arrow.png';
-import deleteIcon from '../assets/icons/delete.png';
+import selectIcon from '../assets/icons/select.svg';
+import addNodeIcon from '../assets/icons/add-node.svg';
+import linkIcon from '../assets/icons/link.svg';
+import arrowIcon from '../assets/icons/arrow.svg';
+import deleteIcon from '../assets/icons/delete.svg';
 
 export type ToolMode = 'SELECT' | 'ADD_NODE' | 'LINK' | 'ARROW' | 'DELETE_ANY';
 

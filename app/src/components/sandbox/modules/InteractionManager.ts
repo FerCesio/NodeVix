@@ -38,6 +38,10 @@ export class InteractionManager {
   private autoPlayIntervals: Map<string, number> = new Map();
   private animating = false;
   private selectedNodes: Set<string> = new Set();
+  private clipboard: { nodes: { id: string; value: number; scale: number; color?: string; dx: number; dy: number }[]; edges: { fromIdx: number; toIdx: number; weight: number; directed: boolean }[] } | null = null;
+  private undoStack: string[] = [];
+  private redoStack: string[] = [];
+  private maxHistory = 50;
 
   constructor(
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -84,6 +88,81 @@ export class InteractionManager {
     d3.select('body').on('keydown.interaction', (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         this.cancelPending();
+      }
+      if (readOnly) return;
+      // Ctrl+C: copy selected nodes
+      if ((event.ctrlKey || event.metaKey) && event.key === 'c' && this.selectedNodes.size > 0) {
+        event.preventDefault();
+        const selected = this.refs.nodesRef.current.filter(n => this.selectedNodes.has(n.id));
+        const cx = selected.reduce((s, n) => s + (n.x ?? 0), 0) / selected.length;
+        const cy = selected.reduce((s, n) => s + (n.y ?? 0), 0) / selected.length;
+        const idToIdx = new Map(selected.map((n, i) => [n.id, i]));
+        const edges: { fromIdx: number; toIdx: number; weight: number; directed: boolean }[] = [];
+        for (const node of selected) {
+          for (const edge of node.edges) {
+            const toIdx = idToIdx.get(edge.end.id);
+            if (toIdx !== undefined) {
+              edges.push({ fromIdx: idToIdx.get(node.id)!, toIdx, weight: edge.weight, directed: edge.directed });
+            }
+          }
+        }
+        this.clipboard = {
+          nodes: selected.map(n => ({ id: n.id, value: n.value, scale: n.scale, color: n.color, dx: (n.x ?? 0) - cx, dy: (n.y ?? 0) - cy })),
+          edges
+        };
+      }
+      // Ctrl+Z: undo
+      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        this.undo();
+      }
+      // Ctrl+Y / Ctrl+Shift+Z: redo
+      if ((event.ctrlKey || event.metaKey) && (event.key === 'y' || (event.key === 'z' && event.shiftKey))) {
+        event.preventDefault();
+        this.redo();
+      }
+      // Ctrl+V: paste
+      if ((event.ctrlKey || event.metaKey) && event.key === 'v' && this.clipboard) {
+        event.preventDefault();
+        this.saveState();
+        const cx = (this.svg.node()?.clientWidth ?? 800) / 2;
+        const cy = (this.svg.node()?.clientHeight ?? 600) / 2;
+        const newNodes: INode[] = [];
+        for (const data of this.clipboard.nodes) {
+          const node = new DefaultNode(crypto.randomUUID(), data.value, cx + data.dx, cy + data.dy);
+          node.scale = data.scale;
+          if (data.color) node.color = data.color;
+          newNodes.push(node);
+        }
+        // Recreate edges
+        for (const e of this.clipboard.edges) {
+          const from = newNodes[e.fromIdx];
+          const to = newNodes[e.toIdx];
+          from.edges.push({ end: to, weight: e.weight, directed: e.directed });
+        }
+        // Create links
+        const newLinks: SimLink[] = [];
+        const processedPairs = new Set<string>();
+        for (const node of newNodes) {
+          for (const edge of node.edges) {
+            const key = edge.directed ? `${node.id}->${edge.end.id}` : [node.id, edge.end.id].sort().join('--');
+            if (!processedPairs.has(key)) {
+              processedPairs.add(key);
+              newLinks.push({ source: node, target: edge.end, value: edge.weight, directed: edge.directed });
+            }
+          }
+        }
+        this.refs.nodesRef.current.push(...newNodes);
+        this.refs.linksRef.current.push(...newLinks);
+        this.physics.updateNodes(this.refs.nodesRef.current);
+        this.physics.updateLinks(this.refs.linksRef.current);
+        this.renderer.update();
+        this.applyDrag(readOnly);
+        this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
+        // Select pasted nodes
+        this.selectedNodes.clear();
+        for (const n of newNodes) this.selectedNodes.add(n.id);
+        this.renderer.setSelectedNodes(this.selectedNodes);
       }
     });
 
@@ -149,6 +228,7 @@ export class InteractionManager {
         for (const n of enclosed) this.selectedNodes.add(n.id);
         this.renderer.setSelectedNodes(this.selectedNodes);
       } else if (mode === 'DELETE_ANY' && enclosed.length > 0) {
+        this.saveState();
         const toDelete = new Set(enclosed.map(n => n.id));
         this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => !toDelete.has(n.id));
         this.refs.linksRef.current = this.refs.linksRef.current.filter(l => !toDelete.has((l.source as INode).id) && !toDelete.has((l.target as INode).id));
@@ -191,6 +271,7 @@ export class InteractionManager {
       const targetNode = this.getNodeFromTarget(target);
 
       if (targetNode && source.id !== targetNode.id) {
+        this.saveState();
         const isAlgoSource = (source as any).kind === 'algorithm';
         const isAlgoTarget = (targetNode as any).kind === 'algorithm';
 
@@ -327,6 +408,7 @@ export class InteractionManager {
 
       // Preset placement
       if (this.refs.pendingPresetRef.current && !target.closest('g.node')) {
+        this.saveState();
         const presetId = this.refs.pendingPresetRef.current;
         this.refs.pendingPresetRef.current = null;
         const preset = PRESETS.find(p => p.id === presetId);
@@ -374,6 +456,7 @@ export class InteractionManager {
 
       // Add common node
       if (mode === 'ADD_NODE' && !target.closest('g.node')) {
+        this.saveState();
         const [x, y] = d3.pointer(event, this.svg.select<SVGGElement>('.container').node()!);
         const node = new DefaultNode(crypto.randomUUID(), Math.floor(Math.random() * 99) + 1, x, y);
         this.refs.nodesRef.current.push(node);
@@ -386,6 +469,7 @@ export class InteractionManager {
 
       // Deletion (Delete elements)
       if (mode === 'DELETE_ANY') {
+        this.saveState();
         if (this.selectedNodes.size > 0) {
           const toDelete = new Set(this.selectedNodes);
           this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => !toDelete.has(n.id));
@@ -592,6 +676,8 @@ export class InteractionManager {
     if (this.executors.has(algoNode.id)) return this.executors.get(algoNode.id)!;
     if (!algoNode.connectedTo) return null;
 
+    this.saveState();
+
     const entryNode = this.refs.nodesRef.current.find(n => n.id === algoNode.connectedTo);
     if (!entryNode) return null;
 
@@ -651,6 +737,80 @@ export class InteractionManager {
     this.refs.pendingPresetRef.current = null;
     this.refs.pendingAlgorithmRef.current = null;
     this.clearGhost();
+  }
+
+  saveState(): void {
+    const snapshot = JSON.stringify(this.refs.nodesRef.current.map(n => ({
+      id: n.id, value: n.value, scale: n.scale, color: n.color,
+      x: n.x, y: n.y,
+      edges: n.edges.map(e => ({ endId: e.end.id, weight: e.weight, directed: e.directed }))
+    })));
+    this.undoStack.push(snapshot);
+    if (this.undoStack.length > this.maxHistory) this.undoStack.shift();
+    this.redoStack = [];
+  }
+
+  private restoreState(snapshot: string): void {
+    const data = JSON.parse(snapshot) as { id: string; value: number; scale: number; color?: string; x: number; y: number; edges: { endId: string; weight: number; directed: boolean }[] }[];
+    const nodes: INode[] = data.map(d => {
+      const node = new DefaultNode(d.id, d.value, d.x, d.y);
+      node.scale = d.scale;
+      if (d.color) node.color = d.color;
+      node.x = d.x; node.y = d.y;
+      return node;
+    });
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    for (let i = 0; i < data.length; i++) {
+      for (const e of data[i].edges) {
+        const target = nodeMap.get(e.endId);
+        if (target) nodes[i].edges.push({ end: target, weight: e.weight, directed: e.directed });
+      }
+    }
+    // Rebuild links
+    const links: SimLink[] = [];
+    const seen = new Set<string>();
+    for (const node of nodes) {
+      for (const edge of node.edges) {
+        const key = edge.directed ? `${node.id}->${edge.end.id}` : [node.id, edge.end.id].sort().join('--');
+        if (!seen.has(key)) {
+          seen.add(key);
+          links.push({ source: node, target: edge.end, value: edge.weight, directed: edge.directed });
+        }
+      }
+    }
+    this.refs.nodesRef.current = nodes;
+    this.refs.linksRef.current = links;
+    this.physics.updateNodes(nodes);
+    this.physics.updateLinks(links);
+    this.renderer.update();
+    this.applyDrag(false);
+    this.refs.structureManagerRef.current.sync(nodes, links);
+    this.selectedNodes.clear();
+    this.renderer.setSelectedNodes(this.selectedNodes);
+  }
+
+  private undo(): void {
+    if (this.undoStack.length === 0) return;
+    // Save current state to redo
+    const current = JSON.stringify(this.refs.nodesRef.current.map(n => ({
+      id: n.id, value: n.value, scale: n.scale, color: n.color,
+      x: n.x, y: n.y,
+      edges: n.edges.map(e => ({ endId: e.end.id, weight: e.weight, directed: e.directed }))
+    })));
+    this.redoStack.push(current);
+    this.restoreState(this.undoStack.pop()!);
+  }
+
+  private redo(): void {
+    if (this.redoStack.length === 0) return;
+    // Save current state to undo
+    const current = JSON.stringify(this.refs.nodesRef.current.map(n => ({
+      id: n.id, value: n.value, scale: n.scale, color: n.color,
+      x: n.x, y: n.y,
+      edges: n.edges.map(e => ({ endId: e.end.id, weight: e.weight, directed: e.directed }))
+    })));
+    this.undoStack.push(current);
+    this.restoreState(this.redoStack.pop()!);
   }
 
   applyDrag(readOnly: boolean = false): void {

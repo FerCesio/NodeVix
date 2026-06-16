@@ -20,11 +20,11 @@ const bogoSort = new BogoSort();
 const mergeSort = new MergeSort();
 const dijkstra = new Dijkstra();
 
-import bubbleSortIcon from '../../assets/icons/bubble-sort.png';
-import inorderIcon from '../../assets/icons/inorder.png';
-import bogoSortIcon from '../../assets/icons/bogo-sort.png';
-import mergeSortIcon from '../../assets/icons/merge-sort.png';
-import dijkstraIcon from '../../assets/icons/dijkstra.png';
+import bubbleSortIcon from '../../assets/icons/bubble-sort.svg';
+import inorderIcon from '../../assets/icons/inorder.svg';
+import bogoSortIcon from '../../assets/icons/bogo-sort.svg';
+import mergeSortIcon from '../../assets/icons/merge-sort.svg';
+import dijkstraIcon from '../../assets/icons/dijkstra.svg';
 
 export const AVAILABLE_ALGORITHMS: AlgorithmConfig[] = [
   {
