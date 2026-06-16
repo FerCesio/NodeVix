@@ -127,7 +127,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
               {node.edges.map((edge, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', color: '#bdc3c7' }}>
-                    Hacia: {edge.end.value} {edge.directed ? '(➡)' : '(↔)'}
+                    Hacia: {edge.end.value} {edge.directed ? <svg width="12" height="12" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle'}}><path d="M4 16h24M22 10l6 6-6 6"/></svg> : <svg width="12" height="12" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle'}}><path d="M4 16h24M10 10l-6 6 6 6M22 10l6 6-6 6"/></svg>}
                   </span>
                   <input
                     type="number"

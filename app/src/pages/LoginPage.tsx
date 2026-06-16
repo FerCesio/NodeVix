@@ -2,6 +2,7 @@ import LoginForm from "../components/user/LoginForm"; // Importás el corazón
 import "../styles/general.css";
 import TitleAndDesc from "../components/general/TitleAndDesc";
 import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
 
@@ -18,7 +19,10 @@ export default function LoginPage() {
         <p>
           or
         </p>
-        <button className="btn-google" onClick={() => window.location.href = "http://localhost:8080/oauth2/authorization/google"}>
+        <button className="btn-google" onClick={() => {
+          toast.loading("Redirecting to Google...");
+          window.location.href = "http://localhost:8080/oauth2/authorization/google";
+        }}>
           Login with Google
         </button>
 
