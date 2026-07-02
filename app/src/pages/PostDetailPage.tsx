@@ -165,9 +165,9 @@ export default function PostDetailPage() {
                     <span className="post-project-title">{post.projectName}</span>
                 </div>
                 <div className="post-topbar-right" style={{ gap: '10px' }}>
-                    <span className="post-stat">👁 {post.views}</span>
-                    <button className={`post-action-btn ${interaction?.userLiked ? "active" : ""}`} onClick={handleLike} disabled={!isLoggedIn}>👍 {interaction !== null ? interaction.likes : post.likes}</button>
-                    <button className={`post-action-btn ${interaction?.userDisliked ? "active" : ""}`} onClick={handleDislike} disabled={!isLoggedIn}>👎 {interaction !== null ? interaction.dislikes : post.dislikes}</button>
+                    <span className="post-stat"><svg width="14" height="14" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 16s5-8 14-8 14 8 14 8-5 8-14 8-14-8-14-8z"/><circle cx="16" cy="16" r="4"/></svg> {post.views}</span>
+                    <button className={`post-action-btn ${interaction?.userLiked ? "active" : ""}`} onClick={handleLike} disabled={!isLoggedIn}><svg width="14" height="14" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 28H4a2 2 0 01-2-2v-9a2 2 0 012-2h5m0 13V15m0 13h11.4a3 3 0 002.97-2.57l1.5-9A3 3 0 0021.92 13H20v-5a3 3 0 00-3-3l-3 8v15"/></svg> {interaction !== null ? interaction.likes : post.likes}</button>
+                    <button className={`post-action-btn ${interaction?.userDisliked ? "active" : ""}`} onClick={handleDislike} disabled={!isLoggedIn}><svg width="14" height="14" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4h5a2 2 0 012 2v9a2 2 0 01-2 2h-5m0-13v13m0-13H11.6a3 3 0 00-2.97 2.57l-1.5 9A3 3 0 0010.08 19H12v5a3 3 0 003 3l3-8V4"/></svg> {interaction !== null ? interaction.dislikes : post.dislikes}</button>
                     
                     {/* --- BOTÓN DE CLONACIÓN --- */}
                     <button 
@@ -181,14 +181,14 @@ export default function PostDetailPage() {
                         }}
                         title="Clone this structure to your personal projects"
                     >
-                        💾 Save a copy
+                        <svg width="14" height="14" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M26 28H6a2 2 0 01-2-2V6a2 2 0 012-2h14l8 8v16a2 2 0 01-2 2z"/><path d="M22 28V18H10v10M10 4v8h10"/></svg> Save a copy
                     </button>
 
                     <button
                         className={`post-action-btn ${showComments ? "active" : ""}`}
                         onClick={handleToggleComments}
                     >
-                        💬 Comments ({comments.length})
+                        <svg width="14" height="14" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M28 15.5a11.4 11.4 0 01-1.2 5.2 11.5 11.5 0 01-10.3 6.3 11.4 11.4 0 01-5.2-1.2L4 28l2.2-7.3A11.4 11.4 0 015 15.5 11.5 11.5 0 0111.3 5.2 11.4 11.4 0 0116.5 4h.7A11.5 11.5 0 0128 14.8z"/></svg> Comments ({comments.length})
                     </button>
                 </div>
             </div>

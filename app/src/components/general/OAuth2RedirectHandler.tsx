@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function OAuth2RedirectHandler() {
     const [searchParams] = useSearchParams();
@@ -7,11 +8,13 @@ export default function OAuth2RedirectHandler() {
 
     useEffect(() => {
         const token = searchParams.get("token");
+        const error = searchParams.get("error");
 
         if (token) {
             localStorage.setItem("token", token);
-            navigate("/home"); // ¡Login exitoso!
+            navigate("/home");
         } else {
+            toast.error(error || "Google login failed. Try again.");
             navigate("/login");
         }
     }, [searchParams, navigate]);

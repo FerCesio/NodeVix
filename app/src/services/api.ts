@@ -27,10 +27,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     // Si el back devuelve 401 (Unauthorized), el token no sirve más
-    if (error.response && error.response.status === 401) {
+    // No actuar en rutas de auth (login/register) para no interferir con el feedback
+    const url = error.config?.url || "";
+    if (error.response && error.response.status === 401 && !url.includes("/auth/")) {
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
-      // Opcional: Redirigir al login
       window.location.href = "/login";
     }
     return Promise.reject(error);

@@ -138,7 +138,6 @@ export default function ProjectPage() {
         
         if (!id || id === "new") {
             toast.error("Please save the project before sharing!", { 
-                icon: "💾",
                 style: { borderRadius: '10px', background: '#333', color: '#fff' }
             });
             return;
@@ -153,8 +152,8 @@ export default function ProjectPage() {
             confirmButtonColor: "#2ecc71", // Verde para PDF
             denyButtonColor: "#3498db",    // Azul para redes
             cancelButtonColor: "#888",
-            confirmButtonText: "📄 Export as PDF",
-            denyButtonText: "🌐 Share to Socials",
+            confirmButtonText: "Export as PDF",
+            denyButtonText: "Share to Socials",
             cancelButtonText: "Close",
             background: "#1a1a1a",
             color: "#fff",
@@ -294,7 +293,7 @@ export default function ProjectPage() {
                     </a>
                     
                     <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}" target="_blank" rel="noopener noreferrer" style="background: #0A66C2; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                        💼 Share on LinkedIn
+                        Share on LinkedIn
                     </a>
                     
                     <a href="https://api.whatsapp.com/send?text=${whatsappText}" target="_blank" rel="noopener noreferrer" style="background: #25D366; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px;">
@@ -302,7 +301,7 @@ export default function ProjectPage() {
                     </a>
                     
                     <button id="copy-link-btn" style="background: #333; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 16px;">
-                        🔗 Copy Link
+                        Copy Link
                     </button>
                 </div>
             `,
