@@ -260,43 +260,47 @@ export default function ProjectPage() {
     };
 
     const shareToSocials = async () => {
-        const projectUrl = window.location.href;
-        const shareText = `Check out my simulation "${projectName || 'Structure'}" on NodeVix! 🚀`;
+        const projectUrl = window.location.href; 
+        const shareTitle = projectName ? `Check out "${projectName}"` : "Check out my simulation";
+        const shareText = `I built this interactive algorithm simulation on NodeVix! 🚀 Take a look:`;
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-        // 1. Intentamos usar la Web Share API nativa (Magia pura en celulares y SO modernos)
-        if (navigator.share) {
+       
+        if (navigator.share && isMobile) {
             try {
                 await navigator.share({
-                    title: 'NodeVix Project',
+                    title: shareTitle,
                     text: shareText,
                     url: projectUrl
                 });
-                // Si funcionó y el usuario compartió, terminamos acá.
                 return; 
             } catch (err: any) {
-                // Si el usuario cerró el menú nativo sin compartir, lo ignoramos.
                 if (err.name === 'AbortError') return;
                 console.log("Error con el share nativo:", err);
             }
         }
 
-        // 2. FALLBACK: Si no hay soporte nativo, abrimos un menú de SweetAlert hermoso
         const encodedText = encodeURIComponent(shareText);
         const encodedUrl = encodeURIComponent(projectUrl);
+        const whatsappText = encodeURIComponent(`${shareTitle} - ${shareText} ${projectUrl}`);
 
         Swal.fire({
             title: 'Share Project',
             html: `
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
-                    <a href="https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}" target="_blank" rel="noopener noreferrer" style="background: #000; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px; border: 1px solid #333;">
+                    
+                    <a href="https://x.com/intent/post?text=${encodedText}&url=${encodedUrl}" target="_blank" rel="noopener noreferrer" style="background: #000; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px; border: 1px solid #333;">
                         𝕏 Share on X
                     </a>
+                    
                     <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}" target="_blank" rel="noopener noreferrer" style="background: #0A66C2; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px;">
                         💼 Share on LinkedIn
                     </a>
-                    <a href="https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}" target="_blank" rel="noopener noreferrer" style="background: #25D366; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                    
+                    <a href="https://api.whatsapp.com/send?text=${whatsappText}" target="_blank" rel="noopener noreferrer" style="background: #25D366; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px;">
                         💬 Share on WhatsApp
                     </a>
+                    
                     <button id="copy-link-btn" style="background: #333; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 16px;">
                         🔗 Copy Link
                     </button>
@@ -306,12 +310,11 @@ export default function ProjectPage() {
             showCloseButton: true,
             background: "#1a1a1a",
             color: "#fff",
-            // Le inyectamos la lógica al botón de "Copiar Link" usando el ciclo de vida de SweetAlert
             didOpen: () => {
                 const copyBtn = document.getElementById('copy-link-btn');
                 if (copyBtn) {
                     copyBtn.onclick = () => {
-                        navigator.clipboard.writeText(projectUrl);
+                        navigator.clipboard.writeText(`${shareTitle} - ${shareText} ${projectUrl}`);
                         toast.success("Link copied to clipboard!", { icon: "📋" });
                         Swal.close();
                     };

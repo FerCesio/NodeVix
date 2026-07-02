@@ -61,6 +61,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
     getCanvasState: () => {
       const cleanNodes = nodesRef.current.map(n => {
         const isAlgo = (n as any).kind === 'algorithm';
+        const isStruct = (n as any).kind === 'stack' || (n as any).kind === 'queue'; // <-- NUEVO
         
         return {
           id: n.id,
@@ -75,6 +76,11 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
             label: (n as any).label,
             connectedTo: (n as any).connectedTo,
             state: { snapshots: [], currentStep: 0, status: 'idle' }
+          }),
+          // --- NUEVO: Si es estructura, guardamos su tipo y sus números ---
+          ...(isStruct && {
+            kind: (n as any).kind,
+            elements: (n as any).elements || []
           })
         };
       });
@@ -120,7 +126,24 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
                   edges: []
                 };
                 return algoNode;
-              } else {
+              } else if (n.kind === 'stack' || n.kind === 'queue') {
+                const structNode: any = {
+                  id: n.id,
+                  kind: n.kind,
+                  value: n.value ?? 0,
+                  x: Number(n.x) || 0,
+                  y: Number(n.y) || 0,
+                  fx: Number(n.x) || 0,
+                  fy: Number(n.y) || 0,
+                  scale: n.scale ?? 1.5,
+                  color: n.color ?? (n.kind === 'stack' ? '#8e44ad' : '#2980b9'),
+                  elements: n.elements || [], // ¡Rescatamos los números guardados!
+                  pos: { x: Number(n.x) || 0, y: Number(n.y) || 0 },
+                  edges: []
+                };
+                return structNode;
+              }
+              else {
                 const node = new DefaultNode(n.id, n.value ?? 1, Number(n.x) || 0, Number(n.y) || 0);
                 node.pos = { x: Number(n.x), y: Number(n.y) };
                 node.scale = n.scale ?? 1;

@@ -13,7 +13,7 @@ export default function PostsPage() {
     // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const pageSize = 10; 
+    const pageSize = 3; 
 
     useEffect(() => {
         const fetchPosts = async () => {

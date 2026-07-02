@@ -55,6 +55,14 @@ rect {
     stroke-width: 1.5px;
 }
 
+/* Rects de struct gestionan su propio stroke desde el renderer */
+g.node-data rect.struct-bg,
+g.node-data rect.struct-border,
+g.node-data .struct-elements rect {
+    stroke: unset;
+    stroke-width: unset;
+}
+
 /* Contextual cursors per mode */
 .canvas-wrapper.mode-select svg { cursor: default; }
 .canvas-wrapper.mode-add-node svg { cursor: cell; }

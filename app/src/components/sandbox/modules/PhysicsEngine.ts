@@ -11,10 +11,18 @@ export class PhysicsEngine {
     const MAX_DIST = 260;
     const LINK_STRENGTH = 0.05;
 
+    // Calcula el radio de colisión real según el tipo de nodo
+    const collisionRadius = (node: INode): number => {
+      const scale = node.scale ?? 1;
+      if ((node as any).kind === 'stack') return (60 * scale) / 2 + 8; // mayor semi-eje + padding
+      if ((node as any).kind === 'queue') return (130 * scale) / 2 + 8;
+      return 20 * scale + 6; // nodo normal
+    };
+
     this.simulation = d3.forceSimulation<INode>(nodes)
       .force('link', d3.forceLink<INode, SimLink>(links).distance(120).strength(0))
       .force('charge', d3.forceManyBody().strength(-80).distanceMin(40).distanceMax(200))
-      .force('collide', d3.forceCollide(35))
+      .force('collide', d3.forceCollide<INode>(collisionRadius).iterations(2))
       .force('rangeLink', () => {
         const currentLinks = (this.simulation.force('link') as d3.ForceLink<INode, SimLink>).links() as SimLink[];
         for (const link of currentLinks) {

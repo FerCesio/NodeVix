@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="#ffffff" stroke-width="2">
+  <!-- Contenedor tubo horizontal -->
+  <path d="M6 10 L6 22 M26 10 L26 22" stroke-linecap="round"/>
+  <!-- Elementos en la fila (3 cajas) -->
+  <rect x="7"  y="12" width="5" height="8" rx="1" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-width="1.5"/>
+  <rect x="13" y="12" width="5" height="8" rx="1" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-width="1.5"/>
+  <rect x="19" y="12" width="5" height="8" rx="1" fill="#ffffff" fill-opacity="0.25" stroke="#ffffff" stroke-width="1.5"/>
+  <!-- Flecha enqueue (izquierda entra) -->
+  <path d="M3 16 L6 16 M3 16 L4.5 14 M3 16 L4.5 18" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Flecha dequeue (derecha sale) -->
+  <path d="M26 16 L29 16 M29 16 L27.5 14 M29 16 L27.5 18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
