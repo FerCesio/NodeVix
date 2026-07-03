@@ -35,22 +35,22 @@ svg {
     overflow: hidden;
 }
 
-/* Estilos para los elementos SVG */
-line {
+/* Estilos para los elementos SVG — restringidos al canvas para no afectar SVGs de la UI */
+.canvas-wrapper line {
     stroke: var(--line-color);
     stroke-opacity: var(--line-opacity);
 }
 
 #grid line {
-    stroke: #2a2a2a; /* Líneas de la grilla apenas visibles */
+    stroke: #2a2a2a;
 }
 
-circle {
+.canvas-wrapper circle {
     stroke: none;
     stroke-width: 0;
 }
 
-rect {
+.canvas-wrapper rect {
     stroke: #fff;
     stroke-width: 1.5px;
 }

@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
+                        .requestMatchers("/ws-nodevix/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // Evita que Spring tire redirects 302 si el token falla en la API, mandando un 401 limpio a React

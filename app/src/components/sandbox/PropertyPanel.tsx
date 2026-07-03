@@ -52,7 +52,10 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
   }, [isDragging]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).tagName.toLowerCase() === 'button') return;
+    const tag = (e.target as HTMLElement).tagName.toLowerCase();
+    // No iniciar drag si el click viene de un elemento interactivo
+    if (tag === 'button' || tag === 'input' || tag === 'canvas' || tag === 'select' || tag === 'textarea') return;
+    e.stopPropagation();
     setIsDragging(true);
     dragStart.current = { x: e.clientX, y: e.clientY };
     panelStart.current = { ...position };
@@ -135,15 +138,43 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
             </div>
 
             {/* Visualizador en miniatura para el panel */}
-            <div style={{ marginTop: '15px', display: 'flex', flexDirection: (node as any).kind === 'stack' ? 'column-reverse' : 'row', gap: '4px', overflowX: 'auto', paddingBottom: '5px' }}>
-              {((node as any).elements || []).map((val: number, i: number) => (
-                <div key={i} style={{ 
-                  background: '#34495e', border: '1px solid #7f8c8d', padding: '4px 8px', 
-                  minWidth: '30px', textAlign: 'center', borderRadius: '3px', color: '#ecf0f1', fontWeight: 'bold'
-                }}>
-                  {val}
-                </div>
-              ))}
+            <div style={{ 
+              marginTop: '15px', 
+              display: 'flex', 
+              flexDirection: (node as any).kind === 'stack' ? 'column-reverse' : 'row', 
+              gap: '4px', 
+              overflowX: (node as any).kind === 'stack' ? 'hidden' : 'auto', 
+              overflowY: (node as any).kind === 'stack' ? 'auto' : 'hidden', 
+              maxHeight: (node as any).kind === 'stack' ? '100px' : 'none',
+              paddingBottom: '5px',
+              paddingRight: '5px',
+              flexWrap: (node as any).kind === 'stack' ? 'nowrap' : 'nowrap'
+            }}>
+              {/* Envolvemos los elementos en OTRO div interno para el Stack. 
+                  Esto "encierra" los items y obliga al div de afuera a scrollear */}
+              {((node as any).kind === 'stack') ? (
+                  <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '4px', width: '100%' }}>
+                     {((node as any).elements || []).map((val: number, i: number) => (
+                        <div key={i} style={{ 
+                          background: '#34495e', border: '1px solid #7f8c8d', padding: '4px 8px', 
+                          minWidth: '30px', textAlign: 'center', borderRadius: '3px', color: '#ecf0f1', fontWeight: 'bold'
+                        }}>
+                          {val}
+                        </div>
+                      ))}
+                  </div>
+              ) : (
+                 /* Si es Queue, lo dejamos normal (porque el row con overflowX funciona bien) */
+                 ((node as any).elements || []).map((val: number, i: number) => (
+                    <div key={i} style={{ 
+                      background: '#34495e', border: '1px solid #7f8c8d', padding: '4px 8px', 
+                      minWidth: '30px', textAlign: 'center', borderRadius: '3px', color: '#ecf0f1', fontWeight: 'bold',
+                      flexShrink: 0 /* Evita que la Queue los aplaste cuando son muchos */
+                    }}>
+                      {val}
+                    </div>
+                  ))
+              )}
             </div>
           </div>
         )}
@@ -197,7 +228,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
               {node.edges.map((edge, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', color: '#bdc3c7' }}>
-                    Hacia: {edge.end.value} {edge.directed ? <svg width="12" height="12" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle'}}><path d="M4 16h24M22 10l6 6-6 6"/></svg> : <svg width="12" height="12" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle'}}><path d="M4 16h24M10 10l-6 6 6 6M22 10l6 6-6 6"/></svg>}
+                    Hacia: {edge.end.value} {edge.directed ? '→' : '↔'}
                   </span>
                   <input
                     type="number"

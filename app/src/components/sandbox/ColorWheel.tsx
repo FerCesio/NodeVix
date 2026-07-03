@@ -62,6 +62,7 @@ export const ColorWheel: React.FC<ColorWheelProps> = ({ onChange, size = 175 }) 
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
     dragging.current = true;
     pickColor(e);
     const onMove = (ev: MouseEvent) => { if (dragging.current) pickColor(ev); };

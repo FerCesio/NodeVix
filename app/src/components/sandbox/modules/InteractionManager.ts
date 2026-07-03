@@ -25,6 +25,7 @@ export interface InteractionRefs {
   pendingAlgorithmRef: React.MutableRefObject<string | null>;
   onSelectNode: (nodeId: string | null) => void;
   onNodeSelected: (node: INode | null) => void;
+  onNodeCreated: (action: 'CREATE_NODE', nodeId: string, payload: any) => void;
 }
 
 export class InteractionManager {
@@ -288,6 +289,16 @@ export class InteractionManager {
           this.physics.updateLinks(this.refs.linksRef.current);
           this.renderer.update();
           this.applyDrag(readOnly);
+
+          this.refs.onNodeCreated('CREATE_NODE', algoNode.id, {
+            isLink: true,
+            isAlgoLink: true, // Flag especial para que el receptor sepa qué tipo de cable es
+            targetId: structureNode.id,
+            directed: true,
+            value: 1
+          });
+
+
         } else {
           const directed = mode === 'ARROW';
           const link: SimLink = { source, target: targetNode, value: 1, directed };
@@ -299,6 +310,13 @@ export class InteractionManager {
           this.applyDrag(readOnly);
           this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
           this.invalidateExecutors();
+
+          this.refs.onNodeCreated('CREATE_NODE', source.id, {
+            isLink: true,
+            targetId: targetNode.id,
+            directed: directed,
+            value: 1
+          });
         }
       }
 
@@ -325,6 +343,23 @@ export class InteractionManager {
           this.applyDrag(readOnly);
           this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
           this.invalidateExecutors();
+          nodes.forEach(node => {
+            const realValue = node.value !== undefined ? node.value : ((node as any).val ?? 1);
+            this.refs.onNodeCreated('CREATE_NODE', node.id, {
+              kind: (node as any).kind || 'default', // Ajustá a cómo guarde tu preset el tipo
+              x: node.x,
+              y: node.y,
+              value: realValue
+            });
+          });
+          links.forEach(link => {
+          this.refs.onNodeCreated('CREATE_NODE', link.source.id, {
+            isLink: true, // Flag para saber que no es un círculo, es un cable
+            targetId: link.target.id,
+            directed: link.directed,
+            value: link.value ?? 1
+          });
+        });
         }
         return;
       }
@@ -350,6 +385,14 @@ export class InteractionManager {
           this.physics.updateNodes(this.refs.nodesRef.current);
           this.renderer.update();
           this.applyDrag(readOnly);
+
+          this.refs.onNodeCreated('CREATE_NODE', algoNode.id, {
+            kind: 'algorithm',
+            algorithmId: algoNode.algorithmId,
+            label: algoNode.label,
+            x: algoNode.x,
+            y: algoNode.y
+          });
         }
         return;
       }
@@ -450,6 +493,13 @@ export class InteractionManager {
           this.physics.updateNodes(this.refs.nodesRef.current);
           this.renderer.update();
           this.applyDrag(readOnly);
+          this.refs.onNodeCreated('CREATE_NODE', algoNode.id, {
+            kind: 'algorithm',
+            algorithmId: algoNode.algorithmId,
+            label: algoNode.label,
+            x: algoNode.x,
+            y: algoNode.y
+          });
         }
         return;
       }
@@ -465,6 +515,12 @@ export class InteractionManager {
         this.applyDrag(readOnly);
         this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
         this.invalidateExecutors();
+        this.refs.onNodeCreated('CREATE_NODE', node.id, {
+          kind: (node as any).kind || 'default', // Si DefaultNode guarda su tipo, usalo acá
+          x: node.x,
+          y: node.y,
+          value: node.value
+        });
       }
 
       // Deletion (Delete elements)

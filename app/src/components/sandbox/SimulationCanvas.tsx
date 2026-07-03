@@ -16,6 +16,7 @@ import { PhysicsEngine, type SimLink } from './modules/PhysicsEngine';
 import { CanvasRenderer } from './modules/CanvasRenderer';
 import { CameraSystem } from './modules/CameraSystem';
 import { InteractionManager } from './modules/InteractionManager';
+import { NetworkManager, type ProjectDelta } from '../../services/NetworkManager';
 
 export interface SimulationCanvasRef {
   getCanvasState: () => { nodes: any[], links: any[] };
@@ -44,7 +45,240 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
   const eventsRef = useRef<InteractionManager | null>(null);
   const pendingPresetRef = useRef<string | null>(null);
   const pendingAlgorithmRef = useRef<string | null>(null);
+  const networkManagerRef = useRef<NetworkManager | null>(null);
+  const senderIdRef = useRef<string>(crypto.randomUUID());
+  const pendingLinksRef = useRef<{ sourceId: string, targetId: string, value: number, directed: boolean }[]>([]);
 
+  // Usamos una sala de test hardcodeada por ahora. Después puede venir de la URL
+  const projectId = "proyecto-test-123"; 
+
+  useEffect(() => {
+    // Inicializamos el manager y le pasamos la función que procesa los deltas remotos (el Paso 4)
+    networkManagerRef.current = new NetworkManager(projectId, (remoteDelta) => {
+      handleRemoteDelta(remoteDelta);
+    });
+
+    // Levantamos el tubo de WebSocket
+    networkManagerRef.current.connect();
+
+    // Limpieza: si el usuario se va del canvas, cortamos la llamada
+    return () => {
+      networkManagerRef.current?.disconnect();
+    };
+  }, [projectId]);
+
+  const handleRemoteDelta = (delta: ProjectDelta) => {
+    console.log("[SimulationCanvas] ¡ENTRÓ UN DELTA DESDE LA RED!", delta);
+    
+    const payloadData = delta.payload;
+    const remoteSenderId = payloadData?.senderId;
+
+    // --- EL FILTRO MÁGICO ---
+    // Si el mensaje lo originé yo mismo, lo descarto de una porque mi pantalla ya cambió con el click
+    if (remoteSenderId === senderIdRef.current) {
+      return; 
+    }
+
+    if ((delta.action as any) === 'CREATE_NODE') {
+      
+      // =================================================================
+      // CASO A: LLEGÓ UN CABLE REMOTO (LINK)
+      // =================================================================
+      if (payloadData?.isLink) {
+
+        if (payloadData?.isAlgoLink) {
+          const algoNode = nodesRef.current.find(n => n.id === delta.nodeId) as any;
+          const structureNode = nodesRef.current.find(n => n.id === payloadData.targetId);
+
+          if (algoNode && structureNode) {
+            // Limpiamos cables de control viejos que pudiera tener ese algoritmo
+            linksRef.current = linksRef.current.filter(l => !((l as any).type === 'algorithm' && (l.source as INode).id === algoNode.id));
+            
+            algoNode.connectedTo = structureNode.id;
+            linksRef.current.push({ 
+              source: algoNode, 
+              target: structureNode, 
+              value: 1, 
+              directed: true, 
+              type: 'algorithm' 
+            } as any);
+
+            if (physicsRef.current) {
+              physicsRef.current.updateLinks(linksRef.current);
+              physicsRef.current.getSimulation().alpha(0.2).restart();
+            }
+            if (rendererRef.current) rendererRef.current.update();
+          }
+          return;
+        }
+
+        const sourceNode = nodesRef.current.find(n => n.id === delta.nodeId);
+        const targetNode = nodesRef.current.find(n => n.id === payloadData.targetId);
+
+        // SI ALGUNO NO EXISTE TODAVÍA, LO MANDAMOS A LA SALA DE ESPERA
+        if (!sourceNode || !targetNode) {
+          pendingLinksRef.current.push({
+            sourceId: delta.nodeId,
+            targetId: payloadData.targetId,
+            value: Number(payloadData.value),
+            directed: payloadData.directed
+          });
+          return; // Esperamos a que nazcan los nodos
+        }
+
+        // Si ya existen ambos, los conectamos
+        const linkExists = linksRef.current.some(l => 
+          (l.source as INode).id === sourceNode.id && (l.target as INode).id === targetNode.id
+        );
+
+        if (!linkExists) {
+          sourceNode.edges.push({ end: targetNode, weight: Number(payloadData.value), directed: payloadData.directed });
+          if (!payloadData.directed) targetNode.edges.push({ end: sourceNode, weight: Number(payloadData.value), directed: false });
+
+          linksRef.current.push({ source: sourceNode, target: targetNode, value: Number(payloadData.value), directed: payloadData.directed });
+          if (physicsRef.current) {
+            physicsRef.current.updateLinks(linksRef.current);
+            physicsRef.current.getSimulation().alpha(0.1).restart();
+          }
+        }
+        if (rendererRef.current) rendererRef.current.update();
+        return;
+      }
+
+      // =================================================================
+      // CASO NUEVO: LLEGÓ UN NODO DE ALGORITMO REMOTO
+      // =================================================================
+      if (payloadData?.kind === 'algorithm') {
+        const exists = nodesRef.current.some(n => n.id === delta.nodeId);
+        if (!exists) {
+          const algoNode: any = {
+            kind: 'algorithm',
+            id: delta.nodeId,
+            algorithmId: payloadData.algorithmId,
+            label: payloadData.label,
+            pos: { x: payloadData.x, y: payloadData.y },
+            scale: 1,
+            x: payloadData.x,
+            y: payloadData.y,
+            fx: null,
+            fy: null,
+            connectedTo: null, 
+            state: { snapshots: [], currentStep: 0, status: 'idle' },
+            edges: []
+          };
+
+          nodesRef.current.push(algoNode);
+
+          if (physicsRef.current) {
+            physicsRef.current.updateNodes(nodesRef.current);
+            physicsRef.current.getSimulation().alpha(0.3).restart();
+          }
+        }
+        
+        if (rendererRef.current) rendererRef.current.update();
+        return;
+      }
+
+      // =================================================================
+      // CASO B: LLEGÓ UN NODO COMÚN (CIRCULO / ESTRUCTURA)
+      // =================================================================
+      const exists = nodesRef.current.some(n => n.id === delta.nodeId);
+      if (!exists) {
+        const newRemoteNode = new DefaultNode(
+          delta.nodeId, 
+          payloadData.value ?? 1, 
+          payloadData.x, 
+          payloadData.y
+        );
+        
+        // --- FORCE FIX: Candado de asignación para saltear reseteos del constructor ---
+        newRemoteNode.value = payloadData.value ?? 1;
+        if ((newRemoteNode as any).val !== undefined) {
+          (newRemoteNode as any).val = payloadData.value ?? 1;
+        }
+        
+        (newRemoteNode as any).kind = payloadData.kind;
+        newRemoteNode.scale = payloadData.kind === 'stack' || payloadData.kind === 'queue' ? 1.5 : 1.0;
+        newRemoteNode.color = payloadData.kind === 'stack' ? '#8e44ad' : payloadData.kind === 'queue' ? '#2980b9' : '#2ecc71';
+        (newRemoteNode as any).elements = [];
+        (newRemoteNode as any).edges = [];
+        
+        nodesRef.current.push(newRemoteNode);
+        
+        if (physicsRef.current) physicsRef.current.updateNodes(nodesRef.current);
+        if (structureManagerRef.current) structureManagerRef.current.sync(nodesRef.current, linksRef.current);
+
+        // --- EFECTO RECOLECTOR: REVISAMOS SI ESTE NODO TIENE CABLES ESPERÁNDOLO ---
+        pendingLinksRef.current = pendingLinksRef.current.filter(pending => {
+          const srcNode = nodesRef.current.find(n => n.id === pending.sourceId);
+          const tgtNode = nodesRef.current.find(n => n.id === pending.targetId);
+
+          if (srcNode && tgtNode) {
+            const linkExists = linksRef.current.some(l => 
+              (l.source as INode).id === srcNode.id && (l.target as INode).id === tgtNode.id
+            );
+
+            if (!linkExists) {
+              srcNode.edges.push({ end: tgtNode, weight: pending.value, directed: pending.directed });
+              if (!pending.directed) tgtNode.edges.push({ end: srcNode, weight: pending.value, directed: false });
+              linksRef.current.push({ source: srcNode, target: tgtNode, value: pending.value, directed: pending.directed });
+            }
+            return false; // Se conectó, sale de la sala de espera
+          }
+          return true; // Sigue esperando
+        });
+
+        // Refrescamos los links en la física si se rescató algún cable
+        if (physicsRef.current) {
+          physicsRef.current.updateLinks(linksRef.current);
+          physicsRef.current.getSimulation().alpha(0.2).restart();
+        }
+      }
+      
+      if (rendererRef.current) rendererRef.current.update();
+      return; 
+    }
+
+    const targetNode = nodesRef.current.find(node => node.id === delta.nodeId);
+    
+    if (targetNode) {
+      const structNode = targetNode as any;
+      const currentElements = structNode.elements || [];
+
+      switch (delta.action) {
+        case 'PUSH':
+          // El valor real ahora viene adentro de payloadData.value
+          structNode.elements = [...currentElements, payloadData.value];
+          break;
+          
+        case 'POP':
+          const updatedElements = [...currentElements];
+          // El tipo ahora viene en payloadData.type
+          if (payloadData.type === 'stack') {
+            updatedElements.pop();
+          } else {
+            updatedElements.shift();
+          }
+          structNode.elements = updatedElements;
+          break;
+          
+        case 'MOVE_NODE':
+          structNode.x = payloadData.x;
+          structNode.y = payloadData.y;
+          break;
+      }
+
+      if (activeNode && activeNode.id === delta.nodeId) {
+        setActiveNode({ ...structNode });
+      }
+    }
+
+    if (rendererRef.current) {
+      rendererRef.current.update();
+    }
+  };
+
+  
   const handleGeneratePreset = useCallback((presetId: string) => {
     if (presetId === '__cancel__') { pendingPresetRef.current = null; return; }
     pendingPresetRef.current = presetId;
@@ -254,7 +488,13 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
         pendingPresetRef,
         pendingAlgorithmRef,
         onSelectNode: setSelectedNodeId,
-        onNodeSelected
+        onNodeSelected,
+        onNodeCreated: (action, nodeId, payload) => {
+          networkManagerRef.current?.sendDelta(action, nodeId, {
+            ...payload,
+            senderId: senderIdRef.current // Le clavamos la firma digital
+          });
+        }
     });
     
     // Le pasamos el flag readOnly para que active los candados correspondientes
@@ -300,7 +540,6 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
         const parsedWeight = Number(edge.weight);
         edge.weight = parsedWeight;
 
-        // 1. Lógica del nodo (Ida y vuelta)
         if (!edge.directed) {
           const reverseEdge = edge.end.edges.find(e => e.end.id === selectedNodeRef.current!.id);
           if (reverseEdge) {
@@ -319,6 +558,29 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
         }
       });
     }
+
+    if ((updatedFields as any).elements) {
+      console.log("Mandando delta de push!")
+      const oldElements = (selectedNodeRef.current as any).elements || [];
+      const newElements = (updatedFields as any).elements; // <-- 'as any' acá también
+
+      const metadata = {
+        value: newElements[newElements.length - 1],
+        senderId: senderIdRef.current // <--- FIRMA DE AUTOR
+      };
+
+      if (newElements.length > oldElements.length) {
+        // En el PUSH, pasamos la metadata entera como payload
+        networkManagerRef.current?.sendDelta('PUSH', selectedNodeRef.current.id, metadata);
+      } else {
+        // En el POP, hacemos lo mismo pasándole el tipo y la firma
+        networkManagerRef.current?.sendDelta('POP', selectedNodeRef.current.id, {
+          type: (selectedNodeRef.current as any).kind,
+          senderId: senderIdRef.current // <--- FIRMA DE AUTOR
+        });
+      }
+    }
+    // =========================================================================
 
     Object.assign(selectedNodeRef.current, updatedFields);
     setActiveNode({ ...selectedNodeRef.current });
