@@ -230,6 +230,13 @@ export class InteractionManager {
         this.renderer.setSelectedNodes(this.selectedNodes);
       } else if (mode === 'DELETE_ANY' && enclosed.length > 0) {
         this.saveState();
+
+        enclosed.forEach(node => {
+          this.refs.onNodeCreated('DELETE_NODE' as any, node.id, {
+            kind: (node as any).kind || 'default'
+          });
+        });
+
         const toDelete = new Set(enclosed.map(n => n.id));
         this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => !toDelete.has(n.id));
         this.refs.linksRef.current = this.refs.linksRef.current.filter(l => !toDelete.has((l.source as INode).id) && !toDelete.has((l.target as INode).id));
@@ -528,6 +535,15 @@ export class InteractionManager {
         this.saveState();
         if (this.selectedNodes.size > 0) {
           const toDelete = new Set(this.selectedNodes);
+
+          this.refs.nodesRef.current.forEach(n => {
+            if (toDelete.has(n.id)) {
+              this.refs.onNodeCreated('DELETE_NODE' as any, n.id, { 
+                kind: (n as any).kind || 'default' 
+              });
+            }
+          });
+
           this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => !toDelete.has(n.id));
           this.refs.linksRef.current = this.refs.linksRef.current.filter(l => !toDelete.has((l.source as INode).id) && !toDelete.has((l.target as INode).id));
           for (const n of this.refs.nodesRef.current) {
@@ -545,6 +561,10 @@ export class InteractionManager {
           for (const n of this.refs.nodesRef.current) {
             if (n.edges) n.edges = n.edges.filter(e => e.end.id !== clickedNode.id);
           }
+
+          this.refs.onNodeCreated('DELETE_NODE' as any, clickedNode.id, {
+              kind: (clickedNode as any).kind || 'default'
+          });
           
         } else if (target.tagName === 'line') {
           const datum = d3.select<Element, SimLink>(target).datum();
@@ -557,6 +577,13 @@ export class InteractionManager {
             
             if (srcNode && srcNode.edges) srcNode.edges = srcNode.edges.filter(e => e.end.id !== tgtId);
             if (tgtNode && tgtNode.edges && !datum.directed) tgtNode.edges = tgtNode.edges.filter(e => e.end.id !== srcId);
+
+            // Notificar el borrado del link a los clientes remotos
+            this.refs.onNodeCreated('DELETE_NODE' as any, srcId, {
+              isLink: true,
+              targetId: tgtId,
+              directed: datum.directed
+            });
           }
         }
         }

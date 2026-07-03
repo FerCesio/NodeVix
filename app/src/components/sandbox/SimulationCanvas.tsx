@@ -17,6 +17,7 @@ import { CanvasRenderer } from './modules/CanvasRenderer';
 import { CameraSystem } from './modules/CameraSystem';
 import { InteractionManager } from './modules/InteractionManager';
 import { NetworkManager, type ProjectDelta } from '../../services/NetworkManager';
+import {useParams} from 'react-router-dom';
 
 export interface SimulationCanvasRef {
   getCanvasState: () => { nodes: any[], links: any[] };
@@ -48,9 +49,14 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
   const networkManagerRef = useRef<NetworkManager | null>(null);
   const senderIdRef = useRef<string>(crypto.randomUUID());
   const pendingLinksRef = useRef<{ sourceId: string, targetId: string, value: number, directed: boolean }[]>([]);
+  const handleRemoteDeltaRef = useRef<(delta: ProjectDelta) => void>(() => {});
 
+
+  const { id: urlId } = useParams<{ id: string }>()
+  const projectIdInt = urlId ? parseInt(urlId, 10) : 1;
+  
   // Usamos una sala de test hardcodeada por ahora. Después puede venir de la URL
-  const projectId = "proyecto-test-123"; 
+  const projectId = isNaN(projectIdInt) ? "1" : projectIdInt.toString(); 
 
   useEffect(() => {
     // Inicializamos el manager y le pasamos la función que procesa los deltas remotos (el Paso 4)
@@ -68,6 +74,8 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
   }, [projectId]);
 
   const handleRemoteDelta = (delta: ProjectDelta) => {
+    
+    handleRemoteDeltaRef.current = handleRemoteDelta;
     console.log("[SimulationCanvas] ¡ENTRÓ UN DELTA DESDE LA RED!", delta);
     
     const payloadData = delta.payload;
@@ -77,6 +85,82 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
     // Si el mensaje lo originé yo mismo, lo descarto de una porque mi pantalla ya cambió con el click
     if (remoteSenderId === senderIdRef.current) {
       return; 
+    }
+
+    // =========================================================================
+    // CASO: LLEGÓ UN BORRADO REMOTO (DELETE_NODE)
+    // =========================================================================
+    if ((delta.action as any) === 'DELETE_NODE') {
+      const idA_Borrar = String(delta.nodeId);
+
+      // --- CASO ESPECIAL: BORRADO DE LINK SUELTO ---
+      if (payloadData?.isLink) {
+        const targetIdStr = String(payloadData.targetId);
+        
+        const filteredLinks = linksRef.current.filter(l => {
+          const srcId = String((l.source as INode).id);
+          const tgtId = String((l.target as INode).id);
+          return !((srcId === idA_Borrar && tgtId === targetIdStr) ||
+                   (!(l.directed) && tgtId === idA_Borrar && srcId === targetIdStr));
+        });
+        linksRef.current.length = 0;
+        linksRef.current.push(...filteredLinks);
+
+        const srcNode = nodesRef.current.find(n => String(n.id) === idA_Borrar);
+        const tgtNode = nodesRef.current.find(n => String(n.id) === targetIdStr);
+        if (srcNode && srcNode.edges) srcNode.edges = srcNode.edges.filter(e => String(e.end.id) !== targetIdStr);
+        if (tgtNode && tgtNode.edges) tgtNode.edges = tgtNode.edges.filter(e => String(e.end.id) !== idA_Borrar);
+        
+        if (physicsRef.current) {
+          physicsRef.current.updateLinks(linksRef.current);
+          physicsRef.current.getSimulation().alpha(0.2).restart();
+        }
+        if (rendererRef.current) rendererRef.current.update();
+        return;
+      }
+
+      // =======================================================================
+      // CASO MAESTRO: BORRADO DE NODO / ESTRUCTURA
+      // =======================================================================
+      const index = nodesRef.current.findIndex(n => String(n.id) === idA_Borrar);
+      
+      if (index !== -1) {
+        const [removedNode] = nodesRef.current.splice(index, 1);
+        console.log("[SimulationCanvas] Nodo removido de la memoria física:", removedNode);
+
+        const filteredLinks = linksRef.current.filter(l => 
+          String((l.source as INode).id) !== idA_Borrar && String((l.target as INode).id) !== idA_Borrar
+        );
+        linksRef.current.length = 0;
+        linksRef.current.push(...filteredLinks);
+
+        pendingLinksRef.current = pendingLinksRef.current.filter(pending => 
+          String(pending.sourceId) !== idA_Borrar && String(pending.targetId) !== idA_Borrar
+        );
+
+        nodesRef.current.forEach(n => {
+          if (n.edges) n.edges = n.edges.filter(e => String(e.end.id) !== idA_Borrar);
+        });
+
+        if (structureManagerRef.current) {
+          structureManagerRef.current.sync(nodesRef.current, linksRef.current);
+        }
+
+        if (physicsRef.current) {
+          physicsRef.current.updateNodes(nodesRef.current);
+          physicsRef.current.updateLinks(linksRef.current);
+          physicsRef.current.getSimulation().nodes(nodesRef.current);
+          physicsRef.current.getSimulation().alpha(0.4).restart();
+        }
+
+        if (rendererRef.current) {
+          rendererRef.current.update();
+        }
+      } else {
+        console.warn("[SimulationCanvas] Se recibió un borrado pero el ID no existía localmente:", idA_Borrar);
+      }
+      
+      return;
     }
 
     if ((delta.action as any) === 'CREATE_NODE') {
