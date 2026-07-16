@@ -41,4 +41,12 @@ export class CameraSystem {
     const transform = d3.zoomIdentity.translate(x, y).scale(scale);
     this.svg.transition().duration(500).call(this.zoom.transform, transform);
   }
+
+  getZoom(): d3.ZoomBehavior<SVGSVGElement, unknown> {
+    return this.zoom;
+  }
+
+  getSvg(): d3.Selection<SVGSVGElement, unknown, null, undefined> {
+    return this.svg;
+  }
 }

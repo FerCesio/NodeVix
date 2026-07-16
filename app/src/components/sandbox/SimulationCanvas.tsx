@@ -387,7 +387,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
           y: n.y,
           value: n.value,
           scale: n.scale ?? 1,
-          color: n.color ?? '#ffffff',
+          color: n.color,
           ...(isAlgo && {
             kind: 'algorithm',
             algorithmId: (n as any).algorithmId,
@@ -465,7 +465,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
                 const node = new DefaultNode(n.id, n.value ?? 1, Number(n.x) || 0, Number(n.y) || 0);
                 node.pos = { x: Number(n.x), y: Number(n.y) };
                 node.scale = n.scale ?? 1;
-                node.color = n.color ?? '#2ecc71';
+                node.color = n.color;
                 node.fx = Number(n.x) || 0;
                 node.fy = Number(n.y) || 0;
                 return node;
@@ -563,6 +563,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
     // Inicializamos el InteractionManager siempre
     const events = new InteractionManager(svg, simulation, renderer, layers.ghost);
     eventsRef.current = events;
+    events.setCamera(camera);
     events.bindContext({
         modeRef,
         nodesRef,

@@ -13,6 +13,7 @@ import { diffSnapshots } from '../../../sandbox/utils/diffSnapshots';
 import type { StructureManager } from '../../../sandbox/StructureManager';
 import type { PhysicsEngine, SimLink } from './PhysicsEngine';
 import type { CanvasRenderer } from './CanvasRenderer';
+import type { CameraSystem } from './CameraSystem';
 import { Dijkstra } from '../../../sandbox/algorithms/Dijkstra';
 
 export interface InteractionRefs {
@@ -43,6 +44,9 @@ export class InteractionManager {
   private undoStack: string[] = [];
   private redoStack: string[] = [];
   private maxHistory = 50;
+  private skipNextClick = false;
+  private spaceHeld = false;
+  private camera: CameraSystem | null = null;
 
   constructor(
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -58,6 +62,10 @@ export class InteractionManager {
 
   bindContext(refs: InteractionRefs): void {
     this.refs = refs;
+  }
+
+  setCamera(camera: CameraSystem): void {
+    this.camera = camera;
   }
 
   setupListeners(readOnly: boolean = false): void {
@@ -167,6 +175,51 @@ export class InteractionManager {
       }
     });
 
+    // SPACE + CLICK PAN (like Figma)
+    let panStart: [number, number] | null = null;
+
+    d3.select('body').on('keydown.space', (event: KeyboardEvent) => {
+      if (event.code === 'Space' && !this.spaceHeld && !(event.target as Element)?.closest('input, textarea')) {
+        event.preventDefault();
+        this.spaceHeld = true;
+        this.svg.style('cursor', 'grab');
+      }
+    });
+
+    d3.select('body').on('keyup.space', (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        this.spaceHeld = false;
+        panStart = null;
+        this.svg.style('cursor', '');
+      }
+    });
+
+    this.svg.on('mousedown.pan', (event: MouseEvent) => {
+      if (!this.spaceHeld || !this.camera) return;
+      event.preventDefault();
+      event.stopPropagation();
+      panStart = [event.clientX, event.clientY];
+      this.svg.style('cursor', 'grabbing');
+    });
+
+    this.svg.on('mousemove.pan', (event: MouseEvent) => {
+      if (!this.spaceHeld || !panStart || !this.camera) return;
+      const dx = event.clientX - panStart[0];
+      const dy = event.clientY - panStart[1];
+      panStart = [event.clientX, event.clientY];
+      const svgNode = this.svg.node()!;
+      const transform = d3.zoomTransform(svgNode);
+      const newTransform = transform.translate(dx / transform.k, dy / transform.k);
+      this.svg.call(this.camera.getZoom().transform, newTransform);
+    });
+
+    this.svg.on('mouseup.pan', () => {
+      if (panStart) {
+        panStart = null;
+        this.svg.style('cursor', this.spaceHeld ? 'grab' : '');
+      }
+    });
+
     // MARQUEE SELECTION (rubber band)
     let marqueeRect: d3.Selection<SVGRectElement, unknown, null, undefined> | null = null;
     let marqueeStart: [number, number] | null = null;
@@ -178,6 +231,7 @@ export class InteractionManager {
 
     this.svg.on('mousedown.marquee', (event: MouseEvent) => {
       if (readOnly) return;
+      if (this.spaceHeld) return;
       const mode = this.refs.modeRef.current;
       if (mode !== 'SELECT' && mode !== 'DELETE_ANY') return;
       const target = event.target as Element;
@@ -228,10 +282,14 @@ export class InteractionManager {
         this.selectedNodes.clear();
         for (const n of enclosed) this.selectedNodes.add(n.id);
         this.renderer.setSelectedNodes(this.selectedNodes);
+        if (enclosed.length > 0) this.skipNextClick = true;
       } else if (mode === 'DELETE_ANY' && enclosed.length > 0) {
         this.saveState();
 
         enclosed.forEach(node => {
+          if ((node as any).kind === 'algorithm') {
+            this.cleanupAlgorithmNode(node.id);
+          }
           this.refs.onNodeCreated('DELETE_NODE' as any, node.id, {
             kind: (node as any).kind || 'default'
           });
@@ -406,6 +464,10 @@ export class InteractionManager {
     });
 
     this.svg.on('click.interaction', (event: MouseEvent) => {
+      if (this.skipNextClick) {
+        this.skipNextClick = false;
+        return;
+      }
       const target = event.target as Element;
       const mode = readOnly ? 'SELECT' : this.refs.modeRef.current;
       console.log('[Interaction] click | mode:', mode, '| target:', target.tagName);
@@ -538,6 +600,9 @@ export class InteractionManager {
 
           this.refs.nodesRef.current.forEach(n => {
             if (toDelete.has(n.id)) {
+              if ((n as any).kind === 'algorithm') {
+                this.cleanupAlgorithmNode(n.id);
+              }
               this.refs.onNodeCreated('DELETE_NODE' as any, n.id, { 
                 kind: (n as any).kind || 'default' 
               });
@@ -551,9 +616,13 @@ export class InteractionManager {
           }
           this.selectedNodes.clear();
           this.renderer.setSelectedNodes(this.selectedNodes);
+          this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
         } else {
         const clickedNode = this.getNodeFromTarget(target);
         if (clickedNode) {
+          if ((clickedNode as any).kind === 'algorithm') {
+            this.cleanupAlgorithmNode(clickedNode.id);
+          }
           if (this.refs.selectedNodeRef.current?.id === clickedNode.id) this.refs.selectedNodeRef.current = null;
           this.refs.nodesRef.current = this.refs.nodesRef.current.filter(n => n.id !== clickedNode.id);
           this.refs.linksRef.current = this.refs.linksRef.current.filter(l => (l.source as INode).id !== clickedNode.id && (l.target as INode).id !== clickedNode.id);
@@ -565,6 +634,8 @@ export class InteractionManager {
           this.refs.onNodeCreated('DELETE_NODE' as any, clickedNode.id, {
               kind: (clickedNode as any).kind || 'default'
           });
+
+          this.refs.structureManagerRef.current.sync(this.refs.nodesRef.current, this.refs.linksRef.current);
           
         } else if (target.tagName === 'line') {
           const datum = d3.select<Element, SimLink>(target).datum();
@@ -605,7 +676,14 @@ export class InteractionManager {
     this.svg.on('mousedown.link', null);
     this.svg.on('mouseup.link', null);
     this.svg.on('mouseup.placement', null);
+    this.svg.on('mousedown.marquee', null);
+    this.svg.on('mousemove.marquee', null);
+    this.svg.on('mousedown.pan', null);
+    this.svg.on('mousemove.pan', null);
+    this.svg.on('mouseup.pan', null);
     d3.select('body').on('keydown.interaction', null);
+    d3.select('body').on('keydown.space', null);
+    d3.select('body').on('keyup.space', null);
     this.clearGhost();
     for (const id of this.autoPlayIntervals.keys()) this.stopAutoPlay(id);
   }
@@ -642,6 +720,11 @@ export class InteractionManager {
   }
 
   private animatedStep(algoNode: IAlgorithmNode, executor: AlgorithmExecutor, direction: 'forward' | 'back', onDone?: () => void): void {
+    // Guard: si el executor ya fue eliminado (nodo borrado durante animación), abortar
+    if (!this.executors.has(algoNode.id)) {
+      this.animating = false;
+      return;
+    }
     const { state } = algoNode;
     const prevStep = state.currentStep;
     const ok = direction === 'forward' ? executor.stepForward() : executor.stepBack();
@@ -797,7 +880,9 @@ export class InteractionManager {
   private startAutoPlay(id: string, executor: AlgorithmExecutor, algoNode: IAlgorithmNode): void {
     const step = () => {
       if (!this.autoPlayIntervals.has(id)) return;
+      if (!this.executors.has(id)) { this.stopAutoPlay(id); return; }
       this.animatedStep(algoNode, executor, 'forward', () => {
+        if (!this.executors.has(id)) return;
         if (algoNode.state.status === 'done') { this.stopAutoPlay(id); return; }
         const timeout = window.setTimeout(step, 200);
         this.autoPlayIntervals.set(id, timeout);
@@ -809,6 +894,72 @@ export class InteractionManager {
   private stopAutoPlay(id: string): void {
     const timeout = this.autoPlayIntervals.get(id);
     if (timeout != null) { clearTimeout(timeout); this.autoPlayIntervals.delete(id); }
+  }
+
+  private cleanupAlgorithmNode(nodeId: string): void {
+    // 1. Parar el autoplay si existe
+    this.stopAutoPlay(nodeId);
+
+    // 2. Si hay executor, resetear la estructura al estado original
+    const executor = this.executors.get(nodeId);
+    if (executor) {
+      // Rebobinar completamente hasta el paso 0 (aplica snapshot inicial a los nodos y edges)
+      while (executor.getCurrentStep() > 0) {
+        executor.stepBack();
+      }
+      this.executors.delete(nodeId);
+    }
+
+    // 3. Buscar el algoNode (si todavía existe en el array) para resetear su state
+    const algoNode = (this.refs.nodesRef.current as any[]).find(
+      n => n.id === nodeId && n.kind === 'algorithm'
+    );
+    if (algoNode && algoNode.state?.snapshots?.length > 0) {
+      // Forzar aplicación del snapshot[0] valores a los nodos de la estructura
+      const initial = algoNode.state.snapshots[0];
+      if (initial.values) {
+        for (const node of this.refs.nodesRef.current) {
+          if (node.id in initial.values) {
+            node.value = initial.values[node.id];
+          }
+        }
+      }
+      algoNode.state = { snapshots: [], currentStep: 0, status: 'idle' };
+    }
+
+    // 4. Reconstruir linksRef desde node.edges (ya restaurados por stepBack al paso 0)
+    this.rebuildLinksFromNodeEdges();
+
+    // 5. Limpiar highlights visuales y resetear estado de animación
+    this.animating = false;
+    this.renderer.setHighlights(undefined);
+    this.renderer.update();
+  }
+
+  private rebuildLinksFromNodeEdges(): void {
+    const algoControlLinks = this.refs.linksRef.current.filter(l => l.type === 'algorithm');
+    const newLinks: SimLink[] = [...algoControlLinks];
+    const processedPairs = new Set<string>();
+
+    for (const node of this.refs.nodesRef.current) {
+      if ((node as any).kind === 'algorithm') continue;
+      if (!node.edges) continue;
+      for (const edge of node.edges) {
+        const fwdKey = `${node.id}-${edge.end.id}`;
+        const revKey = `${edge.end.id}-${node.id}`;
+        if (!edge.directed && processedPairs.has(revKey)) continue;
+        processedPairs.add(fwdKey);
+        newLinks.push({
+          source: node,
+          target: edge.end,
+          value: edge.weight ?? 1,
+          directed: edge.directed
+        });
+      }
+    }
+
+    this.refs.linksRef.current = newLinks;
+    this.physics.updateLinks(this.refs.linksRef.current);
   }
 
   private clearGhost(): void {
