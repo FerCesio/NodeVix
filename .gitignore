@@ -35,5 +35,5 @@ out/
 
 ### VS Code ###
 .vscode/
-
+.kiro-workspace/
 .env

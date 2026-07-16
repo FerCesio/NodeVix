@@ -4,7 +4,6 @@ import LoginForm from "../components/user/LoginForm";
 import RegisterForm from "../components/user/RegisterForm";
 import "../styles/general.css";
 import toast, { Toaster } from "react-hot-toast";
-import ReturnButton from "../components/general/ReturnButton";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { SimulationCanvas, type SimulationCanvasRef } from "../components/sandbox/SimulationCanvas";
@@ -261,10 +260,10 @@ export default function ProjectPage() {
     const shareToSocials = async () => {
         const projectUrl = window.location.href; 
         const shareTitle = projectName ? `Check out "${projectName}"` : "Check out my simulation";
-        const shareText = `I built this interactive algorithm simulation on NodeVix! 🚀 Take a look:`;
+        const shareText = `Check out "${projectName}" — built on NodeVix! 🧠🚀\n\n`;
+
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-       
         if (navigator.share && isMobile) {
             try {
                 await navigator.share({

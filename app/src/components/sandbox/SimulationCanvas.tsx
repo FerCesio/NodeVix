@@ -387,7 +387,7 @@ export const SimulationCanvas = forwardRef<SimulationCanvasRef, SimulationCanvas
           y: n.y,
           value: n.value,
           scale: n.scale ?? 1,
-          color: n.color ?? '#2ecc71',
+          color: n.color ?? '#ffffff',
           ...(isAlgo && {
             kind: 'algorithm',
             algorithmId: (n as any).algorithmId,
