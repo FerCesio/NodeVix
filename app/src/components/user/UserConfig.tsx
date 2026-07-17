@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
-import type { UpdateRequest, UpdateResponse } from "../../types/user";
+import type { UpdateRequest } from "../../types/user";
 import "../../styles/userProjects.css";
 import "../../styles/general.css";
 import toast from "react-hot-toast";
