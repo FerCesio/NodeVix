@@ -13,15 +13,19 @@ export default function ProjectsBrowse() {
 
     const deleteProject = async (projectId: number) => {
         try {
-            // Llamada al endpoint sin /api como habías corregido
             await api.delete(`/manage/${projectId}`);
             setProjects((prev) => prev.filter(p => p.id !== projectId));
             return { success: true };
         } catch (error: any) {
             console.error("Error al eliminar:", error);
             
-            // Capturamos si el error es por seguridad (proyecto publicado)
-            const serverMessage = error.response?.data || "Could not delete this project. Make sure to delete the post first.";
+            // 409 Conflict = proyecto publicado, no se puede borrar
+            if (error.response?.status === 409) {
+                const serverMessage = error.response.data?.message || "El proyecto está publicado. Elimina el post primero.";
+                return { success: false, reason: "published", message: serverMessage };
+            }
+            
+            const serverMessage = error.response?.data?.message || "Could not delete this project.";
             return { success: false, message: serverMessage };
         }
     };
