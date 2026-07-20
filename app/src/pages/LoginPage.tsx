@@ -1,6 +1,7 @@
-import LoginForm from "../components/user/LoginForm"; // Importás el corazón
+import LoginForm from "../components/user/LoginForm";
 import "../styles/general.css";
 import TitleAndDesc from "../components/general/TitleAndDesc";
+import BackgroundVideo from "../components/general/BackgroundVideo";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 
@@ -8,6 +9,7 @@ export default function LoginPage() {
 
   return (
     <div className="main-container">
+      <BackgroundVideo />
       <TitleAndDesc/>
       <Toaster/>
       <div className="basic-card">

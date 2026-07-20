@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { api } from "../services/api";
 import ReturnButton from "../components/general/ReturnButton";
 import type { PostListResponse } from "../types/post";
+import BackgroundVideo from "../components/general/BackgroundVideo";
 
 export default function PostsPage() {
     const [posts, setPosts] = useState<PostListResponse[]>([]);
@@ -13,7 +14,7 @@ export default function PostsPage() {
     // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const pageSize = 3; 
+    const pageSize = 9; 
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -44,6 +45,7 @@ export default function PostsPage() {
 
     return (
         <div className="main-container">
+            <BackgroundVideo />
             <Toaster />
             <div className="projects-container" style={{ width: '90%', maxWidth: '1200px' }}>
                 <ReturnButton to="/home"/>

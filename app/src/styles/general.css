@@ -1,16 +1,40 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&display=swap');
 
+/* BACKGROUND VIDEO */
+.bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.bg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: -1;
+  pointer-events: none;
+}
+
 /* MAIN STUFF */
 .main-container {
+  position: relative;
   display: flex;
   justify-content: flex-end; 
-  align-items: center;     /* Centrado vertical */
-  min-height: 100vh;       /* Toda la altura de la pantalla */
-  background-color: #121212; /* Negro mate, más suave que #000 */
+  align-items: center;
+  min-height: 100vh;
+  background-color: transparent;
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   margin: 0;
-  padding: 50px;           /* Espacio de seguridad en móviles */
+  padding: 50px;
   box-sizing: border-box;
 }
 .main-text-section {

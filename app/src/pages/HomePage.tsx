@@ -2,21 +2,21 @@ import "../styles/general.css";
 import { useState } from "react";
 import userIcon from "../assets/circulo-de-usuarios.svg";
 import folderIcon from "../assets/carpeta.svg";
-// Podés importar un ícono de "mis proyectos" o "check", uso folder por ahora
 import myProjectsIcon from "../assets/redaccion.svg"; 
 
 import UserConfig from "../components/user/UserConfig";
 import TitleAndDesc from "../components/general/TitleAndDesc";
+import BackgroundVideo from "../components/general/BackgroundVideo";
 import ProjectsBrowse from "../components/project/ProjectsBrowse";
 import MyPublishedProjects from "../components/user/MyPublishedProjects"; 
 import { Toaster } from "react-hot-toast";
 
 export default function HomePage() {
-  // Ahora tenemos 3 estados: 'projects', 'user', 'my-posts'
   const [view, setView] = useState('projects');
 
   return (
     <div className="main-container">
+        <BackgroundVideo />
         <TitleAndDesc/>
         <Toaster/>
         <div className="browse-container">
