@@ -35,29 +35,44 @@ svg {
     overflow: hidden;
 }
 
-/* Estilos para los elementos SVG */
-line {
+/* Estilos para los elementos SVG — restringidos al canvas para no afectar SVGs de la UI */
+.canvas-wrapper line {
     stroke: var(--line-color);
     stroke-opacity: var(--line-opacity);
 }
 
 #grid line {
-    stroke: #2a2a2a; /* Líneas de la grilla apenas visibles */
+    stroke: #2a2a2a;
 }
 
-circle {
+.canvas-wrapper circle {
+    stroke: none;
+    stroke-width: 0;
+}
+
+.canvas-wrapper rect {
     stroke: #fff;
     stroke-width: 1.5px;
 }
 
-rect {
-    stroke: #fff;
-    stroke-width: 1.5px;
+/* Rects de struct gestionan su propio stroke desde el renderer */
+g.node-data rect.struct-bg,
+g.node-data rect.struct-border,
+g.node-data .struct-elements rect {
+    stroke: unset;
+    stroke-width: unset;
 }
 
-/* DELETE mode feedback */
-.canvas-wrapper.mode-delete svg {
-    cursor: crosshair;
+/* Contextual cursors per mode */
+.canvas-wrapper.mode-select svg { cursor: default; }
+.canvas-wrapper.mode-add-node svg { cursor: cell; }
+.canvas-wrapper.mode-link svg { cursor: pointer; }
+.canvas-wrapper.mode-arrow svg { cursor: pointer; }
+.canvas-wrapper.mode-delete svg { cursor: crosshair; }
+
+.canvas-wrapper.mode-link g.node:hover circle,
+.canvas-wrapper.mode-arrow g.node:hover circle {
+    filter: drop-shadow(0 0 6px rgba(46, 204, 113, 0.7));
 }
 
 .canvas-wrapper.mode-delete g.node:hover circle {
@@ -101,4 +116,18 @@ g.node-algo .algo-step {
     pointer-events: none;
     user-select: none;
     -webkit-user-select: none;
+}
+
+g.node-data circle {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Micro-flash on link creation */
+@keyframes linkFlash {
+    0% { stroke-opacity: 0; stroke-width: 4px; }
+    100% { stroke-opacity: 1; stroke-width: 2px; }
+}
+
+line.entering {
+    animation: linkFlash 0.2s ease-out forwards;
 }

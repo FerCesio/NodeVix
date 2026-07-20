@@ -76,9 +76,39 @@ function cycle(cx: number, cy: number): { nodes: INode[]; links: SimLink[] } {
   return { nodes, links };
 }
 
+function generateStack(cx: number, cy: number): { nodes: INode[]; links: SimLink[] } {
+  // Lo instanciamos como un DefaultNode pero le inyectamos nuestras variables custom
+  const node = new DefaultNode(crypto.randomUUID(), 0, cx, cy) as any;
+  node.kind = 'stack';
+  node.color = '#8e44ad'; // Violeta para distinguirlo
+  node.scale = 1.5;
+  node.elements = [];     // Nuestro arreglo vacío
+  
+  return { nodes: [node], links: [] };
+}
+
+function generateQueue(cx: number, cy: number): { nodes: INode[]; links: SimLink[] } {
+  const node = new DefaultNode(crypto.randomUUID(), 0, cx, cy) as any;
+  node.kind = 'queue';
+  node.color = '#2980b9'; // Azul para distinguirlo
+  node.scale = 1.5;
+  node.elements = [];     // Nuestro arreglo vacío
+  
+  return { nodes: [node], links: [] };
+}
+
+import linkedListIcon from '../../assets/icons/linked-list.svg';
+import binaryTreeIcon from '../../assets/icons/binary-tree.svg';
+import completeIcon from '../../assets/icons/complete.svg';
+import cycleIcon from '../../assets/icons/cycle.svg';
+import stackIcon from '../../assets/icons/stack.svg';
+import queueIcon from '../../assets/icons/queue.svg';
+
 export const PRESETS: PresetStructure[] = [
-  { id: 'linked-list', label: 'Linked List', icon: '→', generate: linkedList },
-  { id: 'binary-tree', label: 'Binary Tree', icon: '🌳', generate: binaryTree },
-  { id: 'complete', label: 'Complete K5', icon: '⬡', generate: completeGraph },
-  { id: 'cycle', label: 'Cycle', icon: '🔄', generate: cycle },
+  { id: 'linked-list', label: 'Linked List', icon: linkedListIcon, generate: linkedList },
+  { id: 'binary-tree', label: 'Binary Tree', icon: binaryTreeIcon, generate: binaryTree },
+  { id: 'complete', label: 'Complete K5', icon: completeIcon, generate: completeGraph },
+  { id: 'cycle', label: 'Cycle', icon: cycleIcon, generate: cycle },
+  { id: 'stack', label: 'Stack', icon: stackIcon, generate: generateStack },
+  { id: 'queue', label: 'Queue', icon: queueIcon, generate: generateQueue },
 ];

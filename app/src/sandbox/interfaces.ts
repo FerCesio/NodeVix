@@ -13,7 +13,7 @@ export interface Edge {
 }
 
 export interface INode extends Entity, d3.SimulationNodeDatum {
-  kind: 'data';
+  kind: 'data' | 'stack' | 'queue';
   value: number;
   edges: Edge[];
   color?: string;

@@ -71,6 +71,40 @@
   box-sizing: border-box;
 }
 
+/* Hide number spinners */
+.property-group input.no-spinners::-webkit-outer-spin-button,
+.property-group input.no-spinners::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.property-group input.no-spinners {
+  -moz-appearance: textfield;
+}
+
+/* Inline color circle */
+.inline-color-picker {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px solid #444;
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.inline-color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.inline-color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+.inline-color-picker::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
 .property-group input:focus {
   border-color: #4A90E2;
   outline: none;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/property-panel.css'; 
 import type { INode } from '../../sandbox/interfaces';
+import { ColorWheel } from './ColorWheel';
 
 interface PropertyPanelProps {
   node: INode | null;
@@ -9,19 +10,28 @@ interface PropertyPanelProps {
 }
 
 export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, onClose }) => {
-  // --- LÓGICA DE ARRASTRE (DRAG & DROP) ---
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const panelStart = useRef({ x: 0, y: 0 });
+  
+  // ESTADO PARA EL INPUT DEL PUSH
+  const [structureValue, setStructureValue] = useState<number>(0);
+
+  useEffect(() => {
+    if (!node) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [node, onClose]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
-      // Calculamos la distancia que se movió el mouse desde el clic inicial
       const dx = e.clientX - dragStart.current.x;
       const dy = e.clientY - dragStart.current.y;
-      // Actualizamos la posición sumando esa distancia
       setPosition({
         x: panelStart.current.x + dx,
         y: panelStart.current.y + dy
@@ -30,7 +40,6 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
 
     const handleMouseUp = () => setIsDragging(false);
 
-    // Escuchamos el evento en toda la ventana para que no se "suelte" si movés el mouse muy rápido
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
@@ -43,15 +52,14 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
   }, [isDragging]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Si hace clic justo en el botón de cerrar, no iniciamos el arrastre
-    if ((e.target as HTMLElement).tagName.toLowerCase() === 'button') return;
-    
+    const tag = (e.target as HTMLElement).tagName.toLowerCase();
+    // No iniciar drag si el click viene de un elemento interactivo
+    if (tag === 'button' || tag === 'input' || tag === 'canvas' || tag === 'select' || tag === 'textarea') return;
+    e.stopPropagation();
     setIsDragging(true);
     dragStart.current = { x: e.clientX, y: e.clientY };
     panelStart.current = { ...position };
   };
-
-  // --- FIN LÓGICA DE ARRASTRE ---
 
   if (!node) return null;
 
@@ -62,11 +70,13 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
     onUpdate({ edges: newEdges });
   };
 
+  // Variable de control para saber si mostramos la interfaz especial
+  const isStructure = (node as any).kind === 'stack' || (node as any).kind === 'queue';
+
   return (
     <div 
       className="property-panel-container"
       style={{ 
-        // Aplicamos la traslación calculada por encima del CSS original
         transform: `translate(${position.x}px, ${position.y}px)`, 
         transition: isDragging ? 'none' : 'transform 0.1s ease-out' 
       }}
@@ -74,44 +84,126 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
       <div 
         className="property-panel-header"
         onMouseDown={handleMouseDown}
-        style={{ 
-          cursor: isDragging ? 'grabbing' : 'grab',
-          userSelect: 'none' // Evita que el texto se resalte al arrastrar
-        }}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none' }}
       >
         <h3>Node Inspector</h3>
         <button className="close-panel-btn" onClick={onClose} style={{ cursor: 'pointer' }}>×</button>
       </div>
       
       <div className="property-panel-content">
-        <div className="property-group">
-          <label>Node ID</label>
-          <input type="text" value={node.id} disabled className="disabled-input" />
-        </div>
+        
+        {/* --- INTERFAZ ESPECIAL: STACK / QUEUE --- */}
+        {isStructure && (
+          <div className="property-group" style={{ background: '#2c3e50', padding: '10px', borderRadius: '8px', marginBottom: '15px' }}>
+            <label style={{ color: '#ecf0f1', fontWeight: 'bold' }}>
+              {((node as any).kind || '').toUpperCase()} CONTROLS
+            </label>
+            
+            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+              <input
+                type="number"
+                className="no-spinners"
+                style={{ flex: 1, padding: '6px', borderRadius: '4px', border: '1px solid #555', background: '#222', color: '#fff' }}
+                value={structureValue}
+                onChange={(e) => setStructureValue(Number(e.target.value))}
+              />
+              <button 
+                className="btn btn-small"
+                style={{ backgroundColor: '#2ecc71', color: 'white', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                onClick={() => {
+                  const currentElements = (node as any).elements || [];
+                  onUpdate({ elements: [...currentElements, structureValue] } as any);
+                  setStructureValue(0);
+                }}
+              >
+                {(node as any).kind === 'queue' ? 'ENQUEUE' : 'PUSH'}
+              </button>
+              <button 
+                className="btn btn-small"
+                style={{ backgroundColor: '#e74c3c', color: 'white', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                onClick={() => {
+                  const currentElements = [...((node as any).elements || [])];
+                  if (currentElements.length === 0) return;
+                  
+                  if ((node as any).kind === 'stack') {
+                    currentElements.pop(); // LIFO
+                  } else {
+                    currentElements.shift(); // FIFO
+                  }
+                  onUpdate({ elements: currentElements} as any);
+                }}
+              >
+                {(node as any).kind === 'queue' ? 'DEQUEUE' : 'POP'}
+              </button>
+            </div>
+
+            {/* Visualizador en miniatura para el panel */}
+            <div style={{ 
+              marginTop: '15px', 
+              display: 'flex', 
+              flexDirection: (node as any).kind === 'stack' ? 'column-reverse' : 'row', 
+              gap: '4px', 
+              overflowX: (node as any).kind === 'stack' ? 'hidden' : 'auto', 
+              overflowY: (node as any).kind === 'stack' ? 'auto' : 'hidden', 
+              maxHeight: (node as any).kind === 'stack' ? '100px' : 'none',
+              paddingBottom: '5px',
+              paddingRight: '5px',
+              flexWrap: (node as any).kind === 'stack' ? 'nowrap' : 'nowrap'
+            }}>
+              {/* Envolvemos los elementos en OTRO div interno para el Stack. 
+                  Esto "encierra" los items y obliga al div de afuera a scrollear */}
+              {((node as any).kind === 'stack') ? (
+                  <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '4px', width: '100%' }}>
+                     {((node as any).elements || []).map((val: number, i: number) => (
+                        <div key={i} style={{ 
+                          background: '#34495e', border: '1px solid #7f8c8d', padding: '4px 8px', 
+                          minWidth: '30px', textAlign: 'center', borderRadius: '3px', color: '#ecf0f1', fontWeight: 'bold'
+                        }}>
+                          {val}
+                        </div>
+                      ))}
+                  </div>
+              ) : (
+                 /* Si es Queue, lo dejamos normal (porque el row con overflowX funciona bien) */
+                 ((node as any).elements || []).map((val: number, i: number) => (
+                    <div key={i} style={{ 
+                      background: '#34495e', border: '1px solid #7f8c8d', padding: '4px 8px', 
+                      minWidth: '30px', textAlign: 'center', borderRadius: '3px', color: '#ecf0f1', fontWeight: 'bold',
+                      flexShrink: 0 /* Evita que la Queue los aplaste cuando son muchos */
+                    }}>
+                      {val}
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* --- INTERFAZ NORMAL --- */}
+        {/* Ocultamos el 'Value' principal si es una estructura */}
+        {!isStructure && (
+          <div className="property-group">
+            <label>Value</label>
+            <input
+              type="number"
+              className="no-spinners"
+              value={node.value ?? 0} 
+              onChange={(e) => onUpdate({ value: Number(e.target.value) })}
+            />
+          </div>
+        )}
 
         <div className="property-group">
-          <label>Value</label>
-          <input
-            type="number"
-            value={node.value ?? 0} 
-            onChange={(e) => onUpdate({ value: Number(e.target.value) })}
+          <label>Color</label>
+          <ColorWheel
+            value={node.color ?? '#2ecc71'}
+            onChange={(color) => onUpdate({ color })}
+            size={175}
           />
         </div>
 
         <div className="property-group">
-          <label>Color</label>
-          <div className="color-picker-wrapper">
-            <input
-              type="color"
-              value={node.color ?? '#2ecc71'}
-              onChange={(e) => onUpdate({ color: e.target.value })}
-            />
-            <span>{node.color ?? '#2ecc71'}</span>
-          </div>
-        </div>
-
-        <div className="property-group">
-          <label>Scale (Size)</label>
+          <label>Scale</label>
           <div className="range-wrapper">
             <input
               type="range"
@@ -125,14 +217,18 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
           </div>
         </div>
 
+        {/* --- RUTAS Y PESOS --- */}
         {node.edges && node.edges.length > 0 && (
           <div className="property-group">
             <label>Rutas Conectadas (Pesos)</label>
-            <div className="edges-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '5px' }}>
+            <div 
+              className="edges-list" 
+              style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '5px', maxHeight: '150px', overflowY: 'auto', paddingRight: '4px' }}
+            >
               {node.edges.map((edge, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', color: '#bdc3c7' }}>
-                    Hacia: {edge.end.value} {edge.directed ? '(➡)' : '(↔)'}
+                    Hacia: {edge.end.value} {edge.directed ? '→' : '↔'}
                   </span>
                   <input
                     type="number"
