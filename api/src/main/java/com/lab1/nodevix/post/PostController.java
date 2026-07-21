@@ -60,9 +60,9 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<PostListResponse>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size){
+    public ResponseEntity<Page<PostListResponse>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search){
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(postService.getAll(pageable));
+        return ResponseEntity.ok(postService.getAll(pageable, search));
     }
 
     @GetMapping("/me")

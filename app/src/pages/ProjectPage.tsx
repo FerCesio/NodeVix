@@ -588,15 +588,17 @@ export default function ProjectPage() {
                 </div>
 
                 <div className="nav-share-group" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {!isReadOnly && (
+                    {!isReadOnly && isLoggedIn && (
                         <button className="btn btn-return" onClick={handleManageCollaborators} title="Gestión de usuarios">
                             <span>Users</span>
                         </button>
                     )}
                         
-                    <button className="btn btn-return" onClick={handleShare} style={{ display: 'flex', gap: '2px', alignItems: 'center', minWidth: '130px' }}>
-                        <span>Share ↗</span>
-                    </button>
+                    {isLoggedIn && (
+                        <button className="btn btn-return" onClick={handleShare} style={{ display: 'flex', gap: '2px', alignItems: 'center', minWidth: '130px' }}>
+                            <span>Share ↗</span>
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -180,8 +180,13 @@ public class PostService {
         );
     }
 
-    public Page<PostListResponse> getAll(Pageable pageable){
-        Page<Post> postsPage = postRepo.findAll(pageable);
+    public Page<PostListResponse> getAll(Pageable pageable, String search){
+        Page<Post> postsPage;
+        if (search != null && !search.isBlank()) {
+            postsPage = postRepo.searchByTerm(search.trim(), pageable);
+        } else {
+            postsPage = postRepo.findAll(pageable);
+        }
         return postsPage.map(p -> {
             String owner = userRepo.findByProjectId(p.getProject().getId())
                     .stream()

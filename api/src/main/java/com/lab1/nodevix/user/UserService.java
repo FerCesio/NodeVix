@@ -30,6 +30,20 @@ public class UserService {
 
     public RegisterResponse register(UserRegister ur) {
 
+        // validar campos requeridos
+        if (ur.getUserName() == null || ur.getUserName().isBlank()) {
+            throw new RuntimeException("El nombre de usuario es obligatorio");
+        }
+        if (ur.getEmail() == null || ur.getEmail().isBlank()) {
+            throw new RuntimeException("El email es obligatorio");
+        }
+        if (ur.getPassword() == null || ur.getPassword().isBlank()) {
+            throw new RuntimeException("La contraseña es obligatoria");
+        }
+        if (ur.getBirthDate() == null || ur.getBirthDate().isBlank()) {
+            throw new RuntimeException("La fecha de nacimiento es obligatoria");
+        }
+
         // validar si existe
         userRepo.findByEmail(ur.getEmail()).ifPresent(u -> {
             throw new RuntimeException("Email ya registrado");

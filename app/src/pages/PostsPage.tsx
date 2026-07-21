@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/general.css";
 import { Toaster } from "react-hot-toast";
@@ -10,40 +10,44 @@ import type { PostListResponse } from "../types/post";
 
 export default function PostsPage() {
     const [posts, setPosts] = useState<PostListResponse[]>([]);
+    const [searchInput, setSearchInput] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
-    const [loading, setLoading] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
+    // --- ESTADOS PARA PAGINACIÓN ---
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const pageSize = 6; 
 
     useEffect(() => {
         const fetchPosts = async () => {
-            setLoading(true);
             try {
-                // Ahora enviamos page y size como parámetros
-                const response = await api.get(`/posts?page=${currentPage}&size=${pageSize}`);
+                const searchParam = searchTerm.trim() ? `&search=${encodeURIComponent(searchTerm.trim())}` : "";
+                const response = await api.get(`/posts?page=${currentPage}&size=${pageSize}${searchParam}`);
                 
-                // Spring Data devuelve la lista en .content y el total en .totalPages
                 setPosts(response.data.content); 
                 setTotalPages(response.data.totalPages);
             } catch (error) {
                 console.error("Error al cargar posts:", error);
             } finally {
-                setLoading(false);
+                setInitialLoading(false);
             }
         };
         fetchPosts();
-    }, [currentPage]); 
+    }, [currentPage, searchTerm]); 
 
-    const filteredPosts = posts.filter((post) => {
-        const term = searchTerm.toLowerCase();
-        const name = (post.projectName || "").toLowerCase();
-        const desc = (post.projectDescription || "").toLowerCase();
+    // Debounce: espera 400ms después de que el usuario deja de escribir
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchInput(value);
         
-        return name.includes(term) || desc.includes(term);
-    });
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            setSearchTerm(value);
+            setCurrentPage(0);
+        }, 400);
+    };
 
     return (
         <PageTransition>
@@ -57,18 +61,20 @@ export default function PostsPage() {
                     <input
                         className="nav-community-input"
                         placeholder="Search by name or description..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={searchInput}
+                        onChange={handleSearchChange}
                     />
                 </div>
 
-                {loading ? (
-                    <div className="loader">Cargando comunidad...</div>
+                {initialLoading ? (
+                    <div className="projects-community-list" style={{ minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <p className="main-description">Cargando comunidad...</p>
+                    </div>
                 ) : (
                     <>
-                        <div className="projects-community-list">
-                            {filteredPosts.length > 0 ? (
-                                filteredPosts.map((post, index) => (
+                        <div className="projects-community-list" style={{ minHeight: '500px', alignContent: 'start' }}>
+                            {posts.length > 0 ? (
+                                posts.map((post, index) => (
                                     <FadeIn key={post.id} delay={index * 0.06}>
                                         <PostCard post={post} />
                                     </FadeIn>
