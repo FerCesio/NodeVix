@@ -21,7 +21,8 @@ export default function LoginPage() {
         </p>
         <button className="btn-google" onClick={() => {
           toast.loading("Redirecting to Google...");
-          window.location.href = "http://localhost:8080/oauth2/authorization/google";
+          const backendBase = (import.meta.env.VITE_API_URL || "http://localhost:8080/api").replace("/api", "");
+          window.location.href = `${backendBase}/oauth2/authorization/google`;
         }}>
           Login with Google
         </button>

@@ -18,7 +18,14 @@ export default function ProjectsBrowse() {
             return { success: true };
         } catch (error: any) {
             console.error("Error al eliminar:", error);
-            const serverMessage = error.response?.data || "Could not delete this project. Make sure to delete the post first.";
+            
+            // 409 Conflict = proyecto publicado, no se puede borrar
+            if (error.response?.status === 409) {
+                const serverMessage = error.response.data?.message || "El proyecto está publicado. Elimina el post primero.";
+                return { success: false, reason: "published", message: serverMessage };
+            }
+            
+            const serverMessage = error.response?.data?.message || "Could not delete this project.";
             return { success: false, message: serverMessage };
         }
     };

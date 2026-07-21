@@ -1,41 +1,31 @@
 .projects-list {
-    /* 1. Definimos el tamaño fijo */
-    height: 300px; /* O usa 70vh para que ocupe el 70% de la pantalla */
-    
-    /* 2. Activamos el scroll vertical */
-    overflow-y: auto; 
-    
-    /* 3. Evitamos el scroll horizontal si las tarjetas se estiran */
+    min-height: 300px;
+    max-height: 70vh;
+    overflow-y: auto;
     overflow-x: hidden;
 
-    /* Estilos estéticos que ya tenías */
     display: flex;
     flex-direction: column;
     gap: 1rem;
     padding: 15px;
     margin: 20px;
-    background-color: #f9f9f9; /* Cambié el verde para que no canse la vista */
+    background-color: #f9f9f9;
     border-radius: 10px;
     border: 1px solid #ddd;
 }
 
 .projects-community-list {
-    /* 1. Definimos el tamaño fijo */
-    height: 300px; /* O usa 70vh para que ocupe el 70% de la pantalla */
-    
-    
-    overflow-y: auto; 
-    
+    min-height: 300px;
+    max-height: 70vh;
+    overflow-y: auto;
     overflow-x: hidden;
-    
+
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 20px;
-    flex-direction: column;
     gap: 1rem;
     padding: 15px;
     margin: 20px;
-    background-color: #f9f9f9; /* Cambié el verde para que no canse la vista */
+    background-color: #f9f9f9;
     border-radius: 10px;
     border: 1px solid #ddd;
 }
@@ -139,7 +129,7 @@
   justify-content: flex-end;
   gap: 10px;
   width: 80%;
-  height: 80%;
+  min-height: 80vh;
 }
 
 
@@ -147,7 +137,7 @@
 /* Tarjeta principal más ancha */
 .project-card.wide {
     width: 100%;
-    max-width: 500px; /* Ajusta este valor según tu layout */
+    box-sizing: border-box;
     display: flex;
     justify-content: space-between;
     align-items: center;

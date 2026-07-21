@@ -19,7 +19,7 @@ export class NetworkManager {
 
   connect() {
     this.stompClient = new Client({
-      brokerURL: 'ws://localhost:8080/ws-nodevix',
+      brokerURL: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws-nodevix',
       debug: (str) => {
         console.log('STOMP Debug:', str);
       },
