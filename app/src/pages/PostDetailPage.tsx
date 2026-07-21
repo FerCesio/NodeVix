@@ -28,13 +28,13 @@ export default function PostDetailPage() {
     useEffect(() => {
         const fetchPost = async () => {
             try {
+                // Registrar vista sin bloquear la carga del post
                 const viewedPosts = JSON.parse(localStorage.getItem("viewed_posts") || "[]");
-                
                 if (!viewedPosts.includes(id)) {
-                    await api.patch(`/posts/${id}/view`);
-                    
-                    viewedPosts.push(id);
-                    localStorage.setItem("viewed_posts", JSON.stringify(viewedPosts));
+                    api.patch(`/posts/${id}/view`).then(() => {
+                        viewedPosts.push(id);
+                        localStorage.setItem("viewed_posts", JSON.stringify(viewedPosts));
+                    }).catch(() => { /* vista no crítica */ });
                 }
 
                 const res = await api.get<PostListResponse>(`/posts/${id}`);

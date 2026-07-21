@@ -102,6 +102,10 @@ export default function ProjectPage() {
 
 
     const handleManageCollaborators = async () => {
+        if (!id) {
+            toast.error("Save the project first before managing collaborators!");
+            return;
+        }
         // Función interna para disparar el prompt de agregar
         const triggerAdd = async () => {
             const { isConfirmed } = await Swal.fire({

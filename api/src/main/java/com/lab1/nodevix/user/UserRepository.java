@@ -20,6 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> { // Ya viene 
     @Query("SELECT COUNT(u) > 0 FROM User u JOIN u.collaborations c WHERE u.id = :userId AND c.project.id = :projectId")
     boolean hasProject(@Param("userId") Long userId, @Param("projectId") Long projectId);
 
-    @Query("SELECT u FROM User u JOIN u.collaborations c WHERE c.project.id = :projectId")
+    @Query("SELECT u FROM User u JOIN u.collaborations c WHERE c.project.id = :projectId AND c.role = 'OWNER'")
     Optional<User> findByProjectId(@Param("projectId") Long projectId);
 }

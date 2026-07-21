@@ -40,6 +40,9 @@ public class SecurityConfig {
                         // CORRECCIÓN CLAVE: Solo permitimos ver posts públicamente (GET)
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
 
+                        // El contador de vistas es público (no requiere login)
+                        .requestMatchers(HttpMethod.PATCH, "/api/posts/*/view").permitAll()
+
                         // Cualquier otra acción en posts (POST para crear/clonar, DELETE, etc.) EXIGE TOKEN
                         .requestMatchers(HttpMethod.POST, "/api/posts/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/posts/**").authenticated()
