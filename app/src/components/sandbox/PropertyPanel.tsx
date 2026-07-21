@@ -223,7 +223,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ node, onUpdate, on
             <label>Rutas Conectadas (Pesos)</label>
             <div 
               className="edges-list" 
-              style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '5px', maxHeight: '150px', overflowY: 'auto', paddingRight: '4px' }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '5px', maxHeight: '100px', overflowY: 'auto', paddingRight: '4px' }}
             >
               {node.edges.map((edge, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

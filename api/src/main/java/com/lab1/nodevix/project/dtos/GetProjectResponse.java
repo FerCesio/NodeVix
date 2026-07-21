@@ -6,13 +6,15 @@ public class GetProjectResponse {
     private String description;
     private String modifiedOn;
     private String createdOn;
+    private String role;
 
-    public GetProjectResponse(Long id, String name, String description, String modifiedOn, String createdOn) {
+    public GetProjectResponse(Long id, String name, String description, String modifiedOn, String createdOn, String role) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.modifiedOn = modifiedOn;
         this.createdOn = createdOn;
+        this.role = role;
     }
 
     public Long getId() {
@@ -21,6 +23,10 @@ public class GetProjectResponse {
 
     public String getName() {
         return name;
+    }
+
+    public String getRole(){
+        return role;
     }
 
     public String getDescription() {
@@ -34,5 +40,6 @@ public class GetProjectResponse {
     public String getCreatedOn() {
         return createdOn;
     }
+
 
 }

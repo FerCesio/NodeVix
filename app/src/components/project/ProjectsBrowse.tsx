@@ -50,7 +50,6 @@ export default function ProjectsBrowse() {
         fetchProjects();
     }, []);
     
-    // Orden descendente por fecha de modificación
     const sortedProjects = [...projects].sort((a, b) => {
         const [datePartA, timePartA] = a.modifiedOn.split(" ");
         const [datePartB, timePartB] = b.modifiedOn.split(" ");
@@ -69,7 +68,6 @@ export default function ProjectsBrowse() {
 
     const filteredProjects = sortedProjects.filter((project) => {
         const term = searchTerm.toLowerCase();
-        // Ajustamos las propiedades a 'name' y 'description' que usa tu ReadListResponse
         const name = (project.name || "").toLowerCase();
         const desc = (project.description || "").toLowerCase();
         
@@ -81,10 +79,9 @@ export default function ProjectsBrowse() {
     return (
         <div className="projects-container">
             <h1>- My projects -</h1>
-            {/* Sección de búsqueda mejorada */}
             <div className="search-section" style={{ marginBottom: "20px" }}>
                 <input
-                    className="search-input" // O "nav-community-input" según tu CSS
+                    className="search-input" 
                     placeholder="Search by name or description..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -114,7 +111,6 @@ export default function ProjectsBrowse() {
             <button className="btn" onClick={() => navigate("/project/new")}>
                 <span>Create Project</span>
             </button>
-            
         </div>
     );
 }
@@ -132,6 +128,9 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
         description: project.description || ""
     });
     
+    // --- NUEVO CHEQUEO DE SEGURIDAD EN EL FRONT ---
+    const isOwner = project.role === "OWNER";
+
     const handleSave = async () => {
         const loadingToast = toast.loading("Updating project...");
         try {
@@ -146,7 +145,6 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
             toast.success("Changes saved!", { id: loadingToast });
             setIsEditing(false);
             
-            // Actualización local de la referencia para no esperar a un refetch
             project.name = editForm.name;
             project.description = editForm.description;
             
@@ -191,16 +189,6 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
                         background: '#1a1a1a',
                         color: '#fff'
                     });
-                } else if (response.reason === "published") {
-                    // Bloqueo de seguridad: El proyecto está publicado
-                    Swal.fire({
-                        title: 'Acción Bloqueada',
-                        text: response.message,
-                        icon: 'info',
-                        background: '#1a1a1a',
-                        color: '#fff',
-                        confirmButtonColor: '#3085d6'
-                    });
                 } else {
                     Swal.fire({
                         title: 'Error',
@@ -232,7 +220,22 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
                     </div>
                 ) : (
                     <>
-                        <h3>{project.name}</h3>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <h3>{project.name}</h3>
+                            {/* --- BADGE DE CONTROL COLABORATIVO --- */}
+                            {!isOwner && (
+                                <span className="role-badge guest" style={{
+                                    fontSize: "11px",
+                                    padding: "3px 8px",
+                                    borderRadius: "12px",
+                                    backgroundColor: "#2980b9",
+                                    color: "#fff",
+                                    fontWeight: "bold"
+                                }}>
+                                    Shared
+                                </span>
+                            )}
+                        </div>
                         <p className="project-desc">{project.description || "No description available."}</p>
                     </>
                 )}
@@ -257,16 +260,22 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
                         <button className="action-btn enter" title="Entrar" onClick={() => window.location.assign(`/project/${project.id}`)}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                         </button>
-                        <button className="action-btn edit" onClick={() => setIsEditing(true)} title="Editar">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                        </button>
-                        <button className="action-btn delete" onClick={handleDeleteClick} title="Eliminar">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M3 6h18"></path>
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                            </svg>
-                        </button>
+                        
+                        {/* --- COMPORTAMIENTO BASADO EN ROLES --- */}
+                        {isOwner && (
+                            <>
+                                <button className="action-btn edit" onClick={() => setIsEditing(true)} title="Editar">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                </button>
+                                <button className="action-btn delete" onClick={handleDeleteClick} title="Eliminar">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M3 6h18"></path>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </>
+                        )}
                     </>
                 )}
             </div>
