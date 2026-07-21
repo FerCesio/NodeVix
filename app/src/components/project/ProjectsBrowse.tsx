@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import "../../styles/userProjects.css";
 
 import type { ReadListResponse, UpdateProject, UpdateResponse } from "../../types/project";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+import FadeIn from "../general/FadeIn";
 
 export default function ProjectsBrowse() {
+    const navigate = useNavigate();
     const [projects, setProjects] = useState<ReadListResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -89,14 +92,14 @@ export default function ProjectsBrowse() {
             </div>
             
             <div className="projects-list">
-                {/* Usamos filteredProjects en lugar de sortedProjects */}
                 {filteredProjects.length > 0 ? (
-                    filteredProjects.map((item) => (
-                        <ProjectCard 
-                            key={item.id} 
-                            project={item} 
-                            onDelete={deleteProject} 
-                        />
+                    filteredProjects.map((item, index) => (
+                        <FadeIn key={item.id} delay={index * 0.06}>
+                            <ProjectCard 
+                                project={item} 
+                                onDelete={deleteProject} 
+                            />
+                        </FadeIn>
                     ))
                 ) : (
                     <p>
@@ -108,7 +111,7 @@ export default function ProjectsBrowse() {
             </div>
 
             {/* BOTONES EN VERTICAL (Como estaban antes) */}
-            <button className="btn" onClick={() => window.location.href = "/project/new"}>
+            <button className="btn" onClick={() => navigate("/project/new")}>
                 <span>Create Project</span>
             </button>
             

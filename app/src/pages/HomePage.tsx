@@ -1,12 +1,13 @@
 import "../styles/general.css";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import userIcon from "../assets/circulo-de-usuarios.svg";
 import folderIcon from "../assets/carpeta.svg";
 import myProjectsIcon from "../assets/redaccion.svg"; 
 
 import UserConfig from "../components/user/UserConfig";
 import TitleAndDesc from "../components/general/TitleAndDesc";
-import BackgroundVideo from "../components/general/BackgroundVideo";
+import PageTransition from "../components/general/PageTransition";
 import ProjectsBrowse from "../components/project/ProjectsBrowse";
 import MyPublishedProjects from "../components/user/MyPublishedProjects"; 
 import { Toaster } from "react-hot-toast";
@@ -15,8 +16,8 @@ export default function HomePage() {
   const [view, setView] = useState('projects');
 
   return (
-    <div className="main-container">
-        <BackgroundVideo />
+    <PageTransition>
+      <div className="main-container">
         <TitleAndDesc/>
         <Toaster/>
         <div className="browse-container">
@@ -42,12 +43,24 @@ export default function HomePage() {
           </div>
 
           <div className="basic-card">
-            {view === 'projects' && <ProjectsBrowse />}
-            {view === 'my-posts' && <MyPublishedProjects />} 
-            {view === 'user' && <UserConfig />}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={view}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                style={{ width: "100%", height: "100%" }}
+              >
+                {view === 'projects' && <ProjectsBrowse />}
+                {view === 'my-posts' && <MyPublishedProjects />} 
+                {view === 'user' && <UserConfig />}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
         </div>
-    </div>
+      </div>
+    </PageTransition>
   );
 }
