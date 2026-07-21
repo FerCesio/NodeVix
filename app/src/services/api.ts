@@ -22,18 +22,23 @@ api.interceptors.request.use(
   }
 );
 
-// 2. Interceptor de RESPONSE (Para manejar sesiones expiradas)
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Si el back devuelve 401 (Unauthorized), el token no sirve más
-    // No actuar en rutas de auth (login/register) para no interferir con el feedback
     const url = error.config?.url || "";
-    if (error.response && error.response.status === 401 && !url.includes("/auth/")) {
+    
+    // Identificamos si el error viene del flujo de carga de proyectos
+    const isProjectFlow = url.includes("/manage/") || url.includes("/projects/");
+
+    // Si el back devuelve 401 y NO es ni el auth ni el chequeo de proyectos, lo echamos
+    if (error.response && error.response.status === 401 && !url.includes("/auth/") && !isProjectFlow) {
+      console.warn("⚠️ Token inválido/expirado detectado globalmente. Expulsando usuario...");
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
       window.location.href = "/login";
     }
+    
     return Promise.reject(error);
   }
 );

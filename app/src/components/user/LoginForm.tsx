@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // <-- AGREGADO: useLocation
 import { api } from "../../services/api";
 import type { LoginRequest, LoginResponse } from "../../types/user";
 import toast from "react-hot-toast";
@@ -10,6 +10,8 @@ interface Props {
 
 export default function LoginForm({ onSuccess }: Props) {
   const navigate = useNavigate();
+  const location = useLocation(); // <-- AGREGADO: Capturamos el estado de la ruta
+  
   const [form, setForm] = useState<LoginRequest>({
     identifier: "",
     password: "",
@@ -38,14 +40,21 @@ export default function LoginForm({ onSuccess }: Props) {
       const res = await api.post<LoginResponse>("/auth/login", form);
 
       localStorage.setItem("token", res.data.token);
-
-      if (onSuccess) onSuccess();
-
       toast.success("Welcome!");
 
-      if (window.location.pathname != "/project/new") {
-        navigate("/home");
+      // --- CAMBIO PRINCIPAL: Lógica de redirección inteligente ---
+      if (onSuccess) {
+        // Si el login se usa como MODAL (ej. dentro del canvas), 
+        // solo ejecutamos la función de cierre y NO navegamos a ningún lado.
+        onSuccess();
+      } else {
+        // Si es la PÁGINA de login normal, nos fijamos si el ProtectedRoute nos mandó acá.
+        // Si veníamos de un link (ej. /project/4), volvemos ahí. Si no, al /home.
+        const origin = location.state?.from?.pathname || "/home";
+        navigate(origin, { replace: true });
       }
+      // ---------------------------------------------------------
+
     } catch (err: any) {
       if (err.response) {
         const msg = err.response.data?.message || err.response.data?.error;
@@ -86,8 +95,6 @@ export default function LoginForm({ onSuccess }: Props) {
       <button type="submit" className="btn">
         <span>Login</span>
       </button>
-
-
     </form>
   );
 }

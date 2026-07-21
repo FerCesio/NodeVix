@@ -44,6 +44,9 @@ function App() {
 
         {/* Ruta para errores (404 Not Found) */}
         <Route path="*" element={<h1>Página no encontrada - 404</h1>} />
+
+        <Route path="/project/:id" element={<ProjectPage />} />
+        <Route path="/view/:id" element={<ProjectPage />} /> {/* Misma página, distinta URL */}
         
       </Routes>
     </BrowserRouter>

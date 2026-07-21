@@ -1,5 +1,6 @@
 package com.lab1.nodevix.user;
 
+import com.lab1.nodevix.colabs.Colaboration;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -27,11 +28,8 @@ public class User {
     private LocalDate birthDate;
     private String avatar_url;
 
-    // JPA creará y gestionará la tabla "has" por ti
-    // "has": tabla de relacion --> User has Project
-    @ManyToMany(cascade = CascadeType.ALL) // Incluye PERSIST, MERGE y REMOVE
-    @JoinTable(name = "has", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "project_id"))
-    private List<Project> projects = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Colaboration> collaborations = new ArrayList<>();
 
     public User() {
     }
@@ -84,7 +82,11 @@ public class User {
     }
 
     public List<Project> getProjects() {
-        return projects;
+        List<Project> projectList = new ArrayList<>();
+        for (Colaboration colab : collaborations) {
+            projectList.add(colab.getProject());
+        }
+        return projectList;
     }
 
     public String getAvatar() {

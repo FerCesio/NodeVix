@@ -1,5 +1,6 @@
 package com.lab1.nodevix.project;
 
+import com.lab1.nodevix.colabs.Colaboration;
 import com.lab1.nodevix.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -35,6 +36,9 @@ public class Project {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private String content;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Colaboration> collaborators = new ArrayList<>();
 
     public Project() {
     }
