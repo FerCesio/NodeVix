@@ -1,27 +1,29 @@
 package com.lab1.nodevix;
 
-import com.resend.Resend;
-import com.resend.core.exception.ResendException;
-import com.resend.services.emails.model.CreateEmailOptions;
-import com.resend.services.emails.model.CreateEmailResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    private final Resend resend;
-    private final String fromEmail;
+    @Value("${brevo.api.key}")
+    private String brevoApiKey;
 
-    public EmailService(@Value("${resend.api.key}") String apiKey,
-                        @Value("${resend.from}") String fromEmail) {
-        this.resend = new Resend(apiKey);
-        this.fromEmail = fromEmail;
-    }
+    @Value("${mail.from.email}")
+    private String fromEmail;
+
+    @Value("${mail.from.name}")
+    private String fromName;
 
     @Async
     public void sendInteractionNotification(String toEmail, String authorName, String interactionType, String projectName) {
@@ -38,17 +40,27 @@ public class EmailService {
                     "<p>Go check it out in NodeVix!</p>";
         }
 
-        try {
-            CreateEmailOptions params = CreateEmailOptions.builder()
-                    .from(fromEmail)
-                    .to(toEmail)
-                    .subject(subject)
-                    .html(body)
-                    .build();
+        Map<String, Object> payload = Map.of(
+                "sender", Map.of("name", fromName, "email", fromEmail),
+                "to", List.of(Map.of("email", toEmail, "name", authorName)),
+                "subject", subject,
+                "htmlContent", body
+        );
 
-            CreateEmailResponse data = resend.emails().send(params);
-            log.info("Email sent to {} for {} on project '{}' - ID: {}", toEmail, interactionType, projectName, data.getId());
-        } catch (ResendException e) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", brevoApiKey);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    "https://api.brevo.com/v3/smtp/email",
+                    request,
+                    String.class
+            );
+            log.info("Email sent to {} for {} on project '{}' - Status: {}", toEmail, interactionType, projectName, response.getStatusCode());
+        } catch (Exception e) {
             log.error("Failed to send email to {} for {} on project '{}': {}", toEmail, interactionType, projectName, e.getMessage());
         }
     }
