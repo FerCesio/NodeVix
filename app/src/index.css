@@ -4,7 +4,7 @@ body, html {
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: #121212; /* El fondo negro global que querías */
+  background-color: transparent;
   color: white;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
@@ -12,4 +12,5 @@ body, html {
 #root {
   width: 100%;
   height: 100%;
+  background-color: transparent;
 }

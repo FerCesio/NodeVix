@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { api } from "../../services/api";
 import "../../styles/userProjects.css";
-import type { PostListResponse } from "../../types/post"; // Usando tu DTO
+import type { PostListResponse } from "../../types/post";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+import FadeIn from "../general/FadeIn";
 
 export default function MyPublishedProjects() {
     const [posts, setPosts] = useState<PostListResponse[]>([]);
@@ -62,14 +63,14 @@ export default function MyPublishedProjects() {
                 />
             </div>
             <div className="projects-list">
-                {/* CAMBIO: Usar filteredPosts aquí */}
                 {filteredPosts.length > 0 ? (
-                    filteredPosts.map((item) => (
-                        <PublishedPostCard 
-                            key={item.id} 
-                            post={item} 
-                            onDelete={deletePost} 
-                        />
+                    filteredPosts.map((item, index) => (
+                        <FadeIn key={item.id} delay={index * 0.06}>
+                            <PublishedPostCard 
+                                post={item} 
+                                onDelete={deletePost} 
+                            />
+                        </FadeIn>
                     ))
                 ) : (
                     <p>

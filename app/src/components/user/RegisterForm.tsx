@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import type { LoginResponse, RegisterRequest, RegisterResponse } from "../../types/user";
 import toast from "react-hot-toast";
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function RegisterForm({onSuccess}: Props) {
+  const navigate = useNavigate();
   
   const today = new Date().toISOString().split("T")[0].split("-");
   const year: number = parseInt(today[0]); // Convertimos a número
@@ -60,7 +62,7 @@ export default function RegisterForm({onSuccess}: Props) {
 
         // 5. Gestión de navegación
         if (window.location.pathname !== "/project") {
-          window.location.href = "/home";
+          navigate("/home");
         } else {
           toast.success("Account created!");
         }

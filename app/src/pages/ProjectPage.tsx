@@ -7,6 +7,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { SimulationCanvas, type SimulationCanvasRef } from "../components/sandbox/SimulationCanvas";
+import PageTransition from "../components/general/PageTransition";
 
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -524,6 +525,7 @@ export default function ProjectPage() {
     };
 
     return (
+        <PageTransition>
         <div className="main-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', padding: 0, height: '100vh', width: '100vw', overflow: 'hidden' }}>
             <Toaster/>
             
@@ -643,6 +645,7 @@ export default function ProjectPage() {
                 </div>
             )}
         </div>
+        </PageTransition>
     );
 }
 

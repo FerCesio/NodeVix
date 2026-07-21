@@ -7,6 +7,7 @@ import type { CommentResponse, MessageRequest } from "../types/comment";
 import type { PostListResponse, InteractionResponse } from "../types/post";
 // IMPORTAMOS EL CANVAS Y SU INTERFAZ DE REFERENCIA
 import { SimulationCanvas, type SimulationCanvasRef } from "../components/sandbox/SimulationCanvas";
+import PageTransition from "../components/general/PageTransition";
 
 export default function PostDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -152,9 +153,10 @@ export default function PostDetailPage() {
         }
     };
 
-    if (!post) return <div className="loader">Cargando...</div>;
+    if (!post) return <PageTransition><div className="loader">Cargando...</div></PageTransition>;
 
     return (
+        <PageTransition>
         <div className="post-detail-page">
             <Toaster />
             <div className="post-topbar">
@@ -271,5 +273,6 @@ export default function PostDetailPage() {
                 <span className="post-description">{post.projectDescription}</span>
             </div>
         </div>
+        </PageTransition>
     );
 }

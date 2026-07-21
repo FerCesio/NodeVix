@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/general.css";
 import { Toaster } from "react-hot-toast";
 import { api } from "../services/api";
 import ReturnButton from "../components/general/ReturnButton";
+import PageTransition from "../components/general/PageTransition";
+import FadeIn from "../components/general/FadeIn";
 import type { PostListResponse } from "../types/post";
 
 export default function PostsPage() {
@@ -13,7 +16,7 @@ export default function PostsPage() {
     // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const pageSize = 3; 
+    const pageSize = 6; 
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -43,6 +46,7 @@ export default function PostsPage() {
     });
 
     return (
+        <PageTransition>
         <div className="main-container">
             <Toaster />
             <div className="projects-container" style={{ width: '90%', maxWidth: '1200px' }}>
@@ -64,8 +68,10 @@ export default function PostsPage() {
                     <>
                         <div className="projects-community-list">
                             {filteredPosts.length > 0 ? (
-                                filteredPosts.map((post) => (
-                                    <PostCard key={post.id} post={post} />
+                                filteredPosts.map((post, index) => (
+                                    <FadeIn key={post.id} delay={index * 0.06}>
+                                        <PostCard post={post} />
+                                    </FadeIn>
                                 ))
                             ) : (
                                 <p className="main-description">No posts found matching your search.</p>
@@ -105,10 +111,12 @@ export default function PostsPage() {
                 )}
             </div>
         </div>
+        </PageTransition>
     );
 }
 
 function PostCard({ post }: { post: PostListResponse }) {
+    const navigate = useNavigate();
     return (
         <div className="project-card wide postcard">
             <div className="project-info">
@@ -126,7 +134,7 @@ function PostCard({ post }: { post: PostListResponse }) {
             </div>
 
             <div className="project-actions-vertical">
-                <button className="action-btn enter" title="View Simulation" onClick={() => window.location.href = `/posts/${post.id}`}>
+                <button className="action-btn enter" title="View Simulation" onClick={() => navigate(`/posts/${post.id}`)}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
