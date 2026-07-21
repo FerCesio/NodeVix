@@ -1,0 +1,11 @@
+At login:
+ -> Only name written and at enter 'Text '' could not be parsed at index 0'
+
+At creating projects (not logged in):
+ -> Hide the buttons for sharing and Users collaborators 
+
+At posts page:
+ -> search for 50 registers that match the posts, not only loaded
+ -> dont resize card when moving between pages
+
+
