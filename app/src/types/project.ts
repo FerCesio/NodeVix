@@ -18,6 +18,7 @@ export type UpdateProject = {
     name: string;
     description: string
     content: string
+    role?: "GUEST" | "EDITOR"| "OWNER"
 }
 
 export type UpdateResponse = {
@@ -39,4 +40,5 @@ export type ReadListResponse = {
     description: string
     modifiedOn: string
     createdOn: string
+    role: "OWNER"|"GUEST"|"EDITOR"
 }
