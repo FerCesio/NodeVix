@@ -3,6 +3,9 @@ package com.lab1.nodevix.post;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.lab1.nodevix.EmailService;
+import com.lab1.nodevix.colabs.Colaboration;
+import com.lab1.nodevix.colabs.ColaborationRepository;
+import com.lab1.nodevix.colabs.Role;
 import com.lab1.nodevix.comments.CommentRepository;
 import com.lab1.nodevix.post.dtos.CloneRequest;
 import com.lab1.nodevix.post.dtos.CloneResponse;
@@ -35,18 +38,20 @@ public class PostService {
     private final PostInteractionRepository postLikeRepo;
     private final UserRepository userRepo;
     private final CommentRepository commentRepo;
+    private final ColaborationRepository collaboratonRepo;
     private final EmailService emailService;
     private final Cache<String, Boolean> notificationCache = CacheBuilder.newBuilder()
             .expireAfterWrite(2, TimeUnit.MINUTES)
             .build();
 
-    public PostService(PostRepository postRepo, ProjectRepository projectRepo, PostInteractionRepository postLikeRepo, UserRepository userRepo, CommentRepository commentRepo, EmailService emailService) {
+    public PostService(PostRepository postRepo, ProjectRepository projectRepo, PostInteractionRepository postLikeRepo, UserRepository userRepo, CommentRepository commentRepo, ColaborationRepository collaboratonRepo, EmailService emailService) {
         this.postRepo = postRepo;
         this.projectRepo = projectRepo;
         this.postLikeRepo = postLikeRepo;
         this.userRepo = userRepo;
         this.commentRepo = commentRepo;
         this.emailService = emailService;
+        this.collaboratonRepo = collaboratonRepo;
     }
 
     @Transactional
@@ -280,10 +285,21 @@ public class PostService {
     }
 
     public CloneResponse cloneProject(Long userID, CloneRequest request){
-        User user = userRepo.findById(userID).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        User user = userRepo.findById(userID)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+        // 1. Creamos y guardamos el proyecto
         Project project = new Project(request.getName(), request.getContent());
         user.getProjects().add(project);
         Project saved = projectRepo.save(project);
+
+        Colaboration ownerColab = new Colaboration();
+        ownerColab.setProject(saved);
+        ownerColab.setUser(user);
+        ownerColab.setRole(Role.OWNER); // ¡Esta es la llave mágica!
+
+        collaboratonRepo.save(ownerColab);
+
         return new CloneResponse(saved.getId(), saved.getName());
     }
 }

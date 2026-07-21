@@ -69,7 +69,7 @@ export default function ProjectPage() {
                 
                 try {
                     // PLAN B: Como dio error, le pegamos a tu endpoint que inserta el GUEST en la BD
-                    await api.post(`/api/projects/${id}/accept-invitation`); // Asegurate que la ruta coincida con tu back
+                    await api.post(`/projects/${id}/accept-invitation`); // Asegurate que la ruta coincida con tu back
                     console.log("✅ Registro en tabla 'has' completado con éxito. Reintentando GET...");
 
                     // INTENTO 2: Ahora que el backend te registró, volvemos a pedir el contenido

@@ -13,7 +13,7 @@ public interface ColaborationRepository extends JpaRepository<Colaboration, Long
     boolean existsByProjectIdAndUserId(Long projectId, Long userId);
     List<Colaboration> findByUserId(Long userId);
     List<Colaboration> findByProjectId(Long projectId);
-
+    void deleteAllByProjectId(Long projectId);
     Optional<Colaboration> findByProjectIdAndUserId(Long projectId, Long userId);
     @Query("SELECT pc.project FROM Colaboration pc WHERE pc.user.id = :userId")
     List<Project> findProjectsByUserId(@Param("userId") Long userId);

@@ -100,6 +100,7 @@ public class ProjectService {
         if (!userRepo.hasProject(userID, projectID)) {
             throw new RuntimeException("No tienes permiso o el proyecto no existe");
         }
+
         User user = userRepo.findById(userID)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
@@ -110,9 +111,12 @@ public class ProjectService {
             throw new IllegalStateException("El proyecto está publicado. Elimina el post primero.");
         }
 
-        user.getProjects().remove(project);
-        userRepo.save(user);
+        List<Colaboration> colabs = colaborationRepo.findByProjectId(projectID);
 
+        colaborationRepo.deleteAll(colabs);
+        colaborationRepo.flush();
+
+        user.getProjects().remove(project);
         projectRepo.delete(project);
 
         return new DeleteResponse("Proyecto con id: " + projectID + " eliminado correctamente");
